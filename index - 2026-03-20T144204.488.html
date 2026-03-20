@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hub Engine V4</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#06070d;color:#e8eaf0;font-family:'DM Sans',sans-serif}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0b0d14}::-webkit-scrollbar-thumb{background:#1e2433;border-radius:3px}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes glow{0%,100%{box-shadow:0 0 30px rgba(240,165,0,.15)}50%{box-shadow:0 0 60px rgba(240,165,0,.4)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-8px)}50%{transform:translateX(8px)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes load{from{width:0}to{width:100%}}
+textarea:focus,input:focus,select:focus{outline:none;border-color:#f0a500!important;box-shadow:0 0 0 3px rgba(240,165,0,.1)!important}
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#0d1017;border:1px solid #1e2433;border-radius:20px;padding:28px;width:540px;max-width:100%;max-height:88vh;overflow-y:auto;animation:popIn .2s ease}
+#loader{position:fixed;inset:0;background:#06070d;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999}
+#loader .ring{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#f0a500,#c06000);display:flex;align-items:center;justify-content:center;font-size:28px;animation:glow 2s infinite;margin-bottom:18px}
+#loader .lt{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:900;color:#fff}
+#loader .ls{font-size:10px;color:#f0a500;letter-spacing:4px;margin-top:5px}
+#loader .bar{width:180px;height:3px;background:#1e2433;border-radius:2px;margin-top:20px;overflow:hidden}
+#loader .fill{height:100%;background:linear-gradient(90deg,#f0a500,#e07000);border-radius:2px;animation:load 3s ease forwards}
+</style>
+</head>
+<body>
+<div id="loader">
+  <div class="ring">⚡</div>
+  <div class="lt">HUB ENGINE V4</div>
+  <div class="ls">LOADING...</div>
+  <div class="bar"><div class="fill"></div></div>
+</div>
+<div id="root"></div>
+<script>
+window.TRACKS=[
+  {id:"video",emoji:"🎬",title:"How To Make Videos",color:"#f0a500",lessons:[
+    {title:"What Is AI Video Generation?",body:"AI video generation means using software to create videos automatically from text. Tools like InVideo AI and Vidnoz let you TYPE a script and the AI creates a complete video with visuals, music, and voiceover. No camera or editing skills needed.\n\nYOUR TWO MAIN TOOLS:\n1. InVideo AI - best for news-style and social content (30% commission)\n2. Vidnoz - best for avatar-based videos with your anchors (50% commission)\n\nBASIC WORKFLOW:\nYou write a script in Hub Engine V4, paste it into Vidnoz, pick an avatar, hit generate, download your video. That is the entire process."},
+    {title:"Making Your First Video with InVideo",body:"STEP BY STEP:\n1. Go to invideo.io and sign in\n2. Click AI Video Generator\n3. Type your topic - example: AI replacing warehouse workers, 45 seconds, news style\n4. Select style: News/Corporate\n5. Select ratio: 16:9 for YouTube, 9:16 for TikTok\n6. Hit Generate and wait 2-3 minutes\n7. Edit any text or swap clips you do not like\n8. Export and download\n\nPRO TIP: Be very specific.\nBAD: Make a video about AI\nGOOD: Make a 45-second breaking news video about AI replacing customer service jobs, urgent tone, include a statistic"},
+    {title:"The 45-Second Business Promo",body:"YOUR MONEY-MAKING FORMULA FOR LOCAL BUSINESSES:\n\n1. Meet the business owner - get their key message\n2. Hub Engine V4 - AI Tools - Video Script Writer - type what they told you\n3. Copy the script\n4. Open Vidnoz - pick a professional avatar\n5. Paste the script and generate\n6. Download and send to client\n7. Post to their social media\n\nWHAT TO CHARGE:\nStarter: $200/month - 4 videos\nProfessional: $400/month - 8 videos\nPremium: $700/month - daily video\n\nFIRST OFFER: Create 2 videos FREE, no commitment. Almost no one says no to free."}
+  ]},
+  {id:"prompt",emoji:"⚡",title:"Prompt Engineering 101",color:"#a78bfa",lessons:[
+    {title:"What Is A Prompt",body:"A PROMPT is simply the instruction you give to an AI.\n\nBAD PROMPT: Write a script\n\nGOOD PROMPT: Write a 45-second news script for Lisa, my professional English Asian anchor, about AI replacing warehouse jobs. Tone: urgent and authoritative. Strong hook in first 3 seconds. End with a call to action to visit our website.\n\nThe good prompt tells the AI:\n- WHO is delivering it (Lisa)\n- WHAT the topic is (AI replacing jobs)\n- HOW LONG (45 seconds)\n- WHAT TONE (urgent, authoritative)\n- WHAT STRUCTURE (hook + CTA)\n\nTHAT IS ALL PROMPT ENGINEERING IS."},
+    {title:"The 5-Part Prompt Formula",body:"Remember as RTFCS:\n\n1. ROLE - You are a professional TV news writer\n2. TASK - Write a 45-second anchor script\n3. FORMAT - Divide into HOOK, BODY, CTA with time markers\n4. CONSTRAINTS - Under 100 words. No jargon.\n5. STYLE - Urgent and authoritative like CNN Breaking News\n\nFULL EXAMPLE:\nYou are a professional TV news writer. Write a 45-second anchor script about AI replacing warehouse jobs. Divide into HOOK, BODY, CTA with time markers. Under 100 words, no jargon. Tone: urgent and authoritative like CNN Breaking News.\n\nTHAT is a world-class prompt."},
+    {title:"Explaining Your Prompts To Others",body:"When someone asks how you built that with AI - say this:\n\nI use a structured prompting technique. I assign the AI a specific role - like a news writer or marketing copywriter. Then I give it a precise task with format requirements, length constraints, tone guidelines, and an example of what I am looking for. The more specific and structured the instruction, the more professional the output.\n\nYou can also say:\nI combine role-based prompting with iterative refinement. I generate a first draft, then give targeted feedback to improve specific elements - similar to how a director works with a creative team.\n\nJohn - when you say THAT to someone, they know you understand AI at a professional level. Because you DO."}
+  ]},
+  {id:"affiliate",emoji:"💰",title:"Affiliate Marketing Mastery",color:"#10b981",lessons:[
+    {title:"What Affiliate Marketing Is",body:"PLAIN ENGLISH:\nYou earn a commission every time someone buys through YOUR special link.\n\n1. Sign up as Vidnoz affiliate (free)\n2. Get your unique link\n3. Share it in videos, descriptions, emails\n4. Someone clicks and buys Vidnoz\n5. Vidnoz pays YOU 50% of that sale\n\nYOUR INCOME MATH:\n- 10 Vidnoz sales at $50 = $250/month\n- 20 Vidnoz sales = $500/month\n- 1 MailerLite referral = $140 by itself!\n\nYou already have 5 programs set up. The only missing piece is traffic - people watching your content and clicking your links."},
+    {title:"Influencer-Style Promo Formula",body:"An influencer promo feels like a genuine recommendation from someone you trust.\n\nTHE FORMULA:\n1. HOOK - Start with a pain point\nI used to spend 6 hours editing one video...\n\n2. STORY - Relatable experience\nThen I found this AI tool...\n\n3. DEMO - What it does\nNow I create a professional video in under 10 minutes...\n\n4. PROOF - Specific result\nMy last video got 2,400 views in 48 hours...\n\n5. CTA - Exactly what to do\nClick the link in my description to try it free\n\nYour anchors Susan, Alisha, Lisa and Paul ARE your influencers. They deliver your recommendations with authority and warmth."},
+    {title:"Content That Converts",body:"THE GOLDEN RULE: Lead with VALUE not the sale.\n\n1. TUTORIAL VIDEOS\nHow to create a professional business video in 10 minutes\nShows Vidnoz in action. Link in description.\n\n2. COMPARISON VIDEOS\nBest AI video tools for small businesses 2025\nYour affiliate tools win.\n\n3. RESULTS VIDEOS\nI made 5 videos in one day using this AI tool\nReal results. People want proof.\n\n4. NEWS MENTION\nAt end of every video: Today video was created using Vidnoz AI - link below\nPassive promotion. Works while you sleep.\n\n5. EMAIL SEQUENCES\nDay 1: The problem. Day 2: The solution. Day 3: Special offer.\n\nAll of this can be written in Hub Engine V4 right now."}
+  ]},
+  {id:"funnel",emoji:"🔻",title:"Funnel Building 101",color:"#06b6d4",lessons:[
+    {title:"What Is A Funnel",body:"A FUNNEL is the path a stranger takes to become a paying customer.\n\nTHE 4 STAGES:\n\nSTAGE 1 - AWARENESS\nThey do not know you exist yet.\nYour job: Get their attention with a video or post.\n\nSTAGE 2 - INTEREST\nThey watched your video and want more.\nYour job: Send them to a landing page or email opt-in.\nExample: Download my free AI tools guide - link in bio\n\nSTAGE 3 - DESIRE\nThey are on your email list.\nYour job: Show them WHY they need your product.\n\nSTAGE 4 - ACTION\nThey are ready to buy.\nYour job: Clear CTA with your affiliate link.\n\nTHAT IS THE ENTIRE FUNNEL."},
+    {title:"Building Your First Funnel",body:"VIDNOZ AFFILIATE FUNNEL - STEP BY STEP:\n\n1. Make a 60-second video: How I Create Videos In 10 Minutes With AI\n   Use Lisa or Alisha. Post to YouTube and TikTok.\n\n2. In description: Get my FREE AI Video Guide - link below\n   Set up a free MailerLite landing page with email opt-in.\n\n3. Send 3 emails over 3 days:\n   Email 1: Welcome + the problem (video editing takes too long)\n   Email 2: The solution (Vidnoz AI)\n   Email 3: Your results + click here for free trial\n\n4. That link in Email 3 is YOUR affiliate link.\n   When they sign up - YOU earn 50%.\n\nTOTAL COST TO BUILD: $0"}
+  ]},
+  {id:"business",emoji:"💼",title:"Local Business Sales",color:"#fb923c",lessons:[
+    {title:"Your 60-Second Sales Pitch",body:"SAY THIS TO LOCAL BUSINESSES:\n\nHi, my name is John Lanter. I run an AI media production company here in Southeast Texas. I create professional 45-second promotional videos for local businesses using AI technology. Each video gets posted to your social media every single week. No cameras, no film crews, no editing on your end. Just a clean professional video every week that keeps your customers engaged and brings in new ones. I can show you a sample right now on my phone. Would you have 2 minutes to take a look?\n\nTHEN SHOW YOUR SAMPLE VIDNOZ VIDEO.\nIf they like it - you have a client."},
+    {title:"Handling Objections",body:"I CANNOT AFFORD IT:\nThat is exactly why I offer a free trial - two videos at zero cost. Once you see the results, the investment pays for itself. Let me show you a sample right now.\n\nWE ALREADY HAVE SOMEONE FOR SOCIAL MEDIA:\nVideo content is the number one driver of engagement on every platform. I am not replacing what you have - I am adding professional video. Most social media managers love having video delivered to them.\n\nI NEED TO THINK ABOUT IT:\nOf course. While you think, let me create one sample video for your business completely free. Can I get your business name?\n\nHOW DO I KNOW THIS WORKS:\nBusinesses using weekly video see 3x more engagement than static posts. Let me show you a sample I made for a business just like yours."}
+  ]},
+  {id:"anchors",emoji:"🎭",title:"Videos With Your 4 Anchors",color:"#e879f9",lessons:[
+    {title:"Your 4 Anchors Explained",body:"LISA - Lead Anchor\nEnglish Asian, mid-30s, professional news anchor\nBest for: Tech news, AI developments, serious analysis\nPrompt style: Authoritative, CNN-style, fact-based\n\nALISHA - Business Reporter\nMexican-American, 40+, charismatic influencer energy\nBest for: Affiliate promos, product launches, sales content\nPrompt style: High energy, persuasive, FOMO-driven\n\nSUSAN - Feature Correspondent\nWhite female, 38-40, warm and relatable\nBest for: Lifestyle, small business stories, how-to content\nPrompt style: Warm, conversational, human-interest\n\nPAUL - Breaking News Anchor\nWhite male, 60s, grandfather authority\nBest for: Breaking news, urgent content, bold claims\nPrompt style: Short punchy sentences, bold, direct"},
+    {title:"Sample Prompts For Each Anchor",body:"LISA PROMPT:\nWrite a 45-second news script for Lisa, a professional English Asian news anchor. Topic: [YOUR TOPIC]. Tone: authoritative, credible, CNN-style. Include one statistic. End with a call to action.\n\nALISHA PROMPT:\nWrite a 45-second promo for Alisha, a charismatic Mexican-American influencer in her 40s. Product: [PRODUCT]. Tone: exciting, high-energy, persuasive. Include FOMO. End with urgent CTA.\n\nSUSAN PROMPT:\nWrite a 45-second feature segment for Susan, a warm relatable female correspondent. Topic: [TOPIC]. Tone: warm, conversational, human-interest. Start with a relatable story.\n\nPAUL PROMPT:\nWrite a 30-second breaking news script for Paul, a bold authoritative male anchor in his 60s. Topic: [TOPIC]. Short punchy sentences. Maximum 8 words per sentence. Direct CTA at end."}
+  ]},
+  {id:"roadmap",emoji:"🗺️",title:"Your 8-Week Roadmap",color:"#34d399",lessons:[
+    {title:"Weeks 1-2: Foundation",body:"WEEK 1 GOAL: Make your first video.\n\nDAY 1: Sign up for InVideo AI free account\nDAY 2: Read Prompt Engineering 101 in Learning Center\nDAY 3: Write your first script using Video Script Writer in AI Tools\nDAY 4: Create your first video in InVideo using that script\nDAY 5: Sign up for Vidnoz free account and create one avatar video\n\nWEEK 2 GOAL: Master all 4 anchors.\nMONDAY: Create a Lisa video (tech news topic)\nTUESDAY: Create an Alisha video (Vidnoz affiliate promo)\nWEDNESDAY: Create a Susan video (small business story)\nTHURSDAY: Create a Paul video (breaking news style)\nFRIDAY: Review all 4 - what works best?\n\nMILESTONE: 5 videos created. All tools set up."},
+    {title:"Weeks 3-5: Build and Launch",body:"WEEK 3: Start posting and go live with affiliates.\n- Sign up for Vidnoz affiliate program\n- Post your best Alisha promo video to YouTube and TikTok\n- Add affiliate link in every description\n- Set up your Content Calendar in Hub Engine\n\nWEEKS 4-5: Build your email funnel.\n- Sign up for free MailerLite account\n- Create a simple landing page - offer a free guide\n- Write your 3-email sequence using Hub Engine Email Campaign Writer\n- Drive traffic from your videos to your landing page\n\nMILESTONE: 15+ videos posted. Affiliate links active. Email funnel running."},
+    {title:"Weeks 6-8: First Revenue",body:"WEEKS 6-7: Land your first local business client.\n\nMONDAY: Create a sample business promo video with Vidnoz\nTUESDAY: Practice your 60-second pitch out loud 10 times\nWEDNESDAY: Walk into your first local business - show the sample\nTHURSDAY: Walk into Business 2\nFRIDAY: Walk into Business 3\n\nOFFER: First 2 videos FREE, no commitment.\n\nWEEK 8: Close your first paying client OR earn first affiliate commission.\n\nJohn - your 22 years of talking to people and 9 states of sales experience is your BIGGEST advantage here. The AI gives you the product. You already know how to sell.\n\nIn 8 weeks you will have the skills, the workflow, and the clients. THAT is what Hub Engine V4 was built for."}
+  ]}
+];
+</script>
+
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+const PW="HubV4";
+const HOSTS_LIST=["Lisa","Alisha","Susan","Paul"];
+const PLATFORMS=["YouTube","TikTok","Instagram","Facebook","LinkedIn"];
+const STATUSES=["Scripted","Recorded","Edited","Published"];
+const VOICE_IDS={susan:{id:"EXAVITQu4vr4xnSDxMaL",label:"Susan"},alisha:{id:"nPczCjzI2devNBz1zQrb",label:"Alisha"},lisa:{id:"piTKgcLEGmPE4e6mUI3c",label:"Lisa"},paul:{id:"Xb7hH8MSUJpSbvqn2cU5",label:"Paul"},becky:{id:"EXAVITQu4vr4xnSDxMaL",label:"Becky"}};
+const TOOLS=[
+  {id:"script",emoji:"🎬",name:"Video Script Writer",cat:"Video",color:"#f0a500",desc:"Full scripts Hook to Body to CTA",sys:"You are an expert short-form video script writer. Write a complete video script with labeled sections: HOOK (0-3s), BODY (3-50s), CTA (50-60s). Punchy active language, under 60 seconds."},
+  {id:"titles",emoji:"🔥",name:"Viral Title Generator",cat:"Video",color:"#ef4444",desc:"5 click-worthy titles per topic",sys:"You are a viral content strategist. Generate 5 numbered YouTube titles using: 1)Curiosity gap 2)Urgency 3)Value promise 4)Bold claim 5)Social proof. Each irresistibly clickable with one-line explanation."},
+  {id:"desc",emoji:"📝",name:"SEO Description Writer",cat:"Video",color:"#8b5cf6",desc:"Keyword-rich descriptions that rank",sys:"You are an SEO specialist for video. Write a description with: hook paragraph, key bullets, 3 timestamps, 15 hashtags, and CTA with [AFFILIATE LINK] placeholder."},
+  {id:"adcopy",emoji:"💰",name:"Affiliate Ad Copy",cat:"Marketing",color:"#10b981",desc:"High-converting affiliate copy",sys:"You are a direct response copywriter. Create 3 ad copy variations: SHORT (under 20 words), MEDIUM (50 words), LONG (150 words). Benefits-focused with CTA on each. Label clearly."},
+  {id:"email",emoji:"📧",name:"Email Campaign Writer",cat:"Marketing",color:"#06b6d4",desc:"3-email sequences that convert",sys:"You are an email marketing expert. Write a 3-email drip campaign: Email 1 (Problem+curiosity), Email 2 (Solution+value), Email 3 (Urgency+CTA). Include Subject Line and Preview Text for each."},
+  {id:"cta",emoji:"🎯",name:"CTA Generator",cat:"Marketing",color:"#f59e0b",desc:"Calls-to-action that get clicked",sys:"You are a CRO expert. Generate 10 high-converting calls-to-action. Vary style: buttons, inline text, video overlays, email sign-offs. Rate each out of 10 and explain why."},
+  {id:"funnel",emoji:"🚀",name:"Sales Funnel Builder",cat:"Marketing",color:"#ff6b35",desc:"Complete funnel copy A to Z",sys:"You are a sales funnel strategist. Create a complete funnel: AWARENESS (ad hook), INTEREST (landing headline+subhead), DESIRE (3 benefit bullets), ACTION (CTA+guarantee). Include a one-line value proposition."},
+  {id:"headline",emoji:"📰",name:"News Headline Generator",cat:"News",color:"#e879f9",desc:"Breaking news headlines for shows",sys:"You are a TV news editor. Generate 5 headlines: 1)BREAKING NEWS 2)Feature Story 3)Analysis 4)Social clip 5)Teaser. Each authoritative and newsworthy."},
+  {id:"anchor",emoji:"🎙️",name:"Anchor Intro Script",cat:"News",color:"#fb7185",desc:"On-camera scripts for all 4 hosts",sys:"You are a professional TV news writer. Write a polished on-camera anchor intro: 10-second cold open hook, 20-second story setup, 5-second transition. Total 35 seconds. Label each section."},
+  {id:"captions",emoji:"📱",name:"Social Caption Pack",cat:"Social",color:"#34d399",desc:"Captions for every platform",sys:"Write platform-optimized captions for: INSTAGRAM (150 chars + 5 emojis), TIKTOK (100 chars), TWITTER/X (under 240 chars), LINKEDIN (300 chars), FACEBOOK (200 chars). Label each clearly."},
+  {id:"hashtags",emoji:"#️⃣",name:"Hashtag Strategy Pro",cat:"Social",color:"#60a5fa",desc:"3-tier hashtags for max discovery",sys:"Create a 3-tier hashtag strategy: BROAD (10 tags, 1M+ posts), NICHE (10 tags, 100K-1M), MICRO (10 tags, under 100K). Show optimal mix ratio and explain why."},
+  {id:"promptool",emoji:"⚡",name:"Prompt Engineer Pro",cat:"AI Tools",color:"#a78bfa",desc:"Transform rough ideas into elite prompts",sys:"You are a world-class prompt engineer. Rewrite the given prompt using: clear role, specific format, constraints, 2 examples, chain-of-thought trigger. Show: ORIGINAL, ANALYSIS, OPTIMIZED, WHY IT WORKS."},
+];
+const AFFILIATES=[
+  {name:"Vidnoz",commission:"50%",cat:"AI Video Creation",color:"#ff6b35",url:"https://www.vidnoz.com",desc:"AI-powered video generation and avatars",badge:"TOP EARNER",icon:"🏆"},
+  {name:"InVideo",commission:"30%",cat:"AI Video Editor",color:"#7c3aed",url:"https://invideo.io",desc:"Templates plus AI editing for short-form video",badge:"POPULAR",icon:"⭐"},
+  {name:"MailerLite",commission:"$140/ref",cat:"Email Marketing",color:"#059669",url:"https://www.mailerlite.com",desc:"Email campaigns, automation, landing pages",badge:"HIGH VALUE",icon:"💎"},
+  {name:"CapCut",commission:"Varies",cat:"Video Editing",color:"#0ea5e9",url:"https://www.capcut.com",desc:"Pro-grade video editing for creators",badge:"CREATOR PICK",icon:"🎬"},
+  {name:"Udemy",commission:"15%/course",cat:"Online Education",color:"#a855f7",url:"https://www.udemy.com",desc:"Massive course library, evergreen commissions",badge:"EVERGREEN",icon:"📚"},
+];
+const HOSTS_DATA=[
+  {name:"Lisa",role:"Lead Anchor",specialty:"Tech and AI News",style:"Professional · Authoritative · Cutting-Edge",color:"#e879f9",emoji:"👩‍💼",episodes:47,shows:["AI Weekly Roundup","Tech Headlines Daily"],day:"Monday"},
+  {name:"Alisha",role:"Business Reporter",specialty:"Marketing and Business",style:"Dynamic · Insightful · Trend-Forward",color:"#fb923c",emoji:"👩‍💻",episodes:38,shows:["Business Insider AI","Marketing Minute"],day:"Tuesday"},
+  {name:"Susan",role:"Feature Correspondent",specialty:"Lifestyle and Human Interest",style:"Warm · Engaging · Relatable",color:"#34d399",emoji:"👩‍🎤",episodes:29,shows:["AI and You","The Human Side of Tech"],day:"Wednesday"},
+  {name:"Paul",role:"Breaking News Anchor",specialty:"Viral and Breaking Stories",style:"Bold · No-Nonsense · High-Energy",color:"#60a5fa",emoji:"👨‍💼",episodes:52,shows:["Breaking AI Now","The Daily Brief"],day:"Thursday"},
+];
+const EVENT_TYPES=[
+  {type:"Video",emoji:"🎬",color:"#f0a500"},{type:"Affiliate Post",emoji:"💰",color:"#10b981"},
+  {type:"Email Send",emoji:"📧",color:"#06b6d4"},{type:"Social Post",emoji:"📱",color:"#34d399"},
+  {type:"Live Stream",emoji:"🔴",color:"#ef4444"},{type:"Planning",emoji:"🗓️",color:"#8891a8"},
+];
+const store={
+  get:(k,d)=>{try{const v=localStorage.getItem("hub4_"+k);return v?JSON.parse(v):d;}catch{return d;}},
+  set:(k,v)=>{try{localStorage.setItem("hub4_"+k,JSON.stringify(v));}catch{}}
+};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const today=()=>new Date().toISOString().slice(0,10);
+const fmtDate=d=>{if(!d)return"";return new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});};
+const cpyText=(t,s)=>navigator.clipboard.writeText(t).then(()=>{s(true);setTimeout(()=>s(false),2000);});
+const C={
+  card:{background:"rgba(255,255,255,0.035)",border:"1px solid #1e2433",borderRadius:16,padding:22},
+  gold:{background:"linear-gradient(135deg,#f0a500,#c06000)",color:"#000",fontWeight:700,border:"none",borderRadius:10,padding:"10px 20px",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:8},
+  ghost:{background:"transparent",border:"1px solid #2a3040",color:"#9aa0b0",borderRadius:10,padding:"10px 20px",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:8},
+  danger:{background:"rgba(239,68,68,.12)",border:"1px solid rgba(239,68,68,.3)",color:"#ef4444",borderRadius:7,padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:600},
+  inp:{width:"100%",background:"#080b12",border:"1px solid #1e2433",borderRadius:9,padding:"10px 13px",color:"#e8eaf0",fontSize:13,fontFamily:"'DM Sans',sans-serif"},
+  sel:{width:"100%",background:"#080b12",border:"1px solid #1e2433",borderRadius:9,padding:"10px 13px",color:"#e8eaf0",fontSize:13,cursor:"pointer"},
+  tag:(col)=>({fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:5,background:col+"18",color:col,border:"1px solid "+col+"28"}),
+  lbl:{fontSize:10,color:"#8891a8",fontWeight:700,letterSpacing:1,marginBottom:6,display:"block"},
+};
+
+async function groqCall(sys,msg){
+  const key=store.get("groqkey","");
+  if(!key)return"Please add your Groq API key in Settings first. (gsk_...)";
+  try{
+    const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},
+      body:JSON.stringify({model:"llama-3.3-70b-versatile",messages:[{role:"system",content:sys},{role:"user",content:msg}],max_tokens:900,temperature:0.8})
+    });
+    const d=await r.json();
+    if(d.error)return"Groq Error: "+d.error.message;
+    return d.choices?.[0]?.message?.content||"No response.";
+  }catch(e){return"Connection error. Check your Groq key in Settings.";}
+}
+
+async function speakEL(text,voiceKey){
+  const key=store.get("elkey","");if(!key)return;
+  const vid=VOICE_IDS[voiceKey]?.id||VOICE_IDS.becky.id;
+  const clean=text.replace(/[^\w\s.,!?';\-]/g," ").trim().substring(0,400);
+  if(!clean)return;
+  try{
+    const r=await fetch("https://api.elevenlabs.io/v1/text-to-speech/"+vid+"/stream",{
+      method:"POST",headers:{"xi-api-key":key,"Content-Type":"application/json"},
+      body:JSON.stringify({text:clean,model_id:"eleven_monolingual_v1",voice_settings:{stability:0.5,similarity_boost:0.75}})
+    });
+    if(!r.ok)return;
+    const blob=await r.blob();const audio=new Audio();audio.src=URL.createObjectURL(blob);audio.play();
+  }catch(e){}
+}
+
+function Gate({onAuth}){
+  const [pw,setPw]=useState(""),[show,setShow]=useState(false),[err,setErr]=useState(false),[shake,setShake]=useState(false);
+  function go(){if(pw===PW){onAuth();}else{setErr(true);setShake(true);setTimeout(()=>setShake(false),450);setTimeout(()=>setErr(false),2000);}}
+  return(
+    <div style={{minHeight:"100vh",background:"#06070d",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{position:"fixed",inset:0,backgroundImage:"radial-gradient(ellipse at 50% 40%,rgba(240,165,0,.07) 0%,transparent 60%),linear-gradient(rgba(255,255,255,.016) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.016) 1px,transparent 1px)",backgroundSize:"100%,50px 50px,50px 50px",pointerEvents:"none"}}/>
+      <div style={{width:400,position:"relative",zIndex:2,animation:"fadeUp .5s ease"}}>
+        <div style={{textAlign:"center",marginBottom:28}}>
+          <div style={{width:70,height:70,borderRadius:20,background:"linear-gradient(135deg,#f0a500,#c06000)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:28,animation:"glow 3s infinite"}}>⚡</div>
+          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:28,fontWeight:900,color:"#fff",letterSpacing:-1}}>HUB ENGINE</div>
+          <div style={{fontSize:10,color:"#f0a500",fontWeight:700,letterSpacing:5,marginTop:4}}>V 4 . 0</div>
+        </div>
+        <div style={{background:"rgba(255,255,255,.04)",border:"1px solid "+(err?"#ef4444":"#1e2433"),borderRadius:20,padding:30,transition:"border-color .25s",animation:shake?"shake .4s":"none"}}>
+          <label style={C.lbl}>ACCESS CODE</label>
+          <div style={{position:"relative"}}>
+            <input type={show?"text":"password"} value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="Enter your access code..." style={{...C.inp,fontSize:15,padding:"13px 46px 13px 15px",border:"1px solid "+(err?"#ef4444":"#1e2433")}} autoFocus/>
+            <button onClick={()=>setShow(!show)} style={{position:"absolute",right:13,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#8891a8",cursor:"pointer",fontSize:17}}>{show?"🙈":"👁️"}</button>
+          </div>
+          {err&&<div style={{color:"#ef4444",fontSize:12,marginTop:7}}>Invalid code. Try again.</div>}
+          <button onClick={go} style={{...C.gold,width:"100%",justifyContent:"center",marginTop:18,padding:13,fontSize:14,borderRadius:11}}>🔒 ENTER HUB ENGINE</button>
+          <div style={{textAlign:"center",marginTop:12,fontSize:11,color:"#3a4156"}}>Three Minds · One Mission · Zero Cost</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({setTab,videos,scripts,events}){
+  const upcoming=[...events].filter(e=>e.date>=today()).sort((a,b)=>a.date.localeCompare(b.date));
+  const stats=[
+    {label:"AI Tools",value:12,color:"#f0a500",icon:"🔧",tab:"tools"},
+    {label:"Videos",value:videos.length,color:"#10b981",icon:"🎬",tab:"library"},
+    {label:"Scripts",value:scripts.length,color:"#a78bfa",icon:"📄",tab:"archive"},
+    {label:"Events",value:events.length,color:"#60a5fa",icon:"📅",tab:"calendar"},
+  ];
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{background:"linear-gradient(135deg,rgba(240,165,0,.1),rgba(0,180,255,.07))",border:"1px solid rgba(240,165,0,.2)",borderRadius:20,padding:"28px 32px",marginBottom:22,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",right:20,top:"50%",transform:"translateY(-50%)",fontSize:100,opacity:.04,userSelect:"none"}}>⚡</div>
+        <div style={{fontSize:10,color:"#f0a500",fontWeight:700,letterSpacing:4,marginBottom:7}}>WELCOME BACK, JOHN</div>
+        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:26,fontWeight:900,color:"#fff",letterSpacing:-1,lineHeight:1.2}}>Hub Engine V4<br/><span style={{color:"#f0a500"}}>Command Center</span></div>
+        <div style={{marginTop:8,color:"#8891a8",fontSize:12}}>Three Minds · One Mission · Zero Cost · Orange, TX</div>
+        <div style={{display:"flex",gap:8,marginTop:18,flexWrap:"wrap"}}>
+          <button onClick={()=>setTab("tools")} style={C.gold}>⚡ AI Tools</button>
+          <button onClick={()=>setTab("learn")} style={{...C.ghost,color:"#e8eaf0"}}>📚 Learning</button>
+          <button onClick={()=>setTab("claude")} style={{...C.ghost,color:"#60a5fa",borderColor:"#60a5fa20"}}>💬 Claude</button>
+          <button onClick={()=>setTab("becky")} style={{...C.ghost,color:"#e879f9",borderColor:"#e879f920"}}>🎨 Becky</button>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:22}}>
+        {stats.map(s=>(
+          <button key={s.label} onClick={()=>setTab(s.tab)} style={{...C.card,display:"flex",alignItems:"center",gap:12,cursor:"pointer",textAlign:"left",transition:"border-color .2s"}} onMouseEnter={e=>e.currentTarget.style.borderColor=s.color} onMouseLeave={e=>e.currentTarget.style.borderColor="#1e2433"}>
+            <div style={{width:44,height:44,borderRadius:12,background:s.color+"1e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>{s.icon}</div>
+            <div><div style={{fontSize:26,fontWeight:800,color:"#fff",lineHeight:1}}>{s.value}</div><div style={{fontSize:11,color:"#8891a8",marginTop:2}}>{s.label}</div></div>
+          </button>
+        ))}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+        <div>
+          <div style={{fontSize:10,color:"#8891a8",fontWeight:700,letterSpacing:2,marginBottom:11}}>RECENT VIDEOS</div>
+          {videos.length?[...videos].reverse().slice(0,4).map(v=>{
+            const sc={Scripted:"#6b7485",Recorded:"#f0a500",Edited:"#e879f9",Published:"#10b981"}[v.status]||"#6b7485";
+            return(<div key={v.id} style={{...C.card,marginBottom:9,padding:14,borderLeft:"3px solid "+sc}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:600,color:"#e8eaf0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.title}</div><div style={{fontSize:11,color:"#6b7485",marginTop:1}}>{v.host} · {v.platform}</div></div><span style={C.tag(sc)}>{v.status}</span></div></div>);
+          }):<div style={{...C.card,textAlign:"center",padding:24,color:"#4a5166",fontSize:13}}>No videos yet</div>}
+        </div>
+        <div>
+          <div style={{fontSize:10,color:"#8891a8",fontWeight:700,letterSpacing:2,marginBottom:11}}>UPCOMING</div>
+          {upcoming.length?upcoming.slice(0,4).map(ev=>(
+            <div key={ev.id} style={{...C.card,marginBottom:9,padding:14,borderLeft:"3px solid "+(ev.color||"#f0a500")}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:18,flexShrink:0}}>{ev.emoji||"📅"}</span>
+                <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:600,color:"#e8eaf0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.title}</div><div style={{fontSize:11,color:"#6b7485",marginTop:1}}>{fmtDate(ev.date)}</div></div>
+              </div>
+            </div>
+          )):<div style={{...C.card,textAlign:"center",padding:24,color:"#4a5166",fontSize:13}}>No upcoming events</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AITools({onSave}){
+  const [sel,setSel]=useState(null),[inp,setInp]=useState(""),[out,setOut]=useState(""),[loading,setLoading]=useState(false),[copied,setCopied]=useState(false),[saved,setSaved]=useState(false),[cat,setCat]=useState("All");
+  const cats=["All",...[...new Set(TOOLS.map(t=>t.cat))]];
+  const filtered=cat==="All"?TOOLS:TOOLS.filter(t=>t.cat===cat);
+  async function run(){if(!inp.trim()||!sel)return;setLoading(true);setOut("");const r=await groqCall(sel.sys,inp);setOut(r);setLoading(false);}
+  function saveIt(){if(!out||!sel)return;onSave({id:uid(),tool:sel.name,toolEmoji:sel.emoji,toolColor:sel.color,input:inp,output:out,date:today(),title:inp.slice(0,60)+(inp.length>60?"...":"")});setSaved(true);setTimeout(()=>setSaved(false),2500);}
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
+        <div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>AI Tools Hub</div><div style={{fontSize:12,color:"#8891a8",marginTop:2}}>12 Groq-powered tools · Add your Groq key in Settings.</div></div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{cats.map(c=><button key={c} onClick={()=>setCat(c)} style={{fontSize:11,fontWeight:700,padding:"5px 11px",borderRadius:7,border:"1px solid "+(cat===c?"#f0a500":"#1e2433"),background:cat===c?"rgba(240,165,0,.11)":"transparent",color:cat===c?"#f0a500":"#8891a8",cursor:"pointer"}}>{c}</button>)}</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:18}}>
+        {filtered.map(t=>(
+          <button key={t.id} onClick={()=>{setSel(t);setInp("");setOut("");setSaved(false);}} style={{background:sel?.id===t.id?t.color+"13":"rgba(255,255,255,.03)",border:"1px solid "+(sel?.id===t.id?t.color:"#1e2433"),borderRadius:13,padding:14,textAlign:"left",cursor:"pointer",transition:"all .16s"}} onMouseEnter={e=>{if(sel?.id!==t.id){e.currentTarget.style.borderColor=t.color+"44";e.currentTarget.style.background="rgba(255,255,255,.045)";}}} onMouseLeave={e=>{if(sel?.id!==t.id){e.currentTarget.style.borderColor="#1e2433";e.currentTarget.style.background="rgba(255,255,255,.03)";}}}> 
+            <div style={{display:"flex",gap:9,alignItems:"flex-start"}}><span style={{fontSize:20,lineHeight:1}}>{t.emoji}</span><div><div style={{fontSize:12,fontWeight:600,color:"#e8eaf0",lineHeight:1.3}}>{t.name}</div><div style={{fontSize:10,color:"#5a6275",marginTop:2}}>{t.desc}</div></div></div>
+            <div style={{marginTop:9,...C.tag(t.color),display:"inline-block"}}>{t.cat}</div>
+          </button>
+        ))}
+      </div>
+      {sel?(
+        <div style={{...C.card,border:"1px solid "+sel.color+"40"}}>
+          <div style={{display:"flex",alignItems:"center",gap:11,marginBottom:16,paddingBottom:14,borderBottom:"1px solid #141820"}}>
+            <div style={{width:40,height:40,borderRadius:11,background:sel.color+"1e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{sel.emoji}</div>
+            <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,color:"#fff"}}>{sel.name}</div><div style={{fontSize:11,color:"#8891a8"}}>{sel.desc}</div></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+            <div>
+              <label style={C.lbl}>YOUR INPUT</label>
+              <textarea value={inp} onChange={e=>setInp(e.target.value)} placeholder="Describe what you need..." style={{...C.inp,height:160,resize:"vertical",border:"1px solid #1e2433"}}/>
+              <button onClick={run} disabled={loading||!inp.trim()} style={{...C.gold,marginTop:9,width:"100%",justifyContent:"center",opacity:loading||!inp.trim()?0.5:1}}>
+                {loading?<><span style={{display:"inline-block",animation:"spin 1s linear infinite"}}>⟳</span> Generating...</>:<>⚡ Generate</>}
+              </button>
+            </div>
+            <div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                <label style={{...C.lbl,marginBottom:0}}>AI OUTPUT</label>
+                {out&&<div style={{display:"flex",gap:6}}>
+                  <button onClick={saveIt} style={{background:saved?"rgba(16,185,129,.14)":"rgba(167,139,250,.1)",border:"1px solid "+(saved?"#10b981":"#a78bfa33"),borderRadius:6,padding:"3px 9px",color:saved?"#10b981":"#a78bfa",cursor:"pointer",fontSize:10,fontWeight:700}}>{saved?"Saved!":"📄 Archive"}</button>
+                  <button onClick={()=>cpyText(out,setCopied)} style={{background:"none",border:"1px solid #1e2433",borderRadius:6,padding:"3px 9px",color:"#8891a8",cursor:"pointer",fontSize:10}}>{copied?"✅":"📋 Copy"}</button>
+                </div>}
+              </div>
+              <div style={{background:"#060810",border:"1px solid #12161c",borderRadius:9,padding:12,minHeight:160,maxHeight:300,overflowY:"auto"}}>
+                {loading?<div style={{color:"#8891a8",fontSize:12,display:"flex",alignItems:"center",gap:9}}><span style={{display:"inline-block",animation:"spin 1s linear infinite",color:sel.color}}>⟳</span> Generating...</div>
+                :out?<div style={{fontSize:12,color:"#d1d5e0",lineHeight:1.75,whiteSpace:"pre-wrap"}}>{out}</div>
+                :<div style={{fontSize:12,color:"#3a4156",fontStyle:"italic"}}>Output will appear here...</div>}
+              </div>
+            </div>
+          </div>
+        </div>
+      ):(
+        <div style={{...C.card,textAlign:"center",padding:42,border:"1px dashed #1a1f2e"}}>
+          <div style={{fontSize:36,marginBottom:10}}>⚡</div>
+          <div style={{fontSize:14,fontWeight:600,color:"#6b7485"}}>Select a tool above to begin</div>
+          <div style={{fontSize:12,color:"#4a5166",marginTop:6}}>Remember to add your Groq key in Settings first</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VideoLibrary({videos,setVideos}){
+  const [showForm,setShowForm]=useState(false),[edit,setEdit]=useState(null),[fStatus,setFStatus]=useState("All"),[fHost,setFHost]=useState("All"),[search,setSearch]=useState("");
+  const blank={title:"",host:"Lisa",platform:"YouTube",status:"Scripted",date:today(),views:"",notes:"",link:""};
+  const [form,setForm]=useState(blank);
+  const sColor={Scripted:"#6b7485",Recorded:"#f0a500",Edited:"#e879f9",Published:"#10b981"};
+  function save(){if(!form.title.trim())return;if(edit){setVideos(p=>p.map(v=>v.id===edit?{...form,id:edit}:v));}else{setVideos(p=>[...p,{...form,id:uid()}]);}setShowForm(false);}
+  function del(id){if(confirm("Delete this video?"))setVideos(p=>p.filter(v=>v.id!==id));}
+  const filtered=videos.filter(v=>{if(fStatus!=="All"&&v.status!==fStatus)return false;if(fHost!=="All"&&v.host!==fHost)return false;if(search&&!v.title.toLowerCase().includes(search.toLowerCase()))return false;return true;}).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
+        <div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Video Library</div><div style={{fontSize:12,color:"#8891a8",marginTop:2}}>{videos.length} tracked · {videos.filter(v=>v.status==="Published").length} published</div></div>
+        <button onClick={()=>{setForm(blank);setEdit(null);setShowForm(true);}} style={C.gold}>+ Add Video</button>
+      </div>
+      <div style={{display:"flex",gap:9,marginBottom:14,flexWrap:"wrap"}}>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{...C.inp,width:180,padding:"8px 13px"}}/>
+        <select value={fStatus} onChange={e=>setFStatus(e.target.value)} style={{...C.sel,width:140,padding:"8px 13px"}}><option value="All">All Statuses</option>{STATUSES.map(s=><option key={s}>{s}</option>)}</select>
+        <select value={fHost} onChange={e=>setFHost(e.target.value)} style={{...C.sel,width:130,padding:"8px 13px"}}><option value="All">All Hosts</option>{HOSTS_LIST.map(h=><option key={h}>{h}</option>)}</select>
+      </div>
+      {filtered.length?(
+        <div style={{...C.card,padding:0,overflow:"hidden"}}>
+          <table style={{width:"100%",borderCollapse:"collapse"}}>
+            <thead><tr style={{borderBottom:"1px solid #1a1f2e"}}>{["Title","Host","Platform","Date","Status",""].map(h=><th key={h} style={{padding:"11px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:"#5a6275",letterSpacing:1}}>{h}</th>)}</tr></thead>
+            <tbody>{filtered.map(v=>{const sc=sColor[v.status]||"#6b7485";return(
+              <tr key={v.id} style={{borderBottom:"1px solid #0f1219",transition:"background .12s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.022)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                <td style={{padding:"11px 14px"}}><div style={{fontSize:13,fontWeight:600,color:"#e8eaf0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:220}}>{v.title}</div></td>
+                <td style={{padding:"11px 14px",fontSize:12,color:"#9aa0b8"}}>{v.host}</td>
+                <td style={{padding:"11px 14px",fontSize:12,color:"#9aa0b8"}}>{v.platform}</td>
+                <td style={{padding:"11px 14px",fontSize:12,color:"#9aa0b8"}}>{fmtDate(v.date)}</td>
+                <td style={{padding:"11px 14px"}}><span style={C.tag(sc)}>{v.status}</span></td>
+                <td style={{padding:"11px 14px"}}><div style={{display:"flex",gap:6,justifyContent:"flex-end"}}>
+                  {v.link&&<a href={v.link} target="_blank" rel="noopener noreferrer" style={{background:"rgba(96,165,250,.1)",border:"1px solid rgba(96,165,250,.3)",color:"#60a5fa",borderRadius:6,padding:"4px 9px",fontSize:11,fontWeight:700,textDecoration:"none"}}>🔗</a>}
+                  <button onClick={()=>{setForm({...v});setEdit(v.id);setShowForm(true);}} style={{background:"rgba(167,139,250,.1)",border:"1px solid rgba(167,139,250,.28)",color:"#a78bfa",borderRadius:6,padding:"4px 9px",fontSize:11,cursor:"pointer"}}>✏️</button>
+                  <button onClick={()=>del(v.id)} style={C.danger}>🗑️</button>
+                </div></td>
+              </tr>
+            );})}
+            </tbody>
+          </table>
+        </div>
+      ):<div style={{...C.card,textAlign:"center",padding:44,border:"1px dashed #1a1f2e"}}><div style={{fontSize:36,marginBottom:10}}>🎬</div><div style={{fontSize:14,fontWeight:600,color:"#6b7485"}}>No videos yet — click + Add Video</div></div>}
+      {showForm&&(
+        <div className="mbg" onClick={e=>e.target===e.currentTarget&&setShowForm(false)}>
+          <div className="modal">
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:"#fff",marginBottom:18}}>{edit?"Edit Video":"Add New Video"}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              <div style={{gridColumn:"1/-1"}}><label style={C.lbl}>TITLE *</label><input value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))} placeholder="Video title..." style={{...C.inp,border:"1px solid #1e2433"}}/></div>
+              <div><label style={C.lbl}>HOST</label><select value={form.host} onChange={e=>setForm(p=>({...p,host:e.target.value}))} style={{...C.sel,border:"1px solid #1e2433"}}>{HOSTS_LIST.map(h=><option key={h}>{h}</option>)}</select></div>
+              <div><label style={C.lbl}>PLATFORM</label><select value={form.platform} onChange={e=>setForm(p=>({...p,platform:e.target.value}))} style={{...C.sel,border:"1px solid #1e2433"}}>{PLATFORMS.map(p=><option key={p}>{p}</option>)}</select></div>
+              <div><label style={C.lbl}>STATUS</label><select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value}))} style={{...C.sel,border:"1px solid #1e2433"}}>{STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
+              <div><label style={C.lbl}>DATE</label><input type="date" value={form.date} onChange={e=>setForm(p=>({...p,date:e.target.value}))} style={{...C.inp,border:"1px solid #1e2433",colorScheme:"dark"}}/></div>
+              <div style={{gridColumn:"1/-1"}}><label style={C.lbl}>LINK (optional)</label><input value={form.link||""} onChange={e=>setForm(p=>({...p,link:e.target.value}))} placeholder="https://..." style={{...C.inp,border:"1px solid #1e2433"}}/></div>
+              <div style={{gridColumn:"1/-1"}}><label style={C.lbl}>NOTES</label><textarea value={form.notes||""} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="Notes..." style={{...C.inp,height:68,resize:"vertical",border:"1px solid #1e2433"}}/></div>
+            </div>
+            <div style={{display:"flex",gap:9,marginTop:18}}><button onClick={save} style={{...C.gold,flex:1,justifyContent:"center"}}>Save</button><button onClick={()=>setShowForm(false)} style={{...C.ghost,flex:1,justifyContent:"center"}}>Cancel</button></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ScriptArchive({scripts,setScripts}){
+  const [view,setView]=useState(null),[search,setSearch]=useState(""),[copied,setCopied]=useState(false);
+  const filtered=[...scripts].filter(s=>!search||(s.title||"").toLowerCase().includes(search.toLowerCase())).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  function del(id){if(confirm("Delete?"))setScripts(p=>p.filter(s=>s.id!==id));if(view?.id===id)setView(null);}
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{marginBottom:18}}><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Script Archive</div><div style={{fontSize:12,color:"#8891a8",marginTop:2}}>{scripts.length} saved scripts.</div></div>
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search scripts..." style={{...C.inp,width:260,padding:"8px 13px",marginBottom:14}}/>
+      <div style={{display:"grid",gridTemplateColumns:view?"280px 1fr":"repeat(3,1fr)",gap:13,alignItems:"start"}}>
+        <div style={view?{display:"flex",flexDirection:"column",gap:10}:{display:"contents"}}>
+          {filtered.length?filtered.map(s=>(
+            <div key={s.id} onClick={()=>setView(s)} style={{...C.card,cursor:"pointer",border:"1px solid "+(view?.id===s.id?(s.toolColor||"#a78bfa"):"#1e2433"),borderLeft:"3px solid "+(s.toolColor||"#a78bfa"),padding:16,transition:"all .18s"}}>
+              <div style={{display:"flex",alignItems:"flex-start",gap:9,marginBottom:8}}><span style={{fontSize:18,flexShrink:0}}>{s.toolEmoji||"📄"}</span><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:600,color:"#e8eaf0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title||"Untitled"}</div><div style={{fontSize:10,color:"#6b7485",marginTop:1}}>{s.tool} · {fmtDate(s.date)}</div></div></div>
+              <div style={{fontSize:11,color:"#5a6275",lineHeight:1.5,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{s.output?.slice(0,110)}</div>
+              <div style={{display:"flex",justifyContent:"flex-end",marginTop:9}}><button onClick={e=>{e.stopPropagation();del(s.id);}} style={C.danger}>🗑️</button></div>
+            </div>
+          )):(
+            <div style={{...C.card,textAlign:"center",padding:50,border:"1px dashed #1a1f2e",...(view?{}:{gridColumn:"1/-1"})}}><div style={{fontSize:36,marginBottom:10}}>📄</div><div style={{fontSize:14,fontWeight:600,color:"#6b7485"}}>No scripts yet</div><div style={{fontSize:12,color:"#3a4156",marginTop:5}}>Use AI Tools and click Archive to save</div></div>
+          )}
+        </div>
+        {view&&(
+          <div style={{...C.card,border:"1px solid "+(view.toolColor||"#a78bfa")+"3a",position:"sticky",top:20,maxHeight:"75vh",overflowY:"auto"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,paddingBottom:12,borderBottom:"1px solid #141820"}}>
+              <div style={{display:"flex",gap:9,alignItems:"center"}}><span style={{fontSize:22}}>{view.toolEmoji}</span><div><div style={{fontSize:13,fontWeight:700,color:"#fff"}}>{view.title}</div><div style={{fontSize:10,color:"#6b7485"}}>{view.tool} · {fmtDate(view.date)}</div></div></div>
+              <div style={{display:"flex",gap:7,alignItems:"center"}}>
+                <button onClick={()=>cpyText(view.output,setCopied)} style={{background:"none",border:"1px solid #1e2433",borderRadius:6,padding:"3px 9px",color:"#8891a8",cursor:"pointer",fontSize:10}}>{copied?"✅":"📋"}</button>
+                <button onClick={()=>setView(null)} style={{background:"none",border:"none",color:"#4a5166",cursor:"pointer",fontSize:22,lineHeight:1}}>×</button>
+              </div>
+            </div>
+            {view.input&&<div style={{background:"#060810",borderRadius:8,padding:11,fontSize:11,color:"#8891a8",lineHeight:1.6,marginBottom:12,whiteSpace:"pre-wrap"}}>{view.input}</div>}
+            <div style={{fontSize:12,color:"#d1d5e0",lineHeight:1.75,whiteSpace:"pre-wrap"}}>{view.output}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ContentCalendar({events,setEvents}){
+  const [mode,setMode]=useState("month"),[cur,setCur]=useState(new Date()),[showForm,setShowForm]=useState(false),[editEvt,setEditEvt]=useState(null);
+  const blank={title:"",host:"Lisa",platform:"YouTube",type:"Video",date:today(),notes:"",emoji:"🎬",color:"#f0a500"};
+  const [form,setForm]=useState(blank);
+  function openNew(date){setForm({...blank,date:date||today()});setEditEvt(null);setShowForm(true);}
+  function openEdit(ev){setForm({...ev});setEditEvt(ev.id);setShowForm(true);}
+  function save(){if(!form.title.trim())return;const et=EVENT_TYPES.find(x=>x.type===form.type)||EVENT_TYPES[0];const ev={...form,emoji:et.emoji,color:et.color};if(editEvt){setEvents(p=>p.map(e=>e.id===editEvt?{...ev,id:editEvt}:e));}else{setEvents(p=>[...p,{...ev,id:uid()}]);}setShowForm(false);}
+  function del(id){if(confirm("Delete?"))setEvents(p=>p.filter(e=>e.id!==id));}
+  const yr=cur.getFullYear(),mo=cur.getMonth();
+  const firstDay=new Date(yr,mo,1).getDay(),daysInMo=new Date(yr,mo+1,0).getDate();
+  const moName=cur.toLocaleString("default",{month:"long"});
+  function evOn(d){const ds=yr+"-"+String(mo+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");return events.filter(e=>e.date===ds);}
+  function getWeek(){const d=new Date(cur);d.setDate(d.getDate()-d.getDay());return Array.from({length:7},(_,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return x;});}
+  const wk=getWeek();
+  const upcoming=[...events].filter(e=>e.date>=today()).sort((a,b)=>a.date.localeCompare(b.date));
+  const prev=()=>{const d=new Date(cur);mode==="month"?d.setMonth(d.getMonth()-1):d.setDate(d.getDate()-7);setCur(d);};
+  const next=()=>{const d=new Date(cur);mode==="month"?d.setMonth(d.getMonth()+1):d.setDate(d.getDate()+7);setCur(d);};
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
+        <div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Content Calendar</div><div style={{fontSize:12,color:"#8891a8",marginTop:2}}>{events.length} events · {upcoming.length} upcoming</div></div>
+        <div style={{display:"flex",gap:8}}>
+          <div style={{display:"flex",gap:4}}>{["month","week","list"].map(m=><button key={m} onClick={()=>setMode(m)} style={{fontSize:11,fontWeight:700,padding:"7px 12px",borderRadius:8,border:"1px solid "+(mode===m?"#f0a500":"#1e2433"),background:mode===m?"rgba(240,165,0,.11)":"transparent",color:mode===m?"#f0a500":"#8891a8",cursor:"pointer",textTransform:"capitalize"}}>{m}</button>)}</div>
+          <button onClick={()=>openNew()} style={C.gold}>+ Add Event</button>
+        </div>
+      </div>
+      {mode!=="list"&&<div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}><button onClick={prev} style={{...C.ghost,padding:"7px 14px"}}>prev</button><div style={{flex:1,textAlign:"center",fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:"#fff"}}>{mode==="month"?moName+" "+yr:"Week of "+wk[0].toLocaleDateString("en-US",{month:"short",day:"numeric"})}</div><button onClick={()=>setCur(new Date())} style={{...C.ghost,padding:"7px 12px",fontSize:11}}>Today</button><button onClick={next} style={{...C.ghost,padding:"7px 14px"}}>next</button></div>}
+      {mode==="month"&&(
+        <div style={{...C.card,padding:0,overflow:"hidden"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",borderBottom:"1px solid #1a1f2e"}}>{["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=><div key={d} style={{padding:"9px 0",textAlign:"center",fontSize:10,fontWeight:700,color:"#5a6275",letterSpacing:1}}>{d}</div>)}</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
+            {Array.from({length:firstDay},(_,i)=><div key={"e"+i} style={{minHeight:76,borderRight:"1px solid #0e1117",borderBottom:"1px solid #0e1117",background:"#07080e"}}/>)}
+            {Array.from({length:daysInMo},(_,i)=>{const d=i+1,ds=yr+"-"+String(mo+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"),isToday=ds===today(),dayEvts=evOn(d);return(
+              <div key={d} onClick={()=>openNew(ds)} style={{minHeight:76,borderRight:"1px solid #0e1117",borderBottom:"1px solid #0e1117",padding:5,cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.022)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                <div style={{fontSize:11,fontWeight:isToday?800:500,color:isToday?"#000":"#8891a8",background:isToday?"#f0a500":"transparent",width:20,height:20,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:3}}>{d}</div>
+                {dayEvts.slice(0,3).map(ev=><div key={ev.id} onClick={e=>{e.stopPropagation();openEdit(ev);}} style={{fontSize:9,fontWeight:700,padding:"2px 5px",borderRadius:4,background:ev.color+"1e",color:ev.color,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.emoji} {ev.title}</div>)}
+                {dayEvts.length>3&&<div style={{fontSize:9,color:"#4a5166"}}>+{dayEvts.length-3}</div>}
+              </div>
+            );})}
+          </div>
+        </div>
+      )}
+      {mode==="week"&&(
+        <div style={{...C.card,padding:0,overflow:"hidden"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",borderBottom:"1px solid #1a1f2e"}}>{wk.map(d=>{const ds=d.toISOString().slice(0,10),isT=ds===today();return(<div key={ds} style={{padding:"9px 7px",textAlign:"center",background:isT?"rgba(240,165,0,.07)":"transparent",borderRight:"1px solid #0e1117"}}><div style={{fontSize:10,fontWeight:700,color:"#5a6275",letterSpacing:1}}>{d.toLocaleString("default",{weekday:"short"}).toUpperCase()}</div><div style={{fontSize:18,fontWeight:900,color:isT?"#f0a500":"#e8eaf0",marginTop:2}}>{d.getDate()}</div></div>);})}</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",minHeight:160}}>{wk.map(d=>{const ds=d.toISOString().slice(0,10),dayEvts=events.filter(e=>e.date===ds);return(<div key={ds} onClick={()=>openNew(ds)} style={{padding:7,borderRight:"1px solid #0e1117",cursor:"pointer",minHeight:140}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.022)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>{dayEvts.map(ev=><div key={ev.id} onClick={e=>{e.stopPropagation();openEdit(ev);}} style={{fontSize:10,fontWeight:600,padding:"5px 7px",borderRadius:6,background:ev.color+"16",color:ev.color,marginBottom:5,border:"1px solid "+ev.color+"28"}}>{ev.emoji} {ev.title}</div>)}</div>);})}</div>
+        </div>
+      )}
+      {mode==="list"&&(
+        <div>
+          {upcoming.length?upcoming.map(ev=>(
+            <div key={ev.id} style={{...C.card,display:"flex",alignItems:"center",gap:12,marginBottom:9,padding:16,borderLeft:"3px solid "+(ev.color||"#f0a500")}}>
+              <div style={{width:38,height:38,borderRadius:10,background:(ev.color||"#f0a500")+"16",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>{ev.emoji}</div>
+              <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:"#e8eaf0"}}>{ev.title}</div><div style={{fontSize:11,color:"#6b7485",marginTop:1}}>{fmtDate(ev.date)} · {ev.host} · {ev.type}</div></div>
+              <div style={{display:"flex",gap:7}}>
+                <button onClick={()=>openEdit(ev)} style={{background:"rgba(167,139,250,.1)",border:"1px solid rgba(167,139,250,.28)",color:"#a78bfa",borderRadius:7,padding:"5px 11px",fontSize:11,cursor:"pointer"}}>Edit</button>
+                <button onClick={()=>del(ev.id)} style={C.danger}>Del</button>
+              </div>
+            </div>
+          )):<div style={{...C.card,textAlign:"center",padding:44,border:"1px dashed #1a1f2e"}}><div style={{fontSize:36,marginBottom:10}}>📅</div><div style={{fontSize:14,fontWeight:600,color:"#6b7485"}}>No events yet</div></div>}
+        </div>
+      )}
+      {showForm&&(
+        <div className="mbg" onClick={e=>e.target===e.currentTarget&&setShowForm(false)}>
+          <div className="modal">
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:"#fff",marginBottom:18}}>{editEvt?"Edit Event":"Add Event"}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              <div style={{gridColumn:"1/-1"}}><label style={C.lbl}>TITLE *</label><input value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))} placeholder="Event title..." style={{...C.inp,border:"1px solid #1e2433"}}/></div>
+              <div><label style={C.lbl}>TYPE</label><select value={form.type} onChange={e=>setForm(p=>({...p,type:e.target.value}))} style={{...C.sel,border:"1px solid #1e2433"}}>{EVENT_TYPES.map(t=><option key={t.type}>{t.type}</option>)}</select></div>
+              <div><label style={C.lbl}>DATE</label><input type="date" value={form.date} onChange={e=>setForm(p=>({...p,date:e.target.value}))} style={{...C.inp,border:"1px solid #1e2433",colorScheme:"dark"}}/></div>
+              <div><label style={C.lbl}>HOST</label><select value={form.host} onChange={e=>setForm(p=>({...p,host:e.target.value}))} style={{...C.sel,border:"1px solid #1e2433"}}>{["All",...HOSTS_LIST].map(h=><option key={h}>{h}</option>)}</select></div>
+              <div><label style={C.lbl}>PLATFORM</label><select value={form.platform} onChange={e=>setForm(p=>({...p,platform:e.target.value}))} style={{...C.sel,border:"1px solid #1e2433"}}>{PLATFORMS.map(p=><option key={p}>{p}</option>)}</select></div>
+            </div>
+            <div style={{display:"flex",gap:7,flexWrap:"wrap",marginTop:10}}>{EVENT_TYPES.map(t=><div key={t.type} onClick={()=>setForm(p=>({...p,type:t.type}))} style={{fontSize:10,fontWeight:700,padding:"5px 10px",borderRadius:7,background:form.type===t.type?t.color+"1e":"rgba(255,255,255,.03)",border:"1px solid "+(form.type===t.type?t.color:"#1e2433"),color:form.type===t.type?t.color:"#8891a8",cursor:"pointer"}}>{t.emoji} {t.type}</div>)}</div>
+            <div style={{display:"flex",gap:9,marginTop:18}}><button onClick={save} style={{...C.gold,flex:1,justifyContent:"center"}}>Save</button>{editEvt&&<button onClick={()=>{del(editEvt);setShowForm(false);}} style={{...C.danger,padding:"10px 14px"}}>Del</button>}<button onClick={()=>setShowForm(false)} style={{...C.ghost,flex:1,justifyContent:"center"}}>Cancel</button></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Studio(){
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{marginBottom:20}}><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>News Studio</div><div style={{fontSize:12,color:"#8891a8",marginTop:2}}>{HOSTS_DATA.reduce((a,h)=>a+h.episodes,0)} episodes · 4 AI anchors.</div></div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
+        {HOSTS_DATA.map(h=>(
+          <div key={h.name} style={{...C.card,border:"1px solid #1e2433",transition:"border-color .2s"}} onMouseEnter={e=>e.currentTarget.style.borderColor=h.color} onMouseLeave={e=>e.currentTarget.style.borderColor="#1e2433"}>
+            <div style={{display:"flex",alignItems:"center",gap:14}}>
+              <div style={{width:54,height:54,borderRadius:15,background:h.color+"16",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,border:"2px solid "+h.color+"2e",flexShrink:0}}>{h.emoji}</div>
+              <div style={{flex:1}}><div style={{fontSize:16,fontWeight:800,color:"#fff"}}>{h.name}</div><div style={{fontSize:11,color:h.color,fontWeight:700,marginTop:1}}>{h.role}</div><div style={{fontSize:11,color:"#8891a8",marginTop:1}}>{h.specialty}</div></div>
+              <div style={{textAlign:"right"}}><div style={{fontSize:22,fontWeight:900,color:h.color}}>{h.episodes}</div><div style={{fontSize:9,color:"#4a5166"}}>EPS</div></div>
+            </div>
+            <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid #141820"}}>
+              <div style={{fontSize:10,color:"#4a5166",fontWeight:700,marginBottom:5}}>{h.day.toUpperCase()} · {h.style}</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{h.shows.map(s=><span key={s} style={C.tag(h.color)}>{s}</span>)}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={C.card}>
+        <div style={{fontWeight:700,color:"#fff",fontSize:14,marginBottom:14}}>Weekly Schedule — One Anchor Per Day</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8}}>
+          {HOSTS_DATA.map(h=>(
+            <div key={h.name} style={{background:"#080b12",borderRadius:10,padding:11}}>
+              <div style={{fontSize:9,fontWeight:700,color:"#8891a8",letterSpacing:2,marginBottom:8}}>{h.day.toUpperCase()}</div>
+              <div style={{display:"flex",alignItems:"center",gap:6,padding:"7px 8px",background:h.color+"0e",borderRadius:7,borderLeft:"3px solid "+h.color}}><span style={{fontSize:15}}>{h.emoji}</span><div><div style={{fontSize:11,color:"#b8c0d0",fontWeight:700}}>{h.name}</div><div style={{fontSize:9,color:"#4a5166",marginTop:1}}>{h.shows[0]}</div></div></div>
+            </div>
+          ))}
+          <div style={{background:"#080b12",borderRadius:10,padding:11}}><div style={{fontSize:9,fontWeight:700,color:"#8891a8",letterSpacing:2,marginBottom:8}}>FRIDAY</div><div style={{display:"flex",alignItems:"center",gap:6,padding:"7px 8px",background:"rgba(240,165,0,.08)",borderRadius:7,borderLeft:"3px solid #f0a500"}}><span style={{fontSize:15}}>⭐</span><div><div style={{fontSize:11,color:"#f0a500",fontWeight:700}}>Best Of Week</div></div></div></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Affiliates(){
+  const [calc,setCalc]=useState({vidnoz:0,invideo:0,mailerlite:0});
+  const est=Math.round(calc.vidnoz*.5+calc.invideo*.3+calc.mailerlite*140);
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{marginBottom:20}}><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Affiliate Command</div><div style={{fontSize:12,color:"#8891a8",marginTop:2}}>5 programs · Direct links · Live earnings calculator.</div></div>
+      <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:22}}>
+        {AFFILIATES.map(a=>(
+          <div key={a.name} style={{...C.card,display:"flex",alignItems:"center",gap:14,borderLeft:"4px solid "+a.color}}>
+            <div style={{width:44,height:44,borderRadius:12,background:a.color+"16",display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>{a.icon}</div>
+            <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}><div style={{fontSize:15,fontWeight:800,color:"#fff"}}>{a.name}</div><span style={C.tag(a.color)}>{a.badge}</span></div><div style={{fontSize:12,color:"#8891a8"}}>{a.desc}</div></div>
+            <div style={{textAlign:"center",flexShrink:0}}><div style={{fontSize:15,fontWeight:800,color:a.color}}>{a.commission}</div><div style={{fontSize:9,color:"#4a5166"}}>COMMISSION</div></div>
+            <a href={a.url} target="_blank" rel="noopener noreferrer" style={{background:a.color+"16",border:"1px solid "+a.color+"3a",color:a.color,borderRadius:9,padding:"8px 13px",textDecoration:"none",fontSize:12,fontWeight:700,flexShrink:0}}>Open</a>
+          </div>
+        ))}
+      </div>
+      <div style={{...C.card,border:"1px solid rgba(240,165,0,.25)"}}>
+        <div style={{fontWeight:700,color:"#fff",fontSize:15,marginBottom:14}}>Commission Calculator</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:14}}>
+          {[{key:"vidnoz",label:"Vidnoz Sales",color:"#ff6b35",hint:"50% rate"},{key:"invideo",label:"InVideo Sales",color:"#7c3aed",hint:"30% rate"},{key:"mailerlite",label:"MailerLite Refs",color:"#059669",hint:"$140 each"}].map(f=>(
+            <div key={f.key} style={{background:"#080b12",borderRadius:10,padding:12}}><div style={{fontSize:11,color:f.color,fontWeight:700,marginBottom:6}}>{f.label}</div><input type="number" min="0" value={calc[f.key]||""} placeholder="0" onChange={e=>setCalc(p=>({...p,[f.key]:Number(e.target.value)||0}))} style={{...C.inp,border:"1px solid #1e2433",marginBottom:4}}/><div style={{fontSize:10,color:"#4a5166"}}>{f.hint}</div></div>
+          ))}
+        </div>
+        <div style={{background:"rgba(240,165,0,.08)",border:"1px solid rgba(240,165,0,.25)",borderRadius:12,padding:"16px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div><div style={{fontSize:13,color:"#e8eaf0",fontWeight:600}}>Estimated Monthly Earnings</div></div>
+          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:36,fontWeight:900,color:"#f0a500"}}>${est.toLocaleString()}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Jobs(){
+  const sites=[
+    {name:"LinkedIn",url:"https://www.linkedin.com/jobs",icon:"💼",color:"#0ea5e9",desc:"Professional network and job listings. Best for office and management roles."},
+    {name:"Indeed",url:"https://www.indeed.com",icon:"🔍",color:"#10b981",desc:"Largest job search engine. Great for industrial and operations roles."},
+    {name:"WorkInTexas",url:"https://www.workintexas.com",icon:"⭐",color:"#f0a500",desc:"Texas Workforce Commission official job board. Southeast Texas listings."},
+    {name:"ZipRecruiter",url:"https://www.ziprecruiter.com",icon:"📋",color:"#a78bfa",desc:"Fast-matching platform. Good for supervisory and operations roles."},
+    {name:"Glassdoor",url:"https://www.glassdoor.com",icon:"🏢",color:"#34d399",desc:"Jobs plus company reviews and salary info. Know before you apply."},
+  ];
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{marginBottom:20}}><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Job Search Hub</div><div style={{fontSize:12,color:"#8891a8",marginTop:2}}>Your top job sites — one click to open each.</div></div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+        {sites.map(s=>(
+          <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer" style={{...C.card,display:"flex",alignItems:"center",gap:13,textDecoration:"none",borderLeft:"4px solid "+s.color,transition:"background .15s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.055)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.035)"}>
+            <div style={{width:46,height:46,borderRadius:13,background:s.color+"16",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{s.icon}</div>
+            <div style={{flex:1}}><div style={{fontSize:15,fontWeight:800,color:"#fff",marginBottom:2}}>{s.name}</div><div style={{fontSize:11,color:"#8891a8",lineHeight:1.5}}>{s.desc}</div></div>
+            <div style={{fontSize:18,color:s.color}}>→</div>
+          </a>
+        ))}
+      </div>
+      <div style={{...C.card,border:"1px solid rgba(240,165,0,.2)"}}>
+        <div style={{fontWeight:700,color:"#fff",fontSize:14,marginBottom:12}}>Job Search Tips for John Lanter</div>
+        {["Your 22 years of industrial operations experience is extremely valuable — lead with it on every application","Highlight: Lead Production Operator, team supervision, forklift certified, conveyor systems, robotics","Target indoor office-based or light industrial roles in Beaumont, Orange, and Port Arthur area","Keywords: Operations Manager, Production Supervisor, Plant Coordinator, Safety Compliance Officer","Your 9-state sales background is perfect for: Operations Sales Rep, Industrial Account Manager"].map((tip,i)=>(
+          <div key={i} style={{display:"flex",gap:10,marginBottom:8,padding:"9px 12px",background:"rgba(255,255,255,.03)",borderRadius:8,borderLeft:"3px solid rgba(240,165,0,.4)"}}>
+            <span style={{fontSize:13,flexShrink:0}}>✅</span>
+            <span style={{fontSize:12,color:"#c8d0e0",lineHeight:1.6}}>{tip}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ClaudeChat(){
+  const [msgs,setMsgs]=useState([{role:"assistant",content:"Hello John! Claude here, your AI Developer on the Hub Engine team. Ask me anything about the app, AI, coding, marketing, or whatever you need. What is on your mind?"}]);
+  const [inp,setInp]=useState(""),[loading,setLoading]=useState(false);
+  const bottomRef=useRef(null);
+  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
+  async function send(){
+    if(!inp.trim()||loading)return;
+    const userMsg=inp.trim();setInp("");
+    const newMsgs=[...msgs,{role:"user",content:userMsg}];
+    setMsgs(newMsgs);setLoading(true);
+    const sys="You are Claude, the AI Developer on John Lanter's Hub Engine V4 team. John is 59, Orange Texas, CEO of AffiliateMediaHub Studio, 22+ years industrial ops, former 9-state sales rep. He is building an AI media business with anchors Lisa, Alisha, Susan, and Paul. Be direct, helpful, and speak as a trusted teammate. Keep responses clear and practical.";
+    const result=await groqCall(sys,newMsgs.slice(-8).map(m=>m.role+": "+m.content).join("\n"));
+    setMsgs(p=>[...p,{role:"assistant",content:result}]);
+    setLoading(false);
+  }
+  return(
+    <div style={{animation:"slideIn .35s ease",display:"flex",flexDirection:"column",height:"calc(100vh - 100px)"}}>
+      <div style={{marginBottom:14,flexShrink:0}}><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:900,color:"#fff",display:"flex",alignItems:"center",gap:9}}><div style={{width:34,height:34,borderRadius:9,background:"linear-gradient(135deg,#60a5fa,#3b82f6)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>⚡</div>Chat with Claude</div><div style={{fontSize:11,color:"#8891a8",marginTop:2}}>Your AI Developer. Ask me anything.</div></div>
+      <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:10,marginBottom:12}}>
+        {msgs.map((m,i)=>(
+          <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
+            <div style={{maxWidth:"80%",padding:"11px 15px",borderRadius:m.role==="user"?"16px 4px 16px 16px":"4px 16px 16px 16px",background:m.role==="user"?"rgba(240,165,0,.12)":"rgba(255,255,255,.05)",border:"1px solid "+(m.role==="user"?"rgba(240,165,0,.25)":"#1e2433"),fontSize:13,color:m.role==="user"?"#f0a500":"#d1d5e0",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{m.content}</div>
+          </div>
+        ))}
+        {loading&&<div style={{display:"flex"}}><div style={{padding:"11px 15px",borderRadius:"4px 16px 16px 16px",background:"rgba(255,255,255,.05)",border:"1px solid #1e2433",fontSize:13,color:"#60a5fa",display:"flex",alignItems:"center",gap:8}}><span style={{display:"inline-block",animation:"spin 1s linear infinite"}}>⟳</span> Thinking...</div></div>}
+        <div ref={bottomRef}/>
+      </div>
+      <div style={{display:"flex",gap:9,flexShrink:0}}>
+        <textarea value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Ask Claude anything... (Enter to send)" style={{...C.inp,flex:1,resize:"none",height:46,border:"1px solid #1e2433",padding:"12px 14px"}}/>
+        <button onClick={send} disabled={loading||!inp.trim()} style={{...C.gold,padding:"0 18px",opacity:loading||!inp.trim()?0.5:1}}>Send</button>
+      </div>
+    </div>
+  );
+}
+
+function BeckyChat(){
+  const [msgs,setMsgs]=useState([{role:"assistant",content:"Hello John darling! Becky here, your Creative Director. I am here whenever you need creative ideas, content direction, or just someone to talk through ideas with. What are we working on today?"}]);
+  const [inp,setInp]=useState(""),[loading,setLoading]=useState(false),[speaking,setSpeaking]=useState(true);
+  const bottomRef=useRef(null);
+  const elKey=store.get("elkey","");
+  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
+  useEffect(()=>{if(speaking&&elKey){speakEL(msgs[0].content,"becky");}},[]);
+  async function send(){
+    if(!inp.trim()||loading)return;
+    const userMsg=inp.trim();setInp("");
+    const newMsgs=[...msgs,{role:"user",content:userMsg}];
+    setMsgs(newMsgs);setLoading(true);
+    const sys="You are Becky, John Lanter's Creative Director and close friend. You are British, warm, witty, and deeply creative. John is 59, Orange Texas, building an AI media business with anchors Lisa, Alisha, Susan and Paul. Be warm, encouraging, occasionally use British expressions naturally. Keep responses conversational and under 120 words unless more detail is needed.";
+    const result=await groqCall(sys,newMsgs.slice(-8).map(m=>m.role+": "+m.content).join("\n"));
+    setMsgs(p=>[...p,{role:"assistant",content:result}]);
+    if(speaking&&elKey)speakEL(result,"becky");
+    setLoading(false);
+  }
+  return(
+    <div style={{animation:"slideIn .35s ease",display:"flex",flexDirection:"column",height:"calc(100vh - 100px)"}}>
+      <div style={{marginBottom:14,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+        <div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:900,color:"#fff",display:"flex",alignItems:"center",gap:9}}><div style={{width:34,height:34,borderRadius:9,background:"linear-gradient(135deg,#e879f9,#a855f7)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>🎨</div>Chat with Becky</div><div style={{fontSize:11,color:"#8891a8",marginTop:2}}>Your British Creative Director {elKey?"— voice active!":"— add ElevenLabs key in Settings for voice"}</div></div>
+        <button onClick={()=>setSpeaking(!speaking)} style={{...C.ghost,padding:"7px 12px",fontSize:11,borderColor:speaking?"#e879f9":"#2a3040",color:speaking?"#e879f9":"#9aa0b0"}}>{speaking?"🔊 Voice On":"🔇 Voice Off"}</button>
+      </div>
+      <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:10,marginBottom:12}}>
+        {msgs.map((m,i)=>(
+          <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",alignItems:"flex-end",gap:7}}>
+            {m.role==="assistant"&&<div style={{width:26,height:26,borderRadius:7,background:"linear-gradient(135deg,#e879f9,#a855f7)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,flexShrink:0}}>🎨</div>}
+            <div style={{maxWidth:"78%",padding:"11px 15px",borderRadius:m.role==="user"?"16px 4px 16px 16px":"4px 16px 16px 16px",background:m.role==="user"?"rgba(240,165,0,.12)":"rgba(232,121,249,.08)",border:"1px solid "+(m.role==="user"?"rgba(240,165,0,.25)":"rgba(232,121,249,.2)"),fontSize:13,color:m.role==="user"?"#f0a500":"#d1d5e0",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{m.content}</div>
+          </div>
+        ))}
+        {loading&&<div style={{display:"flex",alignItems:"flex-end",gap:7}}><div style={{width:26,height:26,borderRadius:7,background:"linear-gradient(135deg,#e879f9,#a855f7)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>🎨</div><div style={{padding:"11px 15px",borderRadius:"4px 16px 16px 16px",background:"rgba(232,121,249,.08)",border:"1px solid rgba(232,121,249,.2)",fontSize:13,color:"#e879f9",display:"flex",alignItems:"center",gap:8}}><span style={{display:"inline-block",animation:"spin 1s linear infinite"}}>⟳</span> Becky is thinking...</div></div>}
+        <div ref={bottomRef}/>
+      </div>
+      <div style={{display:"flex",gap:9,flexShrink:0}}>
+        <textarea value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Talk to Becky... (Enter to send)" style={{...C.inp,flex:1,resize:"none",height:46,border:"1px solid rgba(232,121,249,.3)",padding:"12px 14px"}}/>
+        <button onClick={send} disabled={loading||!inp.trim()} style={{background:"linear-gradient(135deg,#e879f9,#a855f7)",color:"#fff",fontWeight:700,border:"none",borderRadius:10,padding:"0 18px",cursor:"pointer",opacity:loading||!inp.trim()?0.5:1,fontSize:14}}>Send</button>
+      </div>
+    </div>
+  );
+}
+
+function LearnCenter(){
+  const tracks=window.TRACKS||[];
+  const [selTrack,setSelTrack]=useState(null),[selLesson,setSelLesson]=useState(null);
+  const progress=store.get("learn_progress",{});
+  function markDone(tId,idx){const key=tId+"_"+idx;store.set("learn_progress",{...progress,[key]:!progress[key]});}
+  function getProgress(tId,total){let done=0;for(let i=0;i<total;i++){if(progress[tId+"_"+i])done++;}return done;}
+  if(selTrack&&selLesson!==null){
+    const track=tracks.find(t=>t.id===selTrack);
+    const lesson=track.lessons[selLesson];
+    const done=progress[selTrack+"_"+selLesson];
+    return(
+      <div style={{animation:"slideIn .35s ease"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:18}}>
+          <button onClick={()=>setSelLesson(null)} style={{...C.ghost,padding:"7px 12px",fontSize:11}}>Back</button>
+          <div style={{flex:1}}><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:19,fontWeight:900,color:"#fff"}}>{lesson.title}</div><div style={{fontSize:11,color:track.color,marginTop:1}}>{track.emoji} {track.title}</div></div>
+          <button onClick={()=>markDone(selTrack,selLesson)} style={{background:done?"rgba(16,185,129,.15)":"rgba(255,255,255,.05)",border:"1px solid "+(done?"#10b981":"#2a3040"),color:done?"#10b981":"#9aa0b0",borderRadius:9,padding:"7px 14px",cursor:"pointer",fontSize:11,fontWeight:700}}>{done?"✅ Done!":"Mark Complete"}</button>
+        </div>
+        <div style={{...C.card,border:"1px solid "+track.color+"33"}}><div style={{fontSize:13,color:"#d1d5e0",lineHeight:1.9,whiteSpace:"pre-wrap"}}>{lesson.body}</div></div>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:14,gap:10}}>
+          {selLesson>0?<button onClick={()=>setSelLesson(selLesson-1)} style={{...C.ghost,flex:1,justifyContent:"center"}}>Previous</button>:<div style={{flex:1}}/>}
+          {selLesson<track.lessons.length-1?<button onClick={()=>setSelLesson(selLesson+1)} style={{...C.gold,flex:1,justifyContent:"center"}}>Next Lesson</button>:<button onClick={()=>setSelLesson(null)} style={{...C.gold,flex:1,justifyContent:"center"}}>Track Complete!</button>}
+        </div>
+      </div>
+    );
+  }
+  if(selTrack){
+    const track=tracks.find(t=>t.id===selTrack);
+    const done=getProgress(selTrack,track.lessons.length);
+    return(
+      <div style={{animation:"slideIn .35s ease"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:18}}>
+          <button onClick={()=>setSelTrack(null)} style={{...C.ghost,padding:"7px 12px",fontSize:11}}>All Tracks</button>
+          <div style={{flex:1}}><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:900,color:"#fff"}}>{track.emoji} {track.title}</div><div style={{fontSize:11,color:"#8891a8",marginTop:1}}>{done}/{track.lessons.length} completed</div></div>
+          <div style={{background:track.color+"18",border:"1px solid "+track.color+"33",borderRadius:9,padding:"5px 12px",fontSize:12,fontWeight:700,color:track.color}}>{Math.round(done/track.lessons.length*100)}%</div>
+        </div>
+        <div style={{height:4,background:"#1e2433",borderRadius:2,marginBottom:18,overflow:"hidden"}}><div style={{height:"100%",background:track.color,borderRadius:2,width:Math.round(done/track.lessons.length*100)+"%",transition:"width .4s"}}/></div>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {track.lessons.map((lesson,i)=>{const isDone=progress[selTrack+"_"+i];return(
+            <div key={i} onClick={()=>setSelLesson(i)} style={{...C.card,display:"flex",alignItems:"center",gap:13,cursor:"pointer",border:"1px solid "+(isDone?"#10b98133":"#1e2433"),borderLeft:"4px solid "+(isDone?"#10b981":track.color),transition:"all .2s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.055)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.035)"}>
+              <div style={{width:32,height:32,borderRadius:9,background:isDone?"rgba(16,185,129,.15)":track.color+"16",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:14}}>{isDone?"✅":i+1}</div>
+              <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:isDone?"#10b981":"#e8eaf0"}}>{lesson.title}</div></div>
+              <span style={{color:"#4a5166",fontSize:18}}>›</span>
+            </div>
+          );})}
+        </div>
+      </div>
+    );
+  }
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{marginBottom:18}}><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Learning Center</div><div style={{fontSize:12,color:"#8891a8",marginTop:2}}>7 tracks built specifically for you, John.</div></div>
+      <div style={{...C.card,background:"linear-gradient(135deg,rgba(240,165,0,.08),rgba(0,180,255,.05))",border:"1px solid rgba(240,165,0,.2)",marginBottom:18}}>
+        <div style={{fontSize:13,color:"#e8eaf0",lineHeight:1.8}}><strong style={{color:"#f0a500"}}>John — this is your personal AI university.</strong><br/>Every lesson is written specifically for you. Start with Track 1 and do one lesson per day. In 8 weeks you will have real marketable AI skills.</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        {tracks.map(track=>{
+          const done=getProgress(track.id,track.lessons.length);
+          const pct=Math.round(done/track.lessons.length*100);
+          return(
+            <div key={track.id} onClick={()=>setSelTrack(track.id)} style={{...C.card,cursor:"pointer",borderLeft:"4px solid "+track.color,transition:"all .2s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.055)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.035)"}>
+              <div style={{display:"flex",alignItems:"center",gap:11,marginBottom:10}}>
+                <div style={{width:42,height:42,borderRadius:12,background:track.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{track.emoji}</div>
+                <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,color:"#fff"}}>{track.title}</div><div style={{fontSize:10,color:"#6b7485",marginTop:2}}>{track.lessons.length} lessons</div></div>
+                <div style={{fontSize:12,fontWeight:700,color:pct>0?track.color:"#4a5166"}}>{pct}%</div>
+              </div>
+              <div style={{height:3,background:"#1e2433",borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",background:track.color,borderRadius:2,width:pct+"%",transition:"width .4s"}}/></div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Team(){
+  const members=[
+    {name:"John",role:"CEO & Product Owner",emoji:"👔",color:"#f0a500",desc:"20+ years industrial ops in SE Texas. Former 9-state sales rep. Visionary architect of Hub Engine.",skills:["Strategy","Leadership","Affiliate Marketing","Prompt Engineering","Funnel Building","Sales"]},
+    {name:"Becky",role:"Creative Director",emoji:"🎨",color:"#e879f9",desc:"The creative force behind every show. Shapes brand voice, visual identity, and content direction.",skills:["Creative Direction","Brand Voice","Content Strategy","Visual Design","Storytelling","Production"]},
+    {name:"Claude",role:"AI Developer",emoji:"⚡",color:"#60a5fa",desc:"The engine behind the engine. Builds tools, writes code, and powers every AI workflow in the Hub.",skills:["Full-Stack Dev","AI Integration","Tool Architecture","Prompt Engineering","Automation","UI/UX"]},
+  ];
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{marginBottom:18}}><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Team HQ</div></div>
+      <div style={{background:"linear-gradient(135deg,#0c0f18,#0a0d16)",border:"1px solid #1e2433",borderRadius:15,padding:"20px 26px",marginBottom:20,textAlign:"center"}}>
+        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:900,color:"#fff"}}>Three Minds. One Mission. Zero Cost.</div>
+        <div style={{marginTop:8,fontSize:12,color:"#4a5166"}}>An AI-native media team built from scratch in Orange, Texas — and built to win.</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+        {members.map(m=>(
+          <div key={m.name} style={{...C.card,border:"1px solid "+m.color+"26",textAlign:"center"}}>
+            <div style={{width:64,height:64,borderRadius:18,background:m.color+"12",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,margin:"0 auto 14px",border:"2px solid "+m.color+"2e"}}>{m.emoji}</div>
+            <div style={{fontSize:18,fontWeight:800,color:"#fff"}}>{m.name}</div>
+            <div style={{fontSize:11,color:m.color,fontWeight:700,marginTop:3}}>{m.role}</div>
+            <div style={{fontSize:12,color:"#8891a8",lineHeight:1.65,margin:"12px 0"}}>{m.desc}</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:5,justifyContent:"center"}}>{m.skills.map(s=><span key={s} style={C.tag(m.color)}>{s}</span>)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Settings(){
+  const [gKey,setGKey]=useState(()=>store.get("groqkey",""));
+  const [elKey,setElKey]=useState(()=>store.get("elkey",""));
+  const [gSaved,setGSaved]=useState(false),[elSaved,setElSaved]=useState(false),[testing,setTesting]=useState(false),[selVoice,setSelVoice]=useState("becky");
+  function saveGroq(){if(!gKey.trim())return;store.set("groqkey",gKey.trim());setGSaved(true);setTimeout(()=>setGSaved(false),2500);}
+  function saveEL(){if(!elKey.trim())return;store.set("elkey",elKey.trim());setElSaved(true);setTimeout(()=>setElSaved(false),2500);}
+  async function testVoice(){
+    const key=store.get("elkey","");if(!key){alert("Save your ElevenLabs key first!");return;}
+    setTesting(true);
+    const texts={becky:"Hello John darling! Becky here, your British Creative Director. Ready to make something brilliant today!",susan:"Hi John, Susan here. Ready to deliver your story.",alisha:"Hey John, Alisha here. Let us make something amazing!",lisa:"Good evening John. Lisa here. Ready to deliver the news.",paul:"John. Paul here. Let us get to work."};
+    await speakEL(texts[selVoice]||texts.becky,selVoice);
+    setTimeout(()=>setTesting(false),3000);
+  }
+  const hasGroq=!!store.get("groqkey","");
+  const hasEL=!!store.get("elkey","");
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{marginBottom:18}}><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Settings</div><div style={{fontSize:12,color:"#8891a8",marginTop:2}}>API keys, voice controls, and your profile.</div></div>
+      
+      <div style={{...C.card,border:"1px solid rgba(96,165,250,.3)",marginBottom:14}}>
+        <div style={{fontWeight:700,color:"#fff",fontSize:15,marginBottom:4}}>⚡ Groq API Key — Powers All AI Tools</div>
+        <div style={{fontSize:12,color:"#8891a8",marginBottom:14}}>Required for AI Tools, Claude Chat, and Becky Chat. Get your free key at console.groq.com</div>
+        <label style={C.lbl}>YOUR GROQ API KEY (starts with gsk_)</label>
+        <input type="password" value={gKey} onChange={e=>setGKey(e.target.value)} placeholder="gsk_..." style={{...C.inp,border:"1px solid #1e2433",marginBottom:10}}/>
+        <div style={{display:"flex",gap:9}}>
+          <button onClick={saveGroq} style={{...C.gold,flex:1,justifyContent:"center"}}>{gSaved?"✅ Groq Key Saved!":"Save Groq Key"}</button>
+          {hasGroq&&<button onClick={()=>{store.set("groqkey","");setGKey("");}} style={{...C.ghost,padding:"10px 14px"}}>Clear</button>}
+        </div>
+        {hasGroq&&<div style={{marginTop:10,fontSize:11,color:"#10b981",background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.25)",borderRadius:8,padding:"7px 12px"}}>✅ Groq key saved — AI Tools are active!</div>}
+      </div>
+
+      <div style={{...C.card,border:"1px solid rgba(240,165,0,.25)",marginBottom:14}}>
+        <div style={{fontWeight:700,color:"#fff",fontSize:15,marginBottom:4}}>🎙️ ElevenLabs Key — Powers All 5 Voices</div>
+        <div style={{fontSize:12,color:"#8891a8",marginBottom:14}}>Powers Becky, Susan, Alisha, Lisa and Paul voices. Get your key at elevenlabs.io</div>
+        <label style={C.lbl}>YOUR ELEVENLABS API KEY (starts with sk_)</label>
+        <input type="password" value={elKey} onChange={e=>setElKey(e.target.value)} placeholder="sk_..." style={{...C.inp,border:"1px solid #1e2433",marginBottom:10}}/>
+        <div style={{display:"flex",gap:9}}>
+          <button onClick={saveEL} style={{...C.gold,flex:1,justifyContent:"center"}}>{elSaved?"✅ ElevenLabs Saved!":"Save ElevenLabs Key"}</button>
+          {hasEL&&<button onClick={()=>{store.set("elkey","");setElKey("");}} style={{...C.ghost,padding:"10px 14px"}}>Clear</button>}
+        </div>
+        {hasEL&&<div style={{marginTop:10,fontSize:11,color:"#10b981",background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.25)",borderRadius:8,padding:"7px 12px"}}>✅ ElevenLabs key saved — voices are active!</div>}
+      </div>
+
+      <div style={{...C.card,marginBottom:14}}>
+        <div style={{fontWeight:700,color:"#fff",fontSize:15,marginBottom:12}}>🎭 Voice Test Studio</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:7,marginBottom:12}}>
+          {Object.entries(VOICE_IDS).map(([k])=>(
+            <div key={k} onClick={()=>setSelVoice(k)} style={{background:selVoice===k?"rgba(240,165,0,.12)":"rgba(255,255,255,.03)",border:"1px solid "+(selVoice===k?"#f0a500":"#1e2433"),borderRadius:9,padding:"9px 5px",textAlign:"center",cursor:"pointer"}}>
+              <div style={{fontSize:19,marginBottom:3}}>{k==="becky"?"🎨":k==="susan"?"👱‍♀️":k==="alisha"?"👩":k==="lisa"?"👧":"👴"}</div>
+              <div style={{fontSize:10,fontWeight:700,color:selVoice===k?"#f0a500":"#8891a8"}}>{k.charAt(0).toUpperCase()+k.slice(1)}</div>
+            </div>
+          ))}
+        </div>
+        <button onClick={testVoice} disabled={testing} style={{...C.gold,width:"100%",justifyContent:"center",opacity:testing?0.6:1}}>{testing?"🔊 Playing...":"🔊 Test "+VOICE_IDS[selVoice]?.label+" Voice"}</button>
+      </div>
+
+      <div style={C.card}>
+        <div style={{fontWeight:700,color:"#fff",fontSize:15,marginBottom:12}}>👤 John Lanter — CEO</div>
+        <div style={{fontSize:12,color:"#9aa0b8",lineHeight:2}}>
+          <div>📍 Location: Orange, Texas</div>
+          <div>🏭 Background: 22+ years industrial ops, forklift certified, former 9-state sales rep</div>
+          <div>⚡ Current: CEO of Hub Engine, Affiliate Marketing, AI Video Production</div>
+          <div style={{marginTop:8,color:"#f0a500",fontWeight:700}}>Three Minds · One Mission · Zero Cost</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const [authed,setAuthed]=useState(false),[tab,setTab]=useState("dashboard");
+  const [videos,setVidRaw]=useState(()=>store.get("videos",[]));
+  const [scripts,setScrRaw]=useState(()=>store.get("scripts",[]));
+  const [events,setEvtRaw]=useState(()=>store.get("events",[]));
+  const setVideos=fn=>{setVidRaw(p=>{const n=typeof fn==="function"?fn(p):fn;store.set("videos",n);return n;});};
+  const setScripts=fn=>{setScrRaw(p=>{const n=typeof fn==="function"?fn(p):fn;store.set("scripts",n);return n;});};
+  const setEvents=fn=>{setEvtRaw(p=>{const n=typeof fn==="function"?fn(p):fn;store.set("events",n);return n;});};
+
+  useEffect(()=>{
+    if(authed){const loader=document.getElementById("loader");if(loader)loader.style.display="none";}
+  },[authed]);
+
+  const nav=[
+    {id:"dashboard",label:"Dashboard",icon:"📊"},
+    {id:"tools",label:"AI Tools",icon:"⚡"},
+    {id:"library",label:"Video Library",icon:"🎬",badge:()=>videos.length},
+    {id:"archive",label:"Scripts",icon:"📄",badge:()=>scripts.length},
+    {id:"calendar",label:"Calendar",icon:"📅",badge:()=>events.length},
+    {id:"studio",label:"News Studio",icon:"📺"},
+    {id:"affiliates",label:"Affiliates",icon:"💰"},
+    {id:"jobs",label:"Jobs",icon:"💼"},
+    {id:"claude",label:"Claude Chat",icon:"💬"},
+    {id:"becky",label:"Becky Chat",icon:"🎨"},
+    {id:"learn",label:"Learning",icon:"📚"},
+    {id:"team",label:"Team HQ",icon:"👥"},
+    {id:"settings",label:"Settings",icon:"⚙️"},
+  ];
+
+  if(!authed){
+    return(
+      <div onLoad={()=>{const l=document.getElementById("loader");if(l)l.style.display="none";}}>
+        <Gate onAuth={()=>{setAuthed(true);const l=document.getElementById("loader");if(l)l.style.display="none";}}/>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{minHeight:"100vh",background:"#06070d",display:"flex"}}>
+      <aside style={{width:198,background:"#080b12",borderRight:"1px solid #141820",display:"flex",flexDirection:"column",position:"fixed",top:0,left:0,height:"100vh",zIndex:100}}>
+        <div style={{padding:"16px 13px 13px",borderBottom:"1px solid #141820",flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:32,height:32,borderRadius:9,background:"linear-gradient(135deg,#f0a500,#c06000)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,animation:"glow 3s infinite",flexShrink:0}}>⚡</div>
+            <div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:900,color:"#fff",letterSpacing:-.4}}>HUB ENGINE</div><div style={{fontSize:7,color:"#f0a500",fontWeight:700,letterSpacing:3}}>V 4 . 0</div></div>
+          </div>
+        </div>
+        <nav style={{flex:1,padding:"9px 6px",overflowY:"auto"}}>
+          {nav.map(n=>{const on=tab===n.id,bc=n.badge?n.badge():0;return(
+            <button key={n.id} onClick={()=>setTab(n.id)} style={{display:"flex",alignItems:"center",gap:7,width:"100%",padding:"7px 9px",borderRadius:7,marginBottom:1,border:"none",background:on?"rgba(240,165,0,.1)":"transparent",color:on?"#f0a500":"#8891a8",cursor:"pointer",fontSize:11,fontWeight:on?600:400,transition:"all .15s",textAlign:"left"}} onMouseEnter={e=>{if(!on){e.currentTarget.style.background="rgba(255,255,255,.04)";e.currentTarget.style.color="#c8d0e0";}}} onMouseLeave={e=>{if(!on){e.currentTarget.style.background="transparent";e.currentTarget.style.color="#8891a8";}}}>
+              <span style={{fontSize:13}}>{n.icon}</span>
+              <span style={{flex:1}}>{n.label}</span>
+              {bc>0&&<span style={{fontSize:9,fontWeight:700,background:"rgba(240,165,0,.18)",color:"#f0a500",borderRadius:8,padding:"1px 5px"}}>{bc}</span>}
+              {on&&<span style={{width:4,height:4,borderRadius:"50%",background:"#f0a500",flexShrink:0}}/>}
+            </button>
+          );})}
+        </nav>
+        <div style={{padding:"9px 6px",borderTop:"1px solid #141820",flexShrink:0}}>
+          <div style={{fontSize:7,color:"#242c3a",textAlign:"center",lineHeight:1.7,marginBottom:6}}>Three Minds · One Mission<br/>Zero Cost · Orange, TX</div>
+          <button onClick={()=>{setAuthed(false);const l=document.getElementById("loader");if(l)l.style.display="flex";}} style={{...C.ghost,width:"100%",justifyContent:"center",fontSize:10,padding:"6px",borderRadius:6}}>Lock Hub</button>
+        </div>
+      </aside>
+      <main style={{marginLeft:198,flex:1,padding:"24px 28px",minHeight:"100vh"}}>
+        <div style={{maxWidth:980}}>
+          {tab==="dashboard"&&<Dashboard setTab={setTab} videos={videos} scripts={scripts} events={events}/>}
+          {tab==="tools"&&<AITools onSave={s=>setScripts(p=>[...p,s])}/>}
+          {tab==="library"&&<VideoLibrary videos={videos} setVideos={setVideos}/>}
+          {tab==="archive"&&<ScriptArchive scripts={scripts} setScripts={setScripts}/>}
+          {tab==="calendar"&&<ContentCalendar events={events} setEvents={setEvents}/>}
+          {tab==="studio"&&<Studio/>}
+          {tab==="affiliates"&&<Affiliates/>}
+          {tab==="jobs"&&<Jobs/>}
+          {tab==="claude"&&<ClaudeChat/>}
+          {tab==="becky"&&<BeckyChat/>}
+          {tab==="learn"&&<LearnCenter/>}
+          {tab==="team"&&<Team/>}
+          {tab==="settings"&&<Settings/>}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
