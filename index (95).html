@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hub Engine V4 — AffiliateMediaHub Studio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#06070d;color:#e8eaf0;font-family:'DM Sans','Segoe UI',sans-serif;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0b0d14}::-webkit-scrollbar-thumb{background:#1e2433;border-radius:3px}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes glow{0%,100%{box-shadow:0 0 30px rgba(240,165,0,.15)}50%{box-shadow:0 0 60px rgba(240,165,0,.4)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+textarea:focus,input:focus,select:focus{outline:none;border-color:#f0a500!important;box-shadow:0 0 0 3px rgba(240,165,0,.1)!important}
+input[type=number]::-webkit-inner-spin-button{opacity:.4}
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#0d1017;border:1px solid #1e2433;border-radius:20px;padding:30px;width:560px;max-width:100%;max-height:90vh;overflow-y:auto;animation:popIn .22s ease}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect}=React;
+const PW="HubV4";
+const HOSTS_LIST=["Lisa","Alisha","Susan","Paul Baby Boss"];
+const PLATFORMS=["YouTube","TikTok","Instagram","Facebook","LinkedIn"];
+const STATUSES=["Scripted","Recorded","Edited","Published"];
+
+const TOOLS=[
+  {id:"script",  emoji:"🎬",name:"Video Script Writer",   cat:"Video",   color:"#f0a500",desc:"Full scripts: Hook→Body→CTA",sys:"You are an expert short-form video script writer for AI content channels. Write a complete engaging video script with clearly labeled sections: 🎣 HOOK (0-3s), 📦 BODY (3-50s), 🚀 CTA (50-60s). Use punchy active language, keep it under 60 seconds. Format cleanly."},
+  {id:"titles",  emoji:"🔥",name:"Viral Title Generator", cat:"Video",   color:"#ef4444",desc:"5 click-worthy titles per topic",sys:"You are a viral content strategist. Generate exactly 5 numbered YouTube/social titles using different psychological hooks: 1) Curiosity gap 2) Urgency/FOMO 3) Value promise 4) Bold controversy 5) Social proof. Make each irresistibly clickable. Explain each strategy in one line."},
+  {id:"desc",    emoji:"📝",name:"SEO Description Writer",cat:"Video",   color:"#8b5cf6",desc:"Keyword-rich descriptions that rank",sys:"You are an SEO specialist for video content. Write a compelling video description with: opening hook paragraph, key bullet points, 3 timestamp suggestions, 15 relevant hashtags, and clear CTA with [AFFILIATE LINK] placeholder. Optimize for search ranking."},
+  {id:"adcopy",  emoji:"💰",name:"Affiliate Ad Copy",     cat:"Marketing",color:"#10b981",desc:"High-converting copy for affiliate offers",sys:"You are a direct response copywriter specializing in affiliate marketing. Create 3 ad copy variations: SHORT (under 20 words), MEDIUM (50 words), LONG (150 words). Focus on benefits not features, use power words, end each with a compelling CTA. Label each variation clearly."},
+  {id:"email",   emoji:"📧",name:"Email Campaign Writer", cat:"Marketing",color:"#06b6d4",desc:"3-email sequences that convert",sys:"You are an email marketing expert. Write a complete 3-email drip campaign: Email 1 (Problem + curiosity), Email 2 (Solution + value), Email 3 (Urgency + CTA). Include Subject Line and Preview Text for each. Conversion-focused throughout."},
+  {id:"cta",     emoji:"🎯",name:"CTA Generator",        cat:"Marketing",color:"#f59e0b",desc:"Calls-to-action that get clicked",sys:"You are a CRO expert. Generate 10 high-converting calls-to-action for the given product/goal. Vary style: buttons, inline text, video overlays, email sign-offs. Rate each out of 10 for expected conversion and explain why in one sentence."},
+  {id:"funnel",  emoji:"🚀",name:"Sales Funnel Builder", cat:"Marketing",color:"#ff6b35",desc:"Complete funnel copy awareness→sale",sys:"You are a sales funnel strategist. Create a complete funnel map: 🎯 AWARENESS (ad hook), 🔍 INTEREST (landing headline+subhead), 💡 DESIRE (3 benefit bullets), ✅ ACTION (CTA+guarantee). Include a one-line value proposition at the top."},
+  {id:"headline",emoji:"📰",name:"News Headline Generator",cat:"News",  color:"#e879f9",desc:"Breaking news headlines for AI shows",sys:"You are a seasoned TV news editor. Generate 5 compelling headlines: 1) BREAKING NEWS banner, 2) Feature Story, 3) Analysis/Opinion, 4) Social Media clip title, 5) Teaser/Promo. Make each authoritative and newsworthy."},
+  {id:"anchor",  emoji:"🎙️",name:"Anchor Intro Script", cat:"News",    color:"#fb7185",desc:"On-camera scripts for all 4 hosts",sys:"You are a professional TV news writer. Write a polished on-camera anchor intro: 10-second cold open hook, 20-second story setup, 5-second transition. Total ~35 seconds/85 words. Authoritative tone with personality. Label each section."},
+  {id:"captions",emoji:"📱",name:"Social Caption Pack",  cat:"Social",  color:"#34d399",desc:"Captions optimized for every platform",sys:"You are a social media growth strategist. Write platform-optimized captions for: 📸 INSTAGRAM (150 chars + 5 emojis), 🎵 TIKTOK (trendy, 100 chars), 🐦 TWITTER/X (under 240 chars), 💼 LINKEDIN (professional, 300 chars), 👥 FACEBOOK (200 chars). Label each clearly."},
+  {id:"hashtags",emoji:"#️⃣",name:"Hashtag Strategy Pro",cat:"Social",  color:"#60a5fa",desc:"3-tier hashtag sets for max discovery",sys:"You are a social media algorithm expert. Create a 3-tier hashtag strategy: 🔵 BROAD (10 tags, 1M+ posts), 🟡 NICHE (10 tags, 100K-1M posts), 🟢 MICRO (10 tags, under 100K). Show optimal mix ratio and explain why."},
+  {id:"prompt",  emoji:"⚡",name:"Prompt Engineer Pro",  cat:"AI Tools", color:"#a78bfa",desc:"Transform rough ideas into elite prompts",sys:"You are a world-class prompt engineer. Analyze the rough prompt and rewrite using: clear role assignment, specific format, constraints, 2 few-shot examples, chain-of-thought trigger, quality criteria. Show: ORIGINAL → ANALYSIS → OPTIMIZED → WHY IT WORKS."},
+];
+
+const AFFILIATES=[
+  {name:"Vidnoz",    commission:"50%",       cat:"AI Video Creation",color:"#ff6b35",url:"https://www.vidnoz.com",   desc:"AI-powered video generation & avatars",       badge:"TOP EARNER", icon:"🏆"},
+  {name:"InVideo",   commission:"30%",       cat:"AI Video Editor",  color:"#7c3aed",url:"https://invideo.io",       desc:"Templates + AI editing for short-form video", badge:"POPULAR",    icon:"⭐"},
+  {name:"MailerLite",commission:"$140/ref",  cat:"Email Marketing",  color:"#059669",url:"https://www.mailerlite.com",desc:"Email campaigns, automation, landing pages",  badge:"HIGH VALUE", icon:"💎"},
+  {name:"CapCut",    commission:"Varies",    cat:"Video Editing",    color:"#0ea5e9",url:"https://www.capcut.com",   desc:"Pro-grade video editing for creators",        badge:"CREATOR PICK",icon:"🎬"},
+  {name:"Udemy",     commission:"15%/course",cat:"Online Education", color:"#a855f7",url:"https://www.udemy.com",    desc:"Massive course library, evergreen commissions",badge:"EVERGREEN",  icon:"📚"},
+];
+
+const HOSTS_DATA=[
+  {name:"Lisa",         role:"Lead Anchor",          specialty:"Tech & AI News",            style:"Professional · Authoritative · Cutting-Edge",color:"#e879f9",emoji:"👩‍💼",episodes:47,shows:["AI Weekly Roundup","Tech Headlines Daily"]},
+  {name:"Alisha",       role:"Business Reporter",    specialty:"Marketing & Business",       style:"Dynamic · Insightful · Trend-Forward",       color:"#fb923c",emoji:"👩‍💻",episodes:38,shows:["Business Insider AI","Marketing Minute"]},
+  {name:"Susan",        role:"Feature Correspondent",specialty:"Lifestyle & Human Interest", style:"Warm · Engaging · Relatable",                color:"#34d399",emoji:"👩‍🎤",episodes:29,shows:["AI & You","The Human Side of Tech"]},
+  {name:"Paul Baby Boss",role:"Breaking News Anchor", specialty:"Viral & Breaking Stories",  style:"Bold · No-Nonsense · High-Energy",           color:"#60a5fa",emoji:"👨‍💼",episodes:52,shows:["Breaking: AI Now","The Daily Brief"]},
+];
+
+const EVENT_TYPES=[
+  {type:"Video",         emoji:"🎬",color:"#f0a500"},
+  {type:"Affiliate Post",emoji:"💰",color:"#10b981"},
+  {type:"Email Send",    emoji:"📧",color:"#06b6d4"},
+  {type:"Social Post",   emoji:"📱",color:"#34d399"},
+  {type:"Live Stream",   emoji:"🔴",color:"#ef4444"},
+  {type:"Planning",      emoji:"🗓️",color:"#8891a8"},
+];
+
+// helpers
+const store={
+  get:(k,d=[])=>{try{const v=localStorage.getItem("hub4_"+k);return v?JSON.parse(v):d;}catch{return d;}},
+  set:(k,v)=>{try{localStorage.setItem("hub4_"+k,JSON.stringify(v));}catch{}}
+};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const today=()=>new Date().toISOString().slice(0,10);
+const fmtDate=d=>{if(!d)return"";return new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});};
+const cpyText=(t,s)=>navigator.clipboard.writeText(t).then(()=>{s(true);setTimeout(()=>s(false),2000);});
+
+const C={
+  card:{background:"rgba(255,255,255,0.035)",border:"1px solid #1e2433",borderRadius:16,padding:22},
+  gold:{background:"linear-gradient(135deg,#f0a500,#c06000)",color:"#000",fontWeight:700,border:"none",borderRadius:10,padding:"10px 20px",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:7},
+  ghost:{background:"transparent",border:"1px solid #2a3040",color:"#9aa0b0",borderRadius:10,padding:"10px 20px",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:7},
+  danger:{background:"rgba(239,68,68,.12)",border:"1px solid rgba(239,68,68,.3)",color:"#ef4444",borderRadius:7,padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:600},
+  inp:{width:"100%",background:"#080b12",border:"1px solid #1e2433",borderRadius:9,padding:"10px 13px",color:"#e8eaf0",fontSize:13,fontFamily:"'DM Sans',sans-serif"},
+  sel:{width:"100%",background:"#080b12",border:"1px solid #1e2433",borderRadius:9,padding:"10px 13px",color:"#e8eaf0",fontSize:13,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"},
+  tag:(col)=>({fontSize:10,fontWeight:700,letterSpacing:.4,padding:"3px 8px",borderRadius:5,background:`${col}18`,color:col,border:`1px solid ${col}28`}),
+  lbl:{fontSize:10,color:"#8891a8",fontWeight:700,letterSpacing:1.2,marginBottom:6,display:"block"},
+};
+
+// ── GATE ──────────────────────────────────────────────────────
+function Gate({onAuth}){
+  const [pw,setPw]=useState(""),[show,setShow]=useState(false),[err,setErr]=useState(false),[shake,setShake]=useState(false);
+  function go(){if(pw===PW){onAuth();}else{setErr(true);setShake(true);setTimeout(()=>setShake(false),450);setTimeout(()=>setErr(false),2200);}}
+  return(
+    <div style={{minHeight:"100vh",background:"#06070d",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{position:"fixed",inset:0,backgroundImage:"radial-gradient(ellipse at 50% 40%,rgba(240,165,0,0.07) 0%,transparent 60%),linear-gradient(rgba(255,255,255,.016) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.016) 1px,transparent 1px)",backgroundSize:"100%,50px 50px,50px 50px",pointerEvents:"none"}}/>
+      <div style={{width:410,position:"relative",zIndex:2,animation:"fadeUp .5s ease"}}>
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <div style={{width:76,height:76,borderRadius:22,background:"linear-gradient(135deg,#f0a500,#c06000)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:30,animation:"glow 3s infinite"}}>⚡</div>
+          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:30,fontWeight:900,color:"#fff",letterSpacing:-1.5}}>HUB ENGINE</div>
+          <div style={{fontSize:10,color:"#f0a500",fontWeight:700,letterSpacing:5,marginTop:4}}>V 4 . 0</div>
+        </div>
+        <div style={{background:"rgba(255,255,255,0.04)",border:`1px solid ${err?"#ef4444":"#1e2433"}`,borderRadius:20,padding:32,backdropFilter:"blur(20px)",transition:"border-color .25s",animation:shake?"shake .4s":"none"}}>
+          <label style={C.lbl}>ACCESS CODE</label>
+          <div style={{position:"relative"}}>
+            <input type={show?"text":"password"} value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="Enter your access code..." style={{...C.inp,fontSize:15,padding:"13px 46px 13px 15px",border:`1px solid ${err?"#ef4444":"#1e2433"}`}} autoFocus/>
+            <button onClick={()=>setShow(!show)} style={{position:"absolute",right:13,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#8891a8",cursor:"pointer",fontSize:17}}>{show?"🙈":"👁️"}</button>
+          </div>
+          {err&&<div style={{color:"#ef4444",fontSize:12,marginTop:7}}>❌ Invalid code — try again.</div>}
+          <button onClick={go} style={{...C.gold,width:"100%",justifyContent:"center",marginTop:18,padding:13,fontSize:14,borderRadius:11}}>🔒 ENTER HUB ENGINE</button>
+          <div style={{textAlign:"center",marginTop:12,fontSize:11,color:"#3a4156"}}>Three Minds · One Mission · Zero Cost</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────
+function Dashboard({setTab,videos,scripts,events}){
+  const now=new Date();
+  const upcoming=events.filter(e=>new Date(e.date)>=new Date(today())).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const stats=[
+    {label:"AI Tools",       value:12,        color:"#f0a500",icon:"🔧",tab:"tools"},
+    {label:"Videos Tracked", value:videos.length,color:"#10b981",icon:"🎬",tab:"library"},
+    {label:"Scripts Saved",  value:scripts.length,color:"#a78bfa",icon:"📄",tab:"archive"},
+    {label:"Events Scheduled",value:events.length,color:"#60a5fa",icon:"📅",tab:"calendar"},
+  ];
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{background:"linear-gradient(135deg,rgba(240,165,0,.1),rgba(0,180,255,.07))",border:"1px solid rgba(240,165,0,.2)",borderRadius:20,padding:"28px 32px",marginBottom:22,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",right:20,top:"50%",transform:"translateY(-50%)",fontSize:110,opacity:.04,userSelect:"none"}}>⚡</div>
+        <div style={{fontSize:10,color:"#f0a500",fontWeight:700,letterSpacing:4,marginBottom:7}}>WELCOME BACK, JOHN</div>
+        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:28,fontWeight:900,color:"#fff",letterSpacing:-1,lineHeight:1.2}}>Hub Engine V4<br/><span style={{color:"#f0a500"}}>Command Center</span></div>
+        <div style={{marginTop:8,color:"#8891a8",fontSize:12}}>Three Minds · One Mission · Zero Cost · Orange, TX</div>
+        <div style={{display:"flex",gap:8,marginTop:18,flexWrap:"wrap"}}>
+          <button onClick={()=>setTab("tools")}    style={C.gold}>⚡ AI Tools</button>
+          <button onClick={()=>setTab("library")}  style={{...C.ghost,color:"#e8eaf0"}}>🎬 Video Library</button>
+          <button onClick={()=>setTab("calendar")} style={{...C.ghost,color:"#e8eaf0"}}>📅 Calendar</button>
+          <button onClick={()=>setTab("archive")}  style={{...C.ghost,color:"#e8eaf0"}}>📄 Scripts</button>
+        </div>
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:22}}>
+        {stats.map(s=>(
+          <button key={s.label} onClick={()=>setTab(s.tab)} style={{...C.card,display:"flex",alignItems:"center",gap:12,cursor:"pointer",textAlign:"left",transition:"border-color .2s"}} onMouseEnter={e=>e.currentTarget.style.borderColor=s.color} onMouseLeave={e=>e.currentTarget.style.borderColor="#1e2433"}>
+            <div style={{width:44,height:44,borderRadius:12,background:`${s.color}1e`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>{s.icon}</div>
+            <div><div style={{fontSize:26,fontWeight:800,color:"#fff",lineHeight:1}}>{s.value}</div><div style={{fontSize:11,color:"#8891a8",marginTop:2}}>{s.label}</div></div>
+          </button>
+        ))}
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+        <div>
+          <div style={{fontSize:10,color:"#8891a8",fontWeight:700,letterSpacing:2,marginBottom:11}}>RECENT VIDEOS</div>
+          {videos.length?[...videos].reverse().slice(0,4).map(v=>{
+            const sc={Scripted:"#6b7485",Recorded:"#f0a500",Edited:"#e879f9",Published:"#10b981"}[v.status]||"#6b7485";
+            return(
+              <div key={v.id} style={{...C.card,marginBottom:9,padding:14,borderLeft:`3px solid ${sc}`}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:600,color:"#e8eaf0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.title}</div>
+                    <div style={{fontSize:11,color:"#6b7485",marginTop:1}}>{v.host} · {v.platform} · {fmtDate(v.date)}</div>
+                  </div>
+                  <span style={C.tag(sc)}>{v.status}</span>
+                </div>
+              </div>
+            );
+          }):<div style={{...C.card,textAlign:"center",padding:28,color:"#4a5166",fontSize:13}}>No videos yet — add one in Video Library 🎬</div>}
+        </div>
+        <div>
+          <div style={{fontSize:10,color:"#8891a8",fontWeight:700,letterSpacing:2,marginBottom:11}}>UPCOMING SCHEDULE</div>
+          {upcoming.length?upcoming.slice(0,4).map(ev=>(
+            <div key={ev.id} style={{...C.card,marginBottom:9,padding:14,borderLeft:`3px solid ${ev.color||"#f0a500"}`}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:18,flexShrink:0}}>{ev.emoji||"📅"}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:600,color:"#e8eaf0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.title}</div>
+                  <div style={{fontSize:11,color:"#6b7485",marginTop:1}}>{fmtDate(ev.date)} · {ev.host}</div>
+                </div>
+              </div>
+            </div>
+          )):<div style={{...C.card,textAlign:"center",padding:28,color:"#4a5166",fontSize:13}}>No upcoming events — add one in Calendar 📅</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── AI TOOLS ──────────────────────────────────────────────────
+function AITools({onSaveScript}){
+  const [sel,setSel]=useState(null),[input,setInput]=useState(""),[output,setOutput]=useState(""),[loading,setLoading]=useState(false),[copied,setCopied]=useState(false),[saved,setSaved]=useState(false),[cat,setCat]=useState("All");
+  const cats=["All",...[...new Set(TOOLS.map(t=>t.cat))]];
+  const filtered=cat==="All"?TOOLS:TOOLS.filter(t=>t.cat===cat);
+  async function run(){
+    if(!input.trim()||!sel)return;
+    setLoading(true);setOutput("");
+    try{
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:sel.sys,messages:[{role:"user",content:input}]})});
+      const d=await r.json();
+      setOutput(d.content?.map(b=>b.text||"").join("")||"⚠️ No response.");
+    }catch{setOutput("⚠️ Connection error.");}
+    setLoading(false);
+  }
+  function saveToArchive(){
+    if(!output||!sel)return;
+    onSaveScript({id:uid(),tool:sel.name,toolEmoji:sel.emoji,toolColor:sel.color,input,output,date:today(),title:input.slice(0,60)+(input.length>60?"...":"")});
+    setSaved(true);setTimeout(()=>setSaved(false),2500);
+  }
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
+        <div>
+          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>AI Tools Hub</div>
+          <div style={{fontSize:12,color:"#8891a8",marginTop:2}}>12 Claude-powered tools · outputs save to Script Archive.</div>
+        </div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{cats.map(c=><button key={c} onClick={()=>setCat(c)} style={{fontSize:11,fontWeight:700,padding:"5px 11px",borderRadius:7,border:`1px solid ${cat===c?"#f0a500":"#1e2433"}`,background:cat===c?"rgba(240,165,0,.11)":"transparent",color:cat===c?"#f0a500":"#8891a8",cursor:"pointer"}}>{c}</button>)}</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:18}}>
+        {filtered.map(t=>(
+          <button key={t.id} onClick={()=>{setSel(t);setInput("");setOutput("");setSaved(false);}} style={{background:sel?.id===t.id?`${t.color}13`:"rgba(255,255,255,0.03)",border:`1px solid ${sel?.id===t.id?t.color:"#1e2433"}`,borderRadius:13,padding:14,textAlign:"left",cursor:"pointer",transition:"all .16s"}} onMouseEnter={e=>{if(sel?.id!==t.id){e.currentTarget.style.borderColor=`${t.color}44`;e.currentTarget.style.background="rgba(255,255,255,0.045)";}}} onMouseLeave={e=>{if(sel?.id!==t.id){e.currentTarget.style.borderColor="#1e2433";e.currentTarget.style.background="rgba(255,255,255,0.03)";}}}> 
+            <div style={{display:"flex",gap:9,alignItems:"flex-start"}}>
+              <span style={{fontSize:20,lineHeight:1}}>{t.emoji}</span>
+              <div><div style={{fontSize:12,fontWeight:600,color:"#e8eaf0",lineHeight:1.3}}>{t.name}</div><div style={{fontSize:10,color:"#5a6275",marginTop:2}}>{t.desc}</div></div>
+            </div>
+            <div style={{marginTop:9,...C.tag(t.color),display:"inline-block"}}>{t.cat}</div>
+          </button>
+        ))}
+      </div>
+      {sel?(
+        <div style={{...C.card,border:`1px solid ${sel.color}40`}}>
+          <div style={{display:"flex",alignItems:"center",gap:11,marginBottom:16,paddingBottom:14,borderBottom:"1px solid #141820"}}>
+            <div style={{width:40,height:40,borderRadius:11,background:`${sel.color}1e`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{sel.emoji}</div>
+            <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,color:"#fff"}}>{sel.name}</div><div style={{fontSize:11,color:"#8891a8"}}>{sel.desc}</div></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+            <div>
+              <label style={C.lbl}>YOUR INPUT</label>
+              <textarea value={input} onChange={e=>setInput(e.target.value)} placeholder="Describe what you need..." style={{...C.inp,height:160,resize:"vertical",border:"1px solid #1e2433"}}/>
+              <button onClick={run} disabled={loading||!input.trim()} style={{...C.gold,marginTop:9,width:"100%",justifyContent:"center",opacity:loading||!input.trim()?.5:1}}>
+                {loading?<><span style={{display:"inline-block",animation:"spin 1s linear infinite"}}>⟳</span> Generating...</>:<>⚡ Generate with Claude</>}
+              </button>
+            </div>
+            <div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                <label style={{...C.lbl,marginBottom:0}}>AI OUTPUT</label>
+                {output&&<div style={{display:"flex",gap:6}}>
+                  <button onClick={saveToArchive} style={{background:saved?"rgba(16,185,129,.14)":"rgba(167,139,250,.1)",border:`1px solid ${saved?"#10b981":"#a78bfa33"}`,borderRadius:6,padding:"3px 9px",color:saved?"#10b981":"#a78bfa",cursor:"pointer",fontSize:10,fontWeight:700}}>
+                    {saved?"✅ Saved!":"📄 Archive"}
+                  </button>
+                  <button onClick={()=>cpyText(output,setCopied)} style={{background:"none",border:"1px solid #1e2433",borderRadius:6,padding:"3px 9px",color:"#8891a8",cursor:"pointer",fontSize:10}}>
+                    {copied?"✅":"📋 Copy"}
+                  </button>
+                </div>}
+              </div>
+              <div style={{background:"#060810",border:"1px solid #12161c",borderRadius:9,padding:12,minHeight:160,maxHeight:300,overflowY:"auto"}}>
+                {loading?<div style={{color:"#8891a8",fontSize:12,display:"flex",alignItems:"center",gap:9}}><span style={{display:"inline-block",animation:"spin 1s linear infinite",color:sel.color}}>⟳</span> Claude is generating...</div>
+                :output?<div style={{fontSize:12,color:"#d1d5e0",lineHeight:1.75,whiteSpace:"pre-wrap"}}>{output}</div>
+                :<div style={{fontSize:12,color:"#3a4156",fontStyle:"italic"}}>Output will appear here...</div>}
+              </div>
+            </div>
+          </div>
+        </div>
+      ):(
+        <div style={{...C.card,textAlign:"center",padding:42,border:"1px dashed #1a1f2e"}}>
+          <div style={{fontSize:36,marginBottom:10}}>⚡</div>
+          <div style={{fontSize:14,fontWeight:600,color:"#6b7485"}}>Select a tool above to begin</div>
+          <div style={{fontSize:12,color:"#3a4156",marginTop:5}}>Outputs auto-save to your Script Archive</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── VIDEO LIBRARY ─────────────────────────────────────────────
+function VideoLibrary({videos,setVideos}){
+  const [showForm,setShowForm]=useState(false),[edit,setEdit]=useState(null);
+  const [filterStatus,setFStatus]=useState("All"),[filterHost,setFHost]=useState("All"),[search,setSearch]=useState("");
+  const blank={title:"",host:"Lisa",platform:"YouTube",status:"Scripted",date:today(),views:"",notes:"",link:""};
+  const [form,setForm]=useState(blank);
+  const sColor={Scripted:"#6b7485",Recorded:"#f0a500",Edited:"#e879f9",Published:"#10b981"};
+
+  function openNew(){setForm(blank);setEdit(null);setShowForm(true);}
+  function openEdit(v){setForm({...v});setEdit(v.id);setShowForm(true);}
+  function save(){if(!form.title.trim())return;if(edit){setVideos(p=>p.map(v=>v.id===edit?{...form,id:edit}:v));}else{setVideos(p=>[...p,{...form,id:uid()}]);}setShowForm(false);}
+  function del(id){if(confirm("Delete this video?"))setVideos(p=>p.filter(v=>v.id!==id));}
+
+  const filtered=videos.filter(v=>{
+    if(filterStatus!=="All"&&v.status!==filterStatus)return false;
+    if(filterHost!=="All"&&v.host!==filterHost)return false;
+    if(search&&!v.title.toLowerCase().includes(search.toLowerCase()))return false;
+    return true;
+  }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
+        <div>
+          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Video Library</div>
+          <div style={{fontSize:12,color:"#8891a8",marginTop:2}}>{videos.length} tracked · {videos.filter(v=>v.status==="Published").length} published</div>
+        </div>
+        <button onClick={openNew} style={C.gold}>＋ Add Video</button>
+      </div>
+
+      <div style={{display:"flex",gap:9,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍  Search..." style={{...C.inp,width:200,padding:"8px 13px"}}/>
+        <select value={filterStatus} onChange={e=>setFStatus(e.target.value)} style={{...C.sel,width:140,padding:"8px 13px"}}>
+          <option value="All">All Statuses</option>
+          {STATUSES.map(s=><option key={s}>{s}</option>)}
+        </select>
+        <select value={filterHost} onChange={e=>setFHost(e.target.value)} style={{...C.sel,width:160,padding:"8px 13px"}}>
+          <option value="All">All Hosts</option>
+          {HOSTS_LIST.map(h=><option key={h}>{h}</option>)}
+        </select>
+        <div style={{marginLeft:"auto",display:"flex",gap:7}}>
+          {["All",...STATUSES].map(s=>{const c=s==="All"?"#8891a8":sColor[s];const n=s==="All"?videos.length:videos.filter(v=>v.status===s).length;return<div key={s} onClick={()=>setFStatus(s)} style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:7,background:filterStatus===s?`${c}1e`:"rgba(255,255,255,.03)",border:`1px solid ${filterStatus===s?c:"#1e2433"}`,color:filterStatus===s?c:"#6b7485",cursor:"pointer"}}>{s} ({n})</div>;})}
+        </div>
+      </div>
+
+      {filtered.length?(
+        <div style={{...C.card,padding:0,overflow:"hidden"}}>
+          <table style={{width:"100%",borderCollapse:"collapse"}}>
+            <thead><tr style={{borderBottom:"1px solid #1a1f2e"}}>
+              {["Title","Host","Platform","Date","Views","Status","Actions"].map(h=><th key={h} style={{padding:"11px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:"#5a6275",letterSpacing:1}}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {filtered.map(v=>{const sc=sColor[v.status]||"#6b7485";return(
+                <tr key={v.id} style={{borderBottom:"1px solid #0f1219",transition:"background .12s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.022)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                  <td style={{padding:"11px 14px",maxWidth:240}}><div style={{fontSize:13,fontWeight:600,color:"#e8eaf0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:220}}>{v.title}</div>{v.notes&&<div style={{fontSize:10,color:"#4a5166",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:220}}>{v.notes}</div>}</td>
+                  <td style={{padding:"11px 14px",fontSize:12,color:"#9aa0b8",whiteSpace:"nowrap"}}>{v.host}</td>
+                  <td style={{padding:"11px 14px",fontSize:12,color:"#9aa0b8",whiteSpace:"nowrap"}}>{v.platform}</td>
+                  <td style={{padding:"11px 14px",fontSize:12,color:"#9aa0b8",whiteSpace:"nowrap"}}>{fmtDate(v.date)}</td>
+                  <td style={{padding:"11px 14px",fontSize:13,fontWeight:600,color:"#e8eaf0"}}>{v.views?Number(v.views).toLocaleString():"—"}</td>
+                  <td style={{padding:"11px 14px"}}><span style={C.tag(sc)}>{v.status}</span></td>
+                  <td style={{padding:"11px 14px"}}>
+                    <div style={{display:"flex",gap:6,justifyContent:"flex-end"}}>
+                      {v.link&&<a href={v.link} target="_blank" rel="noopener noreferrer" style={{background:"rgba(96,165,250,.1)",border:"1px solid rgba(96,165,250,.3)",color:"#60a5fa",borderRadius:6,padding:"4px 9px",fontSize:11,fontWeight:700,textDecoration:"none"}}>🔗</a>}
+                      <button onClick={()=>openEdit(v)} style={{background:"rgba(167,139,250,.1)",border:"1px solid rgba(167,139,250,.28)",color:"#a78bfa",borderRadius:6,padding:"4px 9px",fontSize:11,fontWeight:700,cursor:"pointer"}}>✏️</button>
+                      <button onClick={()=>del(v.id)} style={C.danger}>🗑️</button>
+                    </div>
+                  </td>
+                </tr>
+              );})}
+            </tbody>
+          </table>
+        </div>
+      ):(
+        <div style={{...C.card,textAlign:"center",padding:50,border:"1px dashed #1a1f2e"}}>
+          <div style={{fontSize:36,marginBottom:10}}>🎬</div>
+          <div style={{fontSize:14,fontWeight:600,color:"#6b7485"}}>{search||filterStatus!=="All"||filterHost!=="All"?"No videos match your filters":"No videos yet"}</div>
+          <div style={{fontSize:12,color:"#3a4156",marginTop:5}}>Click <strong style={{color:"#f0a500"}}>+ Add Video</strong> to start tracking</div>
+        </div>
+      )}
+
+      {showForm&&(
+        <div className="mbg" onClick={e=>e.target===e.currentTarget&&setShowForm(false)}>
+          <div className="modal">
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:"#fff",marginBottom:20}}>{edit?"✏️ Edit Video":"＋ Add New Video"}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:13}}>
+              <div style={{gridColumn:"1/-1"}}><label style={C.lbl}>VIDEO TITLE *</label><input value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))} placeholder="e.g. AI Takes Over Customer Service Jobs" style={{...C.inp,border:"1px solid #1e2433"}}/></div>
+              <div><label style={C.lbl}>HOST</label><select value={form.host} onChange={e=>setForm(p=>({...p,host:e.target.value}))} style={{...C.sel,border:"1px solid #1e2433"}}>{HOSTS_LIST.map(h=><option key={h}>{h}</option>)}</select></div>
+              <div><label style={C.lbl}>PLATFORM</label><select value={form.platform} onChange={e=>setForm(p=>({...p,platform:e.target.value}))} style={{...C.sel,border:"1px solid #1e2433"}}>{PLATFORMS.map(p=><option key={p}>{p}</option>)}</select></div>
+              <div><label style={C.lbl}>STATUS</label><select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value}))} style={{...C.sel,border:"1px solid #1e2433"}}>{STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
+              <div><label style={C.lbl}>DATE</label><input type="date" value={form.date} onChange={e=>setForm(p=>({...p,date:e.target.value}))} style={{...C.inp,border:"1px solid #1e2433",colorScheme:"dark"}}/></div>
+              <div><label style={C.lbl}>VIEWS (optional)</label><input type="number" value={form.views} onChange={e=>setForm(p=>({...p,views:e.target.value}))} placeholder="1500" style={{...C.inp,border:"1px solid #1e2433"}}/></div>
+              <div><label style={C.lbl}>VIDEO LINK (optional)</label><input value={form.link} onChange={e=>setForm(p=>({...p,link:e.target.value}))} placeholder="https://..." style={{...C.inp,border:"1px solid #1e2433"}}/></div>
+              <div style={{gridColumn:"1/-1"}}><label style={C.lbl}>NOTES</label><textarea value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="Any notes..." style={{...C.inp,height:72,resize:"vertical",border:"1px solid #1e2433"}}/></div>
+            </div>
+            <div style={{display:"flex",gap:9,marginTop:20}}>
+              <button onClick={save} style={{...C.gold,flex:1,justifyContent:"center"}}>✅ {edit?"Save Changes":"Add Video"}</button>
+              <button onClick={()=>setShowForm(false)} style={{...C.ghost,flex:1,justifyContent:"center"}}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── SCRIPT ARCHIVE ────────────────────────────────────────────
+function ScriptArchive({scripts,setScripts}){
+  const [view,setView]=useState(null),[search,setSearch]=useState(""),[filterTool,setFTool]=useState("All"),[copied,setCopied]=useState(false),[showForm,setShowForm]=useState(false);
+  const [form,setForm]=useState({title:"",output:"",date:today()});
+  const toolNames=["All",...[...new Set(scripts.map(s=>s.tool))]];
+  const filtered=scripts.filter(s=>{
+    if(filterTool!=="All"&&s.tool!==filterTool)return false;
+    if(search&&!(s.title||"").toLowerCase().includes(search.toLowerCase())&&!(s.output||"").toLowerCase().includes(search.toLowerCase()))return false;
+    return true;
+  }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  function del(id){if(confirm("Delete this script?"))setScripts(p=>p.filter(s=>s.id!==id));if(view?.id===id)setView(null);}
+  function saveManual(){if(!form.output.trim())return;setScripts(p=>[...p,{...form,id:uid(),tool:"Manual Entry",toolEmoji:"📝",toolColor:"#a78bfa",title:form.title||form.output.slice(0,55)}]);setShowForm(false);setForm({title:"",output:"",date:today()});}
+
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
+        <div>
+          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Script Archive</div>
+          <div style={{fontSize:12,color:"#8891a8",marginTop:2}}>{scripts.length} scripts — never lose a good output again.</div>
+        </div>
+        <button onClick={()=>setShowForm(true)} style={C.gold}>＋ Add Manually</button>
+      </div>
+
+      <div style={{display:"flex",gap:9,marginBottom:15,flexWrap:"wrap"}}>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍  Search scripts..." style={{...C.inp,width:220,padding:"8px 13px"}}/>
+        <select value={filterTool} onChange={e=>setFTool(e.target.value)} style={{...C.sel,width:200,padding:"8px 13px"}}>{toolNames.map(t=><option key={t}>{t}</option>)}</select>
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:view?"280px 1fr":"repeat(3,1fr)",gap:13,alignItems:"start"}}>
+        <div style={view?{display:"flex",flexDirection:"column",gap:10}:{display:"contents"}}>
+          {filtered.length?filtered.map(s=>(
+            <div key={s.id} onClick={()=>setView(s)} style={{...C.card,cursor:"pointer",border:`1px solid ${view?.id===s.id?(s.toolColor||"#a78bfa"):"#1e2433"}`,borderLeft:`3px solid ${s.toolColor||"#a78bfa"}`,padding:16,transition:"all .18s"}} onMouseEnter={e=>{if(view?.id!==s.id)e.currentTarget.style.borderColor=`${s.toolColor||"#a78bfa"}44`;}} onMouseLeave={e=>{if(view?.id!==s.id){e.currentTarget.style.borderColor="#1e2433";e.currentTarget.style.borderLeftColor=s.toolColor||"#a78bfa";}}}>
+              <div style={{display:"flex",alignItems:"flex-start",gap:9,marginBottom:8}}>
+                <span style={{fontSize:18,flexShrink:0}}>{s.toolEmoji||"📄"}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:12,fontWeight:600,color:"#e8eaf0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title||"Untitled"}</div>
+                  <div style={{fontSize:10,color:"#6b7485",marginTop:1}}>{s.tool} · {fmtDate(s.date)}</div>
+                </div>
+              </div>
+              <div style={{fontSize:11,color:"#5a6275",lineHeight:1.5,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{s.output?.slice(0,110)}</div>
+              <div style={{display:"flex",justifyContent:"flex-end",marginTop:9}}>
+                <button onClick={e=>{e.stopPropagation();del(s.id);}} style={C.danger}>🗑️</button>
+              </div>
+            </div>
+          )):(
+            <div style={{...C.card,textAlign:"center",padding:50,border:"1px dashed #1a1f2e",...(view?{}:{gridColumn:"1/-1"})}}>
+              <div style={{fontSize:36,marginBottom:10}}>📄</div>
+              <div style={{fontSize:14,fontWeight:600,color:"#6b7485"}}>No scripts yet</div>
+              <div style={{fontSize:12,color:"#3a4156",marginTop:5}}>Use AI Tools and hit <strong style={{color:"#a78bfa"}}>Archive</strong> to save outputs</div>
+            </div>
+          )}
+        </div>
+
+        {view&&(
+          <div style={{...C.card,border:`1px solid ${view.toolColor||"#a78bfa"}3a`,position:"sticky",top:20,maxHeight:"78vh",overflowY:"auto"}}>
+            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:14,paddingBottom:12,borderBottom:"1px solid #141820"}}>
+              <div style={{display:"flex",gap:9,alignItems:"center"}}>
+                <span style={{fontSize:22}}>{view.toolEmoji}</span>
+                <div><div style={{fontSize:13,fontWeight:700,color:"#fff"}}>{view.title}</div><div style={{fontSize:10,color:"#6b7485",marginTop:1}}>{view.tool} · {fmtDate(view.date)}</div></div>
+              </div>
+              <button onClick={()=>setView(null)} style={{background:"none",border:"none",color:"#4a5166",cursor:"pointer",fontSize:22,lineHeight:1}}>×</button>
+            </div>
+            {view.input&&<><div style={{fontSize:9,color:"#6b7485",fontWeight:700,letterSpacing:1,marginBottom:5}}>ORIGINAL INPUT</div><div style={{background:"#060810",borderRadius:8,padding:11,fontSize:11,color:"#8891a8",lineHeight:1.6,marginBottom:12,whiteSpace:"pre-wrap"}}>{view.input}</div></>}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+              <div style={{fontSize:9,color:"#6b7485",fontWeight:700,letterSpacing:1}}>OUTPUT</div>
+              <button onClick={()=>cpyText(view.output,setCopied)} style={{background:"none",border:"1px solid #1e2433",borderRadius:6,padding:"3px 9px",color:"#8891a8",cursor:"pointer",fontSize:10}}>{copied?"✅ Copied!":"📋 Copy"}</button>
+            </div>
+            <div style={{fontSize:12,color:"#d1d5e0",lineHeight:1.75,whiteSpace:"pre-wrap"}}>{view.output}</div>
+          </div>
+        )}
+      </div>
+
+      {showForm&&(
+        <div className="mbg" onClick={e=>e.target===e.currentTarget&&setShowForm(false)}>
+          <div className="modal">
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:"#fff",marginBottom:18}}>📄 Add Script Manually</div>
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              <div><label style={C.lbl}>TITLE</label><input value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))} placeholder="Script title..." style={{...C.inp,border:"1px solid #1e2433"}}/></div>
+              <div><label style={C.lbl}>DATE</label><input type="date" value={form.date} onChange={e=>setForm(p=>({...p,date:e.target.value}))} style={{...C.inp,border:"1px solid #1e2433",colorScheme:"dark"}}/></div>
+              <div><label style={C.lbl}>CONTENT *</label><textarea value={form.output} onChange={e=>setForm(p=>({...p,output:e.target.value}))} placeholder="Paste script content here..." style={{...C.inp,height:190,resize:"vertical",border:"1px solid #1e2433"}}/></div>
+            </div>
+            <div style={{display:"flex",gap:9,marginTop:18}}>
+              <button onClick={saveManual} style={{...C.gold,flex:1,justifyContent:"center"}}>✅ Save Script</button>
+              <button onClick={()=>setShowForm(false)} style={{...C.ghost,flex:1,justifyContent:"center"}}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── CONTENT CALENDAR ──────────────────────────────────────────
+function ContentCalendar({events,setEvents}){
+  const [mode,setMode]=useState("month"),[curDate,setCurDate]=useState(new Date()),[showForm,setShowForm]=useState(false),[editEvt,setEditEvt]=useState(null);
+  const blank={title:"",host:"Lisa",platform:"YouTube",type:"Video",date:today(),notes:"",emoji:"🎬",color:"#f0a500"};
+  const [form,setForm]=useState(blank);
+
+  function openNew(date){setForm({...blank,date:date||today()});setEditEvt(null);setShowForm(true);}
+  function openEdit(ev){setForm({...ev});setEditEvt(ev.id);setShowForm(true);}
+  function save(){
+    if(!form.title.trim())return;
+    const et=EVENT_TYPES.find(x=>x.type===form.type)||EVENT_TYPES[0];
+    const ev={...form,emoji:et.emoji,color:et.color};
+    if(editEvt){setEvents(p=>p.map(e=>e.id===editEvt?{...ev,id:editEvt}:e));}else{setEvents(p=>[...p,{...ev,id:uid()}]);}
+    setShowForm(false);
+  }
+  function del(id){if(confirm("Delete this event?"))setEvents(p=>p.filter(e=>e.id!==id));}
+
+  const yr=curDate.getFullYear(),mo=curDate.getMonth();
+  const firstDay=new Date(yr,mo,1).getDay(),daysInMo=new Date(yr,mo+1,0).getDate();
+  const moName=curDate.toLocaleString("default",{month:"long"});
+
+  function evOn(d){const ds=`${yr}-${String(mo+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;return events.filter(e=>e.date===ds);}
+  function getWeek(){const d=new Date(curDate);d.setDate(d.getDate()-d.getDay());return Array.from({length:7},(_,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return x;});}
+  const weekDays=getWeek();
+  const upcoming=[...events].filter(e=>e.date>=today()).sort((a,b)=>a.date.localeCompare(b.date));
+  const prev=()=>{const d=new Date(curDate);mode==="month"?d.setMonth(d.getMonth()-1):d.setDate(d.getDate()-7);setCurDate(d);};
+  const next=()=>{const d=new Date(curDate);mode==="month"?d.setMonth(d.getMonth()+1):d.setDate(d.getDate()+7);setCurDate(d);};
+
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
+        <div>
+          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Content Calendar</div>
+          <div style={{fontSize:12,color:"#8891a8",marginTop:2}}>{events.length} events · {upcoming.length} upcoming</div>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <div style={{display:"flex",gap:4}}>
+            {["month","week","list"].map(m=><button key={m} onClick={()=>setMode(m)} style={{fontSize:11,fontWeight:700,padding:"7px 13px",borderRadius:8,border:`1px solid ${mode===m?"#f0a500":"#1e2433"}`,background:mode===m?"rgba(240,165,0,.11)":"transparent",color:mode===m?"#f0a500":"#8891a8",cursor:"pointer",textTransform:"capitalize"}}>{m}</button>)}
+          </div>
+          <button onClick={()=>openNew()} style={C.gold}>＋ Add Event</button>
+        </div>
+      </div>
+
+      {mode!=="list"&&(
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+          <button onClick={prev} style={{...C.ghost,padding:"7px 14px"}}>‹</button>
+          <div style={{flex:1,textAlign:"center",fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:"#fff"}}>
+            {mode==="month"?`${moName} ${yr}`:`Week of ${weekDays[0].toLocaleDateString("en-US",{month:"short",day:"numeric"})} – ${weekDays[6].toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}`}
+          </div>
+          <button onClick={()=>setCurDate(new Date())} style={{...C.ghost,padding:"7px 12px",fontSize:11}}>Today</button>
+          <button onClick={next} style={{...C.ghost,padding:"7px 14px"}}>›</button>
+        </div>
+      )}
+
+      {/* MONTH */}
+      {mode==="month"&&(
+        <div style={{...C.card,padding:0,overflow:"hidden"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",borderBottom:"1px solid #1a1f2e"}}>
+            {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=><div key={d} style={{padding:"9px 0",textAlign:"center",fontSize:10,fontWeight:700,color:"#5a6275",letterSpacing:1}}>{d}</div>)}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
+            {Array.from({length:firstDay},(_,i)=><div key={"e"+i} style={{minHeight:86,borderRight:"1px solid #0e1117",borderBottom:"1px solid #0e1117",background:"#07080e"}}/>)}
+            {Array.from({length:daysInMo},(_,i)=>{
+              const d=i+1,ds=`${yr}-${String(mo+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`,isToday=ds===today(),dayEvts=evOn(d);
+              return(
+                <div key={d} onClick={()=>openNew(ds)} style={{minHeight:86,borderRight:"1px solid #0e1117",borderBottom:"1px solid #0e1117",padding:6,cursor:"pointer",transition:"background .12s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.022)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                  <div style={{fontSize:11,fontWeight:isToday?800:500,color:isToday?"#000":"#8891a8",background:isToday?"#f0a500":"transparent",width:20,height:20,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:3}}>{d}</div>
+                  {dayEvts.slice(0,3).map(ev=><div key={ev.id} onClick={e=>{e.stopPropagation();openEdit(ev);}} style={{fontSize:9,fontWeight:700,padding:"2px 5px",borderRadius:4,background:`${ev.color}1e`,color:ev.color,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",border:`1px solid ${ev.color}28`}}>{ev.emoji} {ev.title}</div>)}
+                  {dayEvts.length>3&&<div style={{fontSize:9,color:"#4a5166"}}>+{dayEvts.length-3}</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* WEEK */}
+      {mode==="week"&&(
+        <div style={{...C.card,padding:0,overflow:"hidden"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",borderBottom:"1px solid #1a1f2e"}}>
+            {weekDays.map(d=>{const ds=d.toISOString().slice(0,10),isT=ds===today();return(
+              <div key={ds} style={{padding:"9px 7px",textAlign:"center",background:isT?"rgba(240,165,0,.07)":"transparent",borderRight:"1px solid #0e1117"}}>
+                <div style={{fontSize:10,fontWeight:700,color:"#5a6275",letterSpacing:1}}>{d.toLocaleString("default",{weekday:"short"}).toUpperCase()}</div>
+                <div style={{fontSize:18,fontWeight:900,color:isT?"#f0a500":"#e8eaf0",marginTop:2}}>{d.getDate()}</div>
+              </div>
+            );})}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",minHeight:200}}>
+            {weekDays.map(d=>{const ds=d.toISOString().slice(0,10),dayEvts=events.filter(e=>e.date===ds);return(
+              <div key={ds} onClick={()=>openNew(ds)} style={{padding:7,borderRight:"1px solid #0e1117",cursor:"pointer",minHeight:160,transition:"background .12s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.022)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                {dayEvts.map(ev=><div key={ev.id} onClick={e=>{e.stopPropagation();openEdit(ev);}} style={{fontSize:10,fontWeight:600,padding:"5px 7px",borderRadius:6,background:`${ev.color}16`,color:ev.color,marginBottom:5,border:`1px solid ${ev.color}28`,lineHeight:1.4}}>
+                  <div>{ev.emoji} {ev.title}</div>
+                  {ev.host&&<div style={{fontSize:9,opacity:.65,marginTop:1}}>{ev.host}</div>}
+                </div>)}
+              </div>
+            );})}
+          </div>
+        </div>
+      )}
+
+      {/* LIST */}
+      {mode==="list"&&(
+        <div>
+          {[["This Week",0,7],["Next Week",7,14],["This Month",14,60],["Later",60,3650]].map(([label,from,to])=>{
+            const base=new Date(today());
+            const s=new Date(base);s.setDate(s.getDate()+from);
+            const e2=new Date(base);e2.setDate(e2.getDate()+to);
+            const grp=events.filter(e=>new Date(e.date)>=s&&new Date(e.date)<e2).sort((a,b)=>a.date.localeCompare(b.date));
+            if(!grp.length)return null;
+            return(
+              <div key={label} style={{marginBottom:22}}>
+                <div style={{fontSize:10,color:"#8891a8",fontWeight:700,letterSpacing:2,marginBottom:10}}>{label.toUpperCase()} ({grp.length})</div>
+                {grp.map(ev=>(
+                  <div key={ev.id} style={{...C.card,display:"flex",alignItems:"center",gap:13,marginBottom:9,padding:16,borderLeft:`3px solid ${ev.color}`}}>
+                    <div style={{width:40,height:40,borderRadius:11,background:`${ev.color}16`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{ev.emoji}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,fontWeight:600,color:"#e8eaf0"}}>{ev.title}</div>
+                      <div style={{fontSize:11,color:"#6b7485",marginTop:1}}>{fmtDate(ev.date)} · {ev.host} · {ev.platform} · <span style={{color:ev.color}}>{ev.type}</span></div>
+                      {ev.notes&&<div style={{fontSize:11,color:"#4a5166",marginTop:1}}>{ev.notes}</div>}
+                    </div>
+                    <div style={{display:"flex",gap:7,flexShrink:0}}>
+                      <button onClick={()=>openEdit(ev)} style={{background:"rgba(167,139,250,.1)",border:"1px solid rgba(167,139,250,.28)",color:"#a78bfa",borderRadius:7,padding:"5px 11px",fontSize:11,fontWeight:700,cursor:"pointer"}}>✏️ Edit</button>
+                      <button onClick={()=>del(ev.id)} style={C.danger}>🗑️</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+          {events.length===0&&<div style={{...C.card,textAlign:"center",padding:50,border:"1px dashed #1a1f2e"}}><div style={{fontSize:36,marginBottom:10}}>📅</div><div style={{fontSize:14,fontWeight:600,color:"#6b7485"}}>No events yet</div><div style={{fontSize:12,color:"#3a4156",marginTop:5}}>Click <strong style={{color:"#f0a500"}}>+ Add Event</strong> to schedule content</div></div>}
+        </div>
+      )}
+
+      {showForm&&(
+        <div className="mbg" onClick={e=>e.target===e.currentTarget&&setShowForm(false)}>
+          <div className="modal">
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:"#fff",marginBottom:18}}>{editEvt?"✏️ Edit Event":"📅 Add New Event"}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:13}}>
+              <div style={{gridColumn:"1/-1"}}><label style={C.lbl}>TITLE *</label><input value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))} placeholder="e.g. Lisa — AI Weekly Roundup Ep. 48" style={{...C.inp,border:"1px solid #1e2433"}}/></div>
+              <div><label style={C.lbl}>EVENT TYPE</label><select value={form.type} onChange={e=>setForm(p=>({...p,type:e.target.value}))} style={{...C.sel,border:"1px solid #1e2433"}}>{EVENT_TYPES.map(t=><option key={t.type}>{t.type}</option>)}</select></div>
+              <div><label style={C.lbl}>DATE</label><input type="date" value={form.date} onChange={e=>setForm(p=>({...p,date:e.target.value}))} style={{...C.inp,border:"1px solid #1e2433",colorScheme:"dark"}}/></div>
+              <div><label style={C.lbl}>HOST</label><select value={form.host} onChange={e=>setForm(p=>({...p,host:e.target.value}))} style={{...C.sel,border:"1px solid #1e2433"}}>
+                {["All",...HOSTS_LIST].map(h=><option key={h}>{h}</option>)}
+              </select></div>
+              <div><label style={C.lbl}>PLATFORM</label><select value={form.platform} onChange={e=>setForm(p=>({...p,platform:e.target.value}))} style={{...C.sel,border:"1px solid #1e2433"}}>{PLATFORMS.map(p=><option key={p}>{p}</option>)}</select></div>
+              <div style={{gridColumn:"1/-1"}}><label style={C.lbl}>NOTES</label><textarea value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="Notes for this event..." style={{...C.inp,height:68,resize:"vertical",border:"1px solid #1e2433"}}/></div>
+            </div>
+            <div style={{display:"flex",gap:7,flexWrap:"wrap",marginTop:11}}>
+              {EVENT_TYPES.map(t=><div key={t.type} onClick={()=>setForm(p=>({...p,type:t.type}))} style={{fontSize:10,fontWeight:700,padding:"5px 11px",borderRadius:7,background:form.type===t.type?`${t.color}1e`:"rgba(255,255,255,.03)",border:`1px solid ${form.type===t.type?t.color:"#1e2433"}`,color:form.type===t.type?t.color:"#8891a8",cursor:"pointer"}}>{t.emoji} {t.type}</div>)}
+            </div>
+            <div style={{display:"flex",gap:9,marginTop:20}}>
+              <button onClick={save} style={{...C.gold,flex:1,justifyContent:"center"}}>✅ {editEvt?"Save Changes":"Add to Calendar"}</button>
+              {editEvt&&<button onClick={()=>{del(editEvt);setShowForm(false);}} style={{...C.danger,padding:"10px 14px"}}>🗑️</button>}
+              <button onClick={()=>setShowForm(false)} style={{...C.ghost,flex:1,justifyContent:"center"}}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── NEWS STUDIO ───────────────────────────────────────────────
+function Studio(){
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{marginBottom:20}}>
+        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>News Studio</div>
+        <div style={{fontSize:12,color:"#8891a8",marginTop:2}}>{HOSTS_DATA.reduce((a,h)=>a+h.episodes,0)} episodes produced · 4 AI anchors on duty.</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:22}}>
+        {HOSTS_DATA.map(h=>(
+          <div key={h.name} style={{...C.card,border:"1px solid #1e2433",transition:"border-color .2s"}} onMouseEnter={e=>e.currentTarget.style.borderColor=h.color} onMouseLeave={e=>e.currentTarget.style.borderColor="#1e2433"}>
+            <div style={{display:"flex",alignItems:"center",gap:14}}>
+              <div style={{width:58,height:58,borderRadius:16,background:`${h.color}16`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,border:`2px solid ${h.color}2e`,flexShrink:0}}>{h.emoji}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:17,fontWeight:800,color:"#fff"}}>{h.name}</div>
+                <div style={{fontSize:11,color:h.color,fontWeight:700,marginTop:1}}>{h.role}</div>
+                <div style={{fontSize:11,color:"#8891a8",marginTop:1}}>{h.specialty}</div>
+              </div>
+              <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:26,fontWeight:900,color:h.color,lineHeight:1}}>{h.episodes}</div><div style={{fontSize:9,color:"#4a5166",letterSpacing:.5}}>EPS</div></div>
+            </div>
+            <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid #141820"}}>
+              <div style={{fontSize:10,color:"#4a5166",fontWeight:700,letterSpacing:1,marginBottom:5}}>STYLE</div>
+              <div style={{fontSize:12,color:"#9aa0b8",marginBottom:9}}>{h.style}</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{h.shows.map(s=><span key={s} style={C.tag(h.color)}>{s}</span>)}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={C.card}>
+        <div style={{fontWeight:700,color:"#fff",fontSize:14,marginBottom:14}}>📅 Weekly Broadcast Schedule</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:9}}>
+          {["MON","TUE","WED","THU","FRI"].map((day,i)=>(
+            <div key={day} style={{background:"#080b12",borderRadius:10,padding:11}}>
+              <div style={{fontSize:9,fontWeight:700,color:"#8891a8",letterSpacing:2,marginBottom:9}}>{day}</div>
+              {[HOSTS_DATA[i%4],HOSTS_DATA[(i+2)%4]].map(h=>(
+                <div key={h.name} style={{display:"flex",alignItems:"center",gap:6,marginBottom:6,padding:"5px 7px",background:`${h.color}0d`,borderRadius:7,borderLeft:`2px solid ${h.color}`}}>
+                  <span style={{fontSize:13}}>{h.emoji}</span>
+                  <span style={{fontSize:10,color:"#b8c0d0",fontWeight:500}}>{h.name.split(" ")[0]}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── AFFILIATES ────────────────────────────────────────────────
+function Affiliates(){
+  const [calc,setCalc]=useState({vidnoz:0,invideo:0,mailerlite:0});
+  const est=Math.round(calc.vidnoz*.5+calc.invideo*.3+calc.mailerlite*140);
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{marginBottom:20}}>
+        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Affiliate Command</div>
+        <div style={{fontSize:12,color:"#8891a8",marginTop:2}}>5 programs · Direct links · Live earnings calculator.</div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:11,marginBottom:24}}>
+        {AFFILIATES.map(a=>(
+          <div key={a.name} style={{...C.card,display:"flex",alignItems:"center",gap:16,borderLeft:`4px solid ${a.color}`}}>
+            <div style={{width:46,height:46,borderRadius:13,background:`${a.color}16`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{a.icon}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:2}}><div style={{fontSize:16,fontWeight:800,color:"#fff"}}>{a.name}</div><span style={C.tag(a.color)}>{a.badge}</span></div>
+              <div style={{fontSize:12,color:"#8891a8"}}>{a.desc}</div>
+            </div>
+            <div style={{textAlign:"center",marginRight:4,flexShrink:0}}><div style={{fontSize:16,fontWeight:800,color:a.color,whiteSpace:"nowrap"}}>{a.commission}</div><div style={{fontSize:9,color:"#4a5166",letterSpacing:.5}}>COMMISSION</div></div>
+            <a href={a.url} target="_blank" rel="noopener noreferrer" style={{background:`${a.color}16`,border:`1px solid ${a.color}3a`,color:a.color,borderRadius:9,padding:"8px 14px",textDecoration:"none",fontSize:12,fontWeight:700,display:"flex",alignItems:"center",gap:5,flexShrink:0}}>🔗 Open</a>
+          </div>
+        ))}
+      </div>
+      <div style={{...C.card,border:"1px solid rgba(240,165,0,.25)"}}>
+        <div style={{fontWeight:700,color:"#fff",fontSize:15,marginBottom:3}}>📊 Commission Calculator</div>
+        <div style={{fontSize:11,color:"#8891a8",marginBottom:16}}>Estimate your monthly affiliate earnings</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:16}}>
+          {[{key:"vidnoz",label:"Vidnoz Sales",color:"#ff6b35",hint:"$/sale · 50%"},{key:"invideo",label:"InVideo Sales",color:"#7c3aed",hint:"$/sale · 30%"},{key:"mailerlite",label:"MailerLite Refs",color:"#059669",hint:"referrals · $140"}].map(f=>(
+            <div key={f.key} style={{background:"#080b12",borderRadius:11,padding:13}}>
+              <div style={{fontSize:11,color:f.color,fontWeight:700,marginBottom:7}}>{f.label}</div>
+              <input type="number" min="0" value={calc[f.key]||""} placeholder="0" onChange={e=>setCalc(p=>({...p,[f.key]:Number(e.target.value)||0}))} style={{...C.inp,border:"1px solid #1e2433",marginBottom:5}}/>
+              <div style={{fontSize:10,color:"#4a5166"}}>{f.hint}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{background:"linear-gradient(135deg,rgba(240,165,0,.09),rgba(240,165,0,.04))",border:"1px solid rgba(240,165,0,.25)",borderRadius:13,padding:"18px 22px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div><div style={{fontSize:13,color:"#e8eaf0",fontWeight:600}}>Estimated Monthly Earnings</div><div style={{fontSize:11,color:"#4a5166",marginTop:1}}>Based on inputs above</div></div>
+          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:38,fontWeight:900,color:"#f0a500"}}>${est.toLocaleString()}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── TEAM HQ ───────────────────────────────────────────────────
+function Team(){
+  const members=[
+    {name:"John", role:"CEO & Product Owner",emoji:"👔",color:"#f0a500",desc:"20+ years industrial ops in SE Texas. Former 9-state sales rep. Visionary architect of Hub Engine.",skills:["Strategy","Leadership","Affiliate Marketing","Prompt Engineering","Funnel Building","Sales"]},
+    {name:"Becky",role:"Creative Director",  emoji:"🎨",color:"#e879f9",desc:"The creative force behind every show. Shapes brand voice, visual identity, and content direction.",skills:["Creative Direction","Brand Voice","Content Strategy","Visual Design","Storytelling","Production"]},
+    {name:"Claude",role:"AI Developer",      emoji:"⚡",color:"#60a5fa",desc:"The engine behind the engine. Builds tools, writes code, and powers every AI workflow in the Hub.",skills:["Full-Stack Dev","AI Integration","Tool Architecture","Prompt Engineering","Automation","UI/UX"]},
+  ];
+  return(
+    <div style={{animation:"slideIn .35s ease"}}>
+      <div style={{marginBottom:20}}>
+        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#fff"}}>Team HQ</div>
+        <div style={{fontSize:12,color:"#8891a8",marginTop:2}}>Three minds. One unstoppable mission.</div>
+      </div>
+      <div style={{background:"linear-gradient(135deg,#0c0f18,#0a0d16)",border:"1px solid #1e2433",borderRadius:16,padding:"22px 28px",marginBottom:22,textAlign:"center"}}>
+        <div style={{fontSize:9,color:"#f0a500",fontWeight:700,letterSpacing:5,marginBottom:9}}>THE MISSION</div>
+        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:26,fontWeight:900,color:"#fff",letterSpacing:-.5}}>"Three Minds. One Mission. Zero Cost."</div>
+        <div style={{marginTop:9,fontSize:12,color:"#4a5166"}}>An AI-native media team built from scratch in Orange, Texas — and built to win.</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
+        {members.map(m=>(
+          <div key={m.name} style={{...C.card,border:`1px solid ${m.color}26`,textAlign:"center"}}>
+            <div style={{width:68,height:68,borderRadius:19,background:`${m.color}12`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,margin:"0 auto 14px",border:`2px solid ${m.color}2e`}}>{m.emoji}</div>
+            <div style={{fontSize:19,fontWeight:800,color:"#fff"}}>{m.name}</div>
+            <div style={{fontSize:11,color:m.color,fontWeight:700,marginTop:3,letterSpacing:.3}}>{m.role}</div>
+            <div style={{fontSize:12,color:"#8891a8",lineHeight:1.65,margin:"12px 0"}}>{m.desc}</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:5,justifyContent:"center"}}>{m.skills.map(s=><span key={s} style={C.tag(m.color)}>{s}</span>)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── ROOT ──────────────────────────────────────────────────────
+function App(){
+  const [authed,setAuthed]=useState(false),[tab,setTab]=useState("dashboard");
+  const [videos,setVidRaw]=useState(()=>store.get("videos",[]));
+  const [scripts,setScrRaw]=useState(()=>store.get("scripts",[]));
+  const [events,setEvtRaw]=useState(()=>store.get("events",[]));
+
+  const setVideos=fn=>{setVidRaw(p=>{const n=typeof fn==="function"?fn(p):fn;store.set("videos",n);return n;});};
+  const setScripts=fn=>{setScrRaw(p=>{const n=typeof fn==="function"?fn(p):fn;store.set("scripts",n);return n;});};
+  const setEvents=fn=>{setEvtRaw(p=>{const n=typeof fn==="function"?fn(p):fn;store.set("events",n);return n;});};
+  const saveScript=s=>setScripts(p=>[...p,s]);
+
+  const nav=[
+    {id:"dashboard", label:"Dashboard",    icon:"📊"},
+    {id:"tools",     label:"AI Tools",     icon:"⚡"},
+    {id:"library",   label:"Video Library",icon:"🎬",badge:()=>videos.length},
+    {id:"archive",   label:"Scripts",      icon:"📄",badge:()=>scripts.length},
+    {id:"calendar",  label:"Calendar",     icon:"📅",badge:()=>events.length},
+    {id:"studio",    label:"News Studio",  icon:"📺"},
+    {id:"affiliates",label:"Affiliates",   icon:"💰"},
+    {id:"team",      label:"Team HQ",      icon:"👥"},
+  ];
+
+  if(!authed)return <Gate onAuth={()=>setAuthed(true)}/>;
+
+  return(
+    <div style={{minHeight:"100vh",background:"#06070d",display:"flex"}}>
+      <aside style={{width:205,background:"#080b12",borderRight:"1px solid #141820",display:"flex",flexDirection:"column",position:"fixed",top:0,left:0,height:"100vh",zIndex:100}}>
+        <div style={{padding:"18px 14px 14px",borderBottom:"1px solid #141820",flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:9}}>
+            <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#f0a500,#c06000)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,animation:"glow 3s infinite",flexShrink:0}}>⚡</div>
+            <div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:900,color:"#fff",letterSpacing:-.4}}>HUB ENGINE</div><div style={{fontSize:8,color:"#f0a500",fontWeight:700,letterSpacing:4}}>V 4 . 0</div></div>
+          </div>
+        </div>
+        <nav style={{flex:1,padding:"11px 7px",overflowY:"auto"}}>
+          {nav.map(n=>{
+            const on=tab===n.id,bc=n.badge?n.badge():0;
+            return(
+              <button key={n.id} onClick={()=>setTab(n.id)} style={{display:"flex",alignItems:"center",gap:9,width:"100%",padding:"8px 10px",borderRadius:8,marginBottom:2,border:"none",background:on?"rgba(240,165,0,.1)":"transparent",color:on?"#f0a500":"#8891a8",cursor:"pointer",fontSize:12,fontWeight:on?600:400,transition:"all .15s",textAlign:"left"}} onMouseEnter={e=>{if(!on){e.currentTarget.style.background="rgba(255,255,255,.044)";e.currentTarget.style.color="#c8d0e0";}}} onMouseLeave={e=>{if(!on){e.currentTarget.style.background="transparent";e.currentTarget.style.color="#8891a8";}}}>
+                <span style={{fontSize:14}}>{n.icon}</span>
+                <span style={{flex:1}}>{n.label}</span>
+                {bc>0&&<span style={{fontSize:9,fontWeight:700,background:"rgba(240,165,0,.18)",color:"#f0a500",borderRadius:9,padding:"1px 6px",minWidth:18,textAlign:"center"}}>{bc}</span>}
+                {on&&<span style={{width:5,height:5,borderRadius:"50%",background:"#f0a500",flexShrink:0}}/>}
+              </button>
+            );
+          })}
+        </nav>
+        <div style={{padding:"10px 7px",borderTop:"1px solid #141820",flexShrink:0}}>
+          <div style={{fontSize:8,color:"#242c3a",textAlign:"center",lineHeight:1.7,marginBottom:7}}>Three Minds · One Mission<br/>Zero Cost · Orange, TX</div>
+          <button onClick={()=>setAuthed(false)} style={{...C.ghost,width:"100%",justifyContent:"center",fontSize:11,padding:"7px",borderRadius:7}}>🔒 Lock Hub</button>
+        </div>
+      </aside>
+
+      <main style={{marginLeft:205,flex:1,padding:"28px 32px",minHeight:"100vh"}}>
+        <div style={{maxWidth:1000}}>
+          {tab==="dashboard"  &&<Dashboard setTab={setTab} videos={videos} scripts={scripts} events={events}/>}
+          {tab==="tools"      &&<AITools onSaveScript={saveScript}/>}
+          {tab==="library"    &&<VideoLibrary videos={videos} setVideos={setVideos}/>}
+          {tab==="archive"    &&<ScriptArchive scripts={scripts} setScripts={setScripts}/>}
+          {tab==="calendar"   &&<ContentCalendar events={events} setEvents={setEvents}/>}
+          {tab==="studio"     &&<Studio/>}
+          {tab==="affiliates" &&<Affiliates/>}
+          {tab==="team"       &&<Team/>}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
