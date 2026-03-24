@@ -1185,7 +1185,7 @@ function toggleMic(tab){
 }
 
 // ─────────────────────────────────────────────
-// VOICE — BECKY SPEAKS
+ // VOICE — BECKY SPEAKS
 // Uses `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0`(free, no API key, works on all devices)
 // British English Female voice
 // ─────────────────────────────────────────────
@@ -1262,7 +1262,7 @@ function speakText(text){
   if(typeof `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0`!== 'undefined'){
     try {
       `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0`cancel();
-      `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0`.speak(clean, chosenVoiceId, {
+      `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0`.speak(clean, chosenVoiceId,{
         rate: 0.9,
         pitch: 1.0,
         volume: 1,
