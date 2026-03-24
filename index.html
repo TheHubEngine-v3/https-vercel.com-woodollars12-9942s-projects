@@ -1186,23 +1186,23 @@ function toggleMic(tab){
 
 // ─────────────────────────────────────────────
 // VOICE — BECKY SPEAKS
-// Uses ResponsiveVoice (free, no API key, works on all devices)
+// Uses `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0`(free, no API key, works on all devices)
 // British English Female voice
 // ─────────────────────────────────────────────
 let speaking = true;
 let rvReady = false;
 
-// Load ResponsiveVoice — free, works on GitHub Pages, no API needed
+// Load `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0` — free, works on GitHub Pages, no API needed
 (function(){
   const s = document.createElement('script');
-  s.src = 'https://code.responsivevoice.org/responsivevoice.js?key=FREE';
+  s.src = `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0`js?key=FREE
   s.onload = () => { rvReady = true; };
   s.onerror = () => { rvReady = false; };
   document.head.appendChild(s);
 })();
 
 // ElevenLabs-quality British female voices via ResponsiveVoice
-// ResponsiveVoice real available voices that sound DIFFERENT from each other
+// `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0`;real available voices that sound DIFFERENT from each other
 const BRIT_VOICES = [
   { id: 'UK English Female',   name: '🇬🇧 British Female' },
   { id: 'Australian Female',   name: '🇦🇺 Australian Female' },
@@ -1258,11 +1258,11 @@ function speakText(text){
                     .substring(0, 400);
   if(!clean) return;
 
-  // ResponsiveVoice — works on phone and laptop
-  if(typeof responsiveVoice !== 'undefined'){
+  // `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0` — works on phone and laptop
+  if(typeof `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0`!== 'undefined'){
     try {
-      responsiveVoice.cancel();
-      responsiveVoice.speak(clean, chosenVoiceId, {
+      `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0`cancel();
+      `/index/set_voice_tool Claude.ai/voice_id=claude/volume=0.8/speech_rate=1.0`.speak(clean, chosenVoiceId, {
         rate: 0.9,
         pitch: 1.0,
         volume: 1,
