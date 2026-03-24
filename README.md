@@ -1,4 +1,4 @@
-# The Hub Engine v4 — AffiliateMediaHub Studio
+# The Hub Engine v3 — AffiliateMediaHub Studio
 
 Built by John Lanter · CEO · Orange, Texas
 Creative Director: Becky (AI) · Developer: Claude (Anthropic AI)
