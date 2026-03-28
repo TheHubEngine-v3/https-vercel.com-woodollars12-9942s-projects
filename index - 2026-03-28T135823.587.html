@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>The Hub Engine v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --gold: #f5c518;--gold2: #e8a020;--dark: #07070f;--dark2: #0e0e1a;--dark3: #13131f;
+  --border: rgba(245,197,24,0.18);--text: #eeeef5;--muted: rgba(238,238,245,0.45);
+  --green: #0f9d58;--red: #ea4335;--blue: #4285f4;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--dark);color:var(--text);font-family:'Exo 2',sans-serif;}
+#loginScreen{position:fixed;inset:0;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;padding:24px;}
+.login-glow{width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(245,197,24,0.25),transparent 70%);display:flex;align-items:center;justify-content:center;font-size:42px;margin-bottom:20px;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,197,24,0.3);}50%{box-shadow:0 0 0 20px rgba(245,197,24,0);}}
+.login-title{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--gold);letter-spacing:3px;text-align:center;}
+.login-sub{font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:32px;}
+.login-step{width:100%;max-width:360px;margin-bottom:14px;}
+.login-label{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:6px;}
+.login-input{width:100%;padding:13px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:15px;outline:none;}
+.login-input:focus{border-color:var(--gold);}
+.login-btn{width:100%;max-width:360px;padding:15px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;border:none;border-radius:10px;cursor:pointer;margin-top:8px;}
+.login-err{font-size:12px;color:var(--red);text-align:center;margin-top:8px;min-height:18px;}
+#app{display:flex;flex-direction:column;height:100%;height:100dvh;height:-webkit-fill-available;overflow:hidden;}
+.status-bar{background:rgba(15,157,88,0.12);border-bottom:1px solid rgba(15,157,88,0.25);padding:6px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0;order:1;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.status-text{font-size:10px;color:var(--green);letter-spacing:2px;font-weight:700;font-family:'Rajdhani',sans-serif;}
+.status-right{margin-left:auto;font-size:10px;color:var(--muted);letter-spacing:1px;}
+.tab-bar{display:flex !important;overflow-x:auto;flex-shrink:0;background:var(--dark2);border-top:2px solid var(--border);scrollbar-width:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;padding-bottom:env(safe-area-inset-bottom);min-height:60px;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 14px;gap:3px;flex-shrink:0;cursor:pointer;border-top:2px solid transparent;transition:all .2s;min-width:58px;font-family:'Rajdhani',sans-serif;}
+.tab-btn span:first-child{font-size:19px;}
+.tab-btn span:last-child{font-size:9px;letter-spacing:1px;color:var(--muted);font-weight:700;}
+.tab-btn.active{border-top-color:var(--gold);}
+.tab-btn.active span:last-child{color:var(--gold);}
+.pages{flex:1;overflow:hidden;position:relative;order:2;}
+.page{display:none;height:100%;flex-direction:column;overflow:hidden;}
+.page.active{display:flex;}
+.page-inner{flex:1;overflow-y:auto;padding:16px;padding-bottom:80px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.page-inner::-webkit-scrollbar{width:4px;}
+.page-inner::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.chat-wrap{display:flex;flex-direction:column;height:100%;padding-bottom:68px;}
+.chat-header{padding:12px 16px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px;}
+.chat-header-icon{font-size:28px;}
+.chat-header-title{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--gold);letter-spacing:1px;}
+.chat-header-sub{font-size:11px;color:var(--muted);}
+.voice-select{margin-left:auto;padding:5px 8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-family:'Exo 2',sans-serif;outline:none;cursor:pointer;}
+.messages{flex:1;overflow-y:auto;padding:14px;padding-bottom:80px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.messages::-webkit-scrollbar{width:4px;}
+.messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.msg{max-width:82%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.55;}
+.msg.bot{background:rgba(255,255,255,0.06);border:1px solid var(--border);align-self:flex-start;border-radius:4px 14px 14px 14px;}
+.msg.user{background:rgba(245,197,24,0.12);border:1px solid rgba(245,197,24,0.2);align-self:flex-end;border-radius:14px 4px 14px 14px;color:var(--gold);}
+.msg.thinking{opacity:0.6;font-style:italic;}
+.chat-input-bar{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--dark2);border-top:1px solid var(--border);flex-shrink:0;margin-bottom:0;min-height:68px;}
+.chat-input-bar textarea{flex:1;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:14px;outline:none;resize:none;min-height:42px;max-height:100px;direction:ltr;unicode-bidi:normal;text-align:left;}
+.chat-input-bar textarea:focus{border-color:var(--gold);}
+.icon-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.icon-btn.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;width:52px;height:52px;font-size:22px;border-radius:14px;}
+.icon-btn.active{border-color:var(--green);color:var(--green);}
+.card{background:var(--dark3);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
+.card-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+.link-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.link-btn{padding:11px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:var(--text);font-size:12px;font-family:'Exo 2',sans-serif;cursor:pointer;text-align:center;transition:all .2s;text-decoration:none;display:block;}
+.link-btn:hover,.link-btn:active{background:rgba(245,197,24,0.08);border-color:var(--border);}
+.link-btn .lb-icon{font-size:20px;display:block;margin-bottom:4px;}
+.link-btn .lb-name{font-size:11px;font-weight:600;}
+.link-btn .lb-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.actor-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.actor-card{padding:14px;background:var(--dark3);border:2px solid rgba(255,255,255,0.06);border-radius:12px;cursor:pointer;transition:all .2s;text-align:center;}
+.actor-card.selected{border-color:var(--gold);background:rgba(245,197,24,0.06);}
+.actor-card .ac-icon{font-size:32px;margin-bottom:6px;}
+.actor-card .ac-name{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--gold);}
+.actor-card .ac-day{font-size:10px;color:var(--muted);letter-spacing:1px;}
+.topic-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+.topic-chip{padding:7px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;}
+.topic-chip.selected{background:rgba(245,197,24,0.1);border-color:var(--gold);color:var(--gold);}
+.custom-input{width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;margin-bottom:12px;}
+.custom-input:focus{border-color:var(--gold);}
+.action-btn{width:100%;padding:13px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'Rajdhani',sans-serif;letter-spacing:1px;margin-bottom:8px;transition:all .2s;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;}
+.btn-blue{background:rgba(66,133,244,0.12);border:1px solid rgba(66,133,244,0.3);color:var(--blue);}
+.btn-green{background:rgba(15,157,88,0.12);border:1px solid rgba(15,157,88,0.3);color:var(--green);}
+.btn-gray{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--muted);font-size:12px;}
+.action-btn:disabled{opacity:0.35;cursor:not-allowed;}
+.script-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;line-height:1.6;color:var(--muted);min-height:80px;white-space:pre-wrap;margin-bottom:10px;}
+.scene-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.scene-item{background:rgba(255,255,255,0.03);border-left:3px solid rgba(245,197,24,0.2);border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.scene-item.current{border-left-color:var(--gold);color:var(--text);background:rgba(245,197,24,0.04);}
+.scene-copy{background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.2);border-radius:6px;padding:3px 8px;font-size:10px;color:var(--gold);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.log-entry{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:7px;}
+.log-cb{width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;}
+.log-text{flex:1;font-size:13px;color:var(--text);}
+.log-del{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;}
+.log-add-row{display:flex;gap:8px;margin-bottom:10px;}
+.log-add-row input{flex:1;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;}
+.log-add-row input:focus{border-color:var(--gold);}
+.quick-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.qchip{padding:6px 11px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.2);border-radius:16px;font-size:11px;color:var(--gold);cursor:pointer;}
+.set-row{margin-bottom:14px;}
+.set-label{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:6px;}
+.set-input{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;}
+.set-input:focus{border-color:var(--gold);}
+.set-status{padding:10px 14px;border-radius:10px;font-size:12px;margin-bottom:10px;}
+.set-ok{background:rgba(15,157,88,0.1);border:1px solid rgba(15,157,88,0.3);color:var(--green);}
+.set-err{background:rgba(234,67,53,0.1);border:1px solid rgba(234,67,53,0.3);color:var(--red);}
+.profile-field{margin-bottom:12px;}
+.profile-label{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:5px;}
+.profile-val{font-size:13px;color:var(--text);padding:9px 13px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;}
+.section-title{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin:16px 0 8px;}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(15,157,88,0.9);color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:700;z-index:9998;pointer-events:none;opacity:0;transition:opacity .3s;}
+.toast.show{opacity:1;}
+@media screen and (max-width:480px){.tab-btn{min-width:52px;padding:7px 10px;}.tab-btn span:first-child{font-size:18px;}.tab-btn span:last-child{font-size:8px;}.msg{font-size:13px;}.chat-input-bar textarea{font-size:15px;min-height:46px;}.link-grid{grid-template-columns:1fr 1fr;gap:7px;}.link-btn{padding:10px 8px;}.link-btn .lb-icon{font-size:22px;}.link-btn .lb-name{font-size:12px;}.actor-grid{grid-template-columns:1fr 1fr;gap:8px;}.actor-card{padding:12px 8px;}.actor-card .ac-icon{font-size:28px;}.actor-card .ac-name{font-size:13px;}.icon-btn{width:44px;height:44px;font-size:20px;}.card{padding:14px 12px;}.page-inner{padding:12px;}.chat-header{padding:10px 12px;}.chat-header-title{font-size:15px;}}
+@media screen and (min-width:768px){#app{max-width:900px;margin:0 auto;box-shadow:0 0 60px rgba(0,0,0,0.8);}.link-grid{grid-template-columns:1fr 1fr 1fr;gap:10px;}.actor-grid{grid-template-columns:1fr 1fr 1fr 1fr;}.tab-btn{min-width:70px;padding:10px 16px;}.tab-btn span:first-child{font-size:22px;}.tab-btn span:last-child{font-size:10px;}.msg{font-size:15px;}.chat-input-bar textarea{font-size:15px;}.chat-wrap{max-width:100%;}.messages{padding:18px;}.page-inner{padding:20px;}}
+</style>
+</head>
+<body>
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-glow">🤖</div>
+  <div class="login-title">THE HUB ENGINE v3</div>
+  <div class="login-sub">AFFILIATEMEDIAHUB STUDIO</div>
+  <div id="loginStep1" class="login-step">
+    <div class="login-label">GROQ API KEY</div>
+    <input id="apiInput" class="login-input" type="password" placeholder="gsk_..." autocomplete="off"/>
+  </div>
+  <div class="login-step">
+    <div class="login-label">ACCESS PASSWORD</div>
+    <input id="pwInput" class="login-input" type="password" placeholder="••••••••" autocomplete="off"/>
+  </div>
+  <button class="login-btn" onclick="doLogin()">🚀 ENTER THE HUB</button>
+  <div class="login-err" id="loginErr"></div>
+  <div style="font-size:10px;color:rgba(238,238,245,0.2);margin-top:20px;text-align:center;letter-spacing:1px;">JOHN LANTER · CEO · ORANGE TEXAS<br/>THREE MINDS · ONE MISSION · ZERO COST</div>
+</div>
+<!-- APP -->
+<div id="app">
+  <div class="status-bar"><div class="status-dot"></div><div class="status-text">ALL CONNECTIONS LIVE</div><div class="status-right">HUB ENGINE v3</div></div>
+  <div class="pages">
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <div class="chat-wrap">
+        <div class="chat-header"><div class="chat-header-icon">🏠</div><div><div class="chat-header-title">THE HUB ENGINE</div><div class="chat-header-sub">Your AI Business HQ</div></div></div>
+        <div class="messages" id="msgs-home"></div>
+        <div class="chat-input-bar"><textarea id="inp-home" placeholder="Ask anything..." rows="1" onkeydown="handleKey(event,'home')"></textarea><button class="icon-btn" onclick="toggleMic('home')" id="mic-home">🎤</button><button class="icon-btn gold" onclick="sendMsg('home')" style="width:54px;height:54px;font-size:24px;">➤</button></div>
+      </div>
+    </div>
+    <!-- BECKY -->
+    <div class="page" id="page-becky">
+      <div class="chat-wrap">
+        <div class="chat-header"><div class="chat-header-icon">🎙️</div><div><div class="chat-header-title">BECKY</div><div class="chat-header-sub">Creative Director · British AI Friend</div></div></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;">
+          <button class="icon-btn" onclick="toggleSpeak()" id="speakBtn" style="width:44px;height:44px;font-size:20px;">🔊</button>
+          <button class="icon-btn" onclick="testVoice('becky')" style="width:44px;height:44px;font-size:20px;">🔈</button>
+          <button class="icon-btn" onclick="debugVoices()" title="Show all voices" style="width:44px;height:44px;font-size:16px;">🔍</button>
+          <div style="margin-left:auto;padding:4px 10px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.2);border-radius:8px;font-size:10px;color:var(--gold);">🇬🇧 British Voice</div>
+        </div>
+        <div class="messages" id="msgs-becky"></div>
+        <div class="chat-input-bar">
+          <label class="icon-btn" for="beckyFile" style="cursor:pointer;width:48px;height:48px;font-size:22px;">➕</label>
+          <input type="file" id="beckyFile" style="display:none" accept="image/*,.pdf,.doc,.docx,.txt,.png,.jpg" onchange="attachFile(event,'becky')"/>
+          <textarea id="inp-becky" placeholder="Chat with Becky..." rows="1" onkeydown="handleKey(event,'becky')"></textarea>
+          <button class="icon-btn" onclick="toggleMic('becky')" id="mic-becky" style="width:48px;height:48px;font-size:22px;">🎤</button>
+          <button class="icon-btn gold" onclick="sendMsg('becky')" style="width:54px;height:54px;font-size:24px;">➤</button>
+        </div>
+      </div>
+    </div>
+    <!-- JOBS -->
+    <div class="page" id="page-jobs">
+      <div class="page-inner">
+        <div style="background:rgba(245,197,24,0.07);border:1px solid rgba(245,197,24,0.25);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:4px;">💼 JOHN LANTER — JOB SEARCH HQ</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.7;">20+ years Chemical Plant Lead Operator · SE Texas · Forklift Certified · OSHA<br/><span style="color:var(--text);font-weight:600;">Target Roles:</span> Operations Coordinator · Warehouse Lead · Production Supervisor · Logistics · Industrial Sales</div>
+        </div>
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">🔍 DAILY JOB FINDER — AI Powered</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Click to find today's open jobs matching YOUR skills in SE Texas!</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+            <button class="action-btn btn-gold" style="margin:0;font-size:12px;" onclick="findJobs('operations')">⚙️ Operations Jobs</button>
+            <button class="action-btn btn-gold" style="margin:0;font-size:12px;" onclick="findJobs('warehouse')">📦 Warehouse Jobs</button>
+            <button class="action-btn btn-gold" style="margin:0;font-size:12px;" onclick="findJobs('production')">🏭 Production Jobs</button>
+            <button class="action-btn btn-gold" style="margin:0;font-size:12px;" onclick="findJobs('logistics')">🚛 Logistics Jobs</button>
+            <button class="action-btn btn-blue" style="margin:0;font-size:12px;" onclick="findJobs('supervisor')">👔 Supervisor Jobs</button>
+            <button class="action-btn btn-blue" style="margin:0;font-size:12px;" onclick="findJobs('all')">🎯 All My Skills</button>
+          </div>
+          <div id="jobResults" style="display:none;"><div style="font-size:11px;color:var(--gold);letter-spacing:1px;margin-bottom:8px;font-family:'Rajdhani',sans-serif;">TODAY'S JOB LEADS</div><div id="jobResultsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div><button class="action-btn btn-gray" style="font-size:11px;" onclick="generateCoverLetter()">✉️ Write Cover Letter For Top Job</button></div>
+          <div id="jobLoading" style="display:none;text-align:center;padding:16px;font-size:13px;color:var(--muted);">🔍 Finding jobs for you...</div>
+        </div>
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">🌐 SEARCH LIVE JOB BOARDS NOW</div>
+          <div class="link-grid">
+            <a href="https://www.indeed.com/jobs?q=operations+coordinator+warehouse+lead&l=Orange+TX&radius=50" target="_blank" class="link-btn"><span class="lb-icon">🔵</span><span class="lb-name">Indeed</span><span class="lb-sub">SE Texas · My Skills</span></a>
+            <a href="https://www.linkedin.com/jobs/search/?keywords=operations+coordinator+warehouse+supervisor&location=Orange%2C+Texas&distance=50" target="_blank" class="link-btn"><span class="lb-icon">💼</span><span class="lb-name">LinkedIn Jobs</span><span class="lb-sub">Skills Match Tool</span></a>
+            <a href="https://www.ziprecruiter.com/jobs-search?search=warehouse+lead+production+supervisor&location=Orange%2C+TX" target="_blank" class="link-btn"><span class="lb-icon">⚡</span><span class="lb-name">ZipRecruiter</span><span class="lb-sub">Orange TX Area</span></a>
+            <a href="https://www.workintexas.com/vosnet/jobseeker/jobs/jobsearch.aspx?rc=TX07" target="_blank" class="link-btn"><span class="lb-icon">⭐</span><span class="lb-name">WorkinTexas</span><span class="lb-sub">State Job Board</span></a>
+            <a href="https://www.glassdoor.com/Job/orange-tx-operations-jobs-SRCH_IL.0,9_IC1140025_KO10,20.htm" target="_blank" class="link-btn"><span class="lb-icon">🟢</span><span class="lb-name">Glassdoor</span><span class="lb-sub">Salary + Reviews</span></a>
+            <a href="https://www.simplyhired.com/search?q=warehouse+operations+forklift&l=Orange%2C+TX" target="_blank" class="link-btn"><span class="lb-icon">🔍</span><span class="lb-name">SimplyHired</span><span class="lb-sub">Forklift · Warehouse</span></a>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">🤖 AI CAREER COACH</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+            <button class="action-btn btn-green" style="margin:0;font-size:11px;" onclick="quickJobAction('coverLetter')">✉️ Write Cover Letter</button>
+            <button class="action-btn btn-green" style="margin:0;font-size:11px;" onclick="quickJobAction('interview')">🎤 Interview Prep</button>
+            <button class="action-btn btn-blue" style="margin:0;font-size:11px;" onclick="quickJobAction('resume')">📄 Resume Tips</button>
+            <button class="action-btn btn-blue" style="margin:0;font-size:11px;" onclick="quickJobAction('linkedin')">💼 LinkedIn Profile</button>
+          </div>
+          <div class="chat-wrap" style="height:280px;border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+            <div class="messages" id="msgs-jobs"></div>
+            <div class="chat-input-bar"><label class="icon-btn" for="jobFile" style="cursor:pointer;">📎</label><input type="file" id="jobFile" style="display:none" accept=".pdf,.doc,.docx,.txt" onchange="attachFile(event,'jobs')"/><textarea id="inp-jobs" placeholder="Ask about jobs, cover letters, interview prep..." rows="1" onkeydown="handleKey(event,'jobs')"></textarea><button class="icon-btn" onclick="toggleMic('jobs')" id="mic-jobs">🎤</button><button class="icon-btn gold" onclick="sendMsg('jobs')" style="width:54px;height:54px;font-size:24px;">➤</button></div>
+          </div>
+        </div>
+        <div class="card"><div class="card-title">📋 JOB APPLICATION TRACKER</div><div class="log-add-row" style="margin-bottom:8px;"><input id="jobTrackInput" placeholder="Company name + job title you applied for..." onkeydown="if(event.key==='Enter')addJobTrack()"/><button class="icon-btn gold" onclick="addJobTrack()" style="width:44px;height:44px;">+</button></div><div id="jobTrackList"></div></div>
+      </div>
+    </div>
+    <!-- ACTORS -->
+    <div class="page" id="page-actors">
+      <div class="page-inner">
+        <div style="background:rgba(245,197,24,0.07);border:1px solid rgba(245,197,24,0.2);border-radius:12px;padding:12px 14px;margin-bottom:14px;">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:6px;">⚡ YOUR VIDEO PRODUCTION STUDIO</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8;">📺 <strong style="color:var(--text)">Your Shows</strong> — Susan Mon · Alisha Wed · Lisa Fri · Paul Thu<br/>💰 <strong style="color:var(--text)">Affiliate Marketing</strong> — Promo videos for products you earn commissions on<br/>🏢 <strong style="color:var(--text)">Business Promo</strong> — 45-sec videos for local businesses · charge monthly</div>
+        </div>
+        <div class="card"><div class="card-title">🎭 Pick Your Actor</div><div class="actor-grid"><div class="actor-card" id="ac-lisa" onclick="selectActor('lisa')"><div class="ac-icon">🔴</div><div class="ac-name">LISA</div><div class="ac-day">FRIDAYS · AI NEWS SHOW</div></div><div class="actor-card" id="ac-alisha" onclick="selectActor('alisha')"><div class="ac-icon">🔵</div><div class="ac-name">ALISHA</div><div class="ac-day">WEDNESDAYS · AI NEWS SHOW</div></div><div class="actor-card" id="ac-susan" onclick="selectActor('susan')"><div class="ac-icon">🩵</div><div class="ac-name">SUSAN</div><div class="ac-day">MONDAYS · AI NEWS SHOW</div></div><div class="actor-card" id="ac-paul" onclick="selectActor('paul')"><div class="ac-icon">🎙️</div><div class="ac-name">PAUL</div><div class="ac-day">THURSDAYS · PODCAST SHOW</div></div></div></div>
+        <div class="card"><div class="card-title">🎯 Pick Topic</div><div class="topic-row"><div class="topic-chip" id="tp-ainews" onclick="selectTopic('ainews')">🤖 AI News</div><div class="topic-chip" id="tp-affiliate" onclick="selectTopic('affiliate')">💰 Affiliate Promo</div><div class="topic-chip" id="tp-tips" onclick="selectTopic('tips')">💡 AI Tips</div><div class="topic-chip" id="tp-business" onclick="selectTopic('business')">🏢 Business Promo</div><div class="topic-chip" id="tp-custom" onclick="selectTopic('custom')">✏️ Custom</div></div><input id="customTopicInput" class="custom-input" placeholder="Business name, product name, or your topic..." style="display:none"/><div id="topicHint" style="font-size:11px;color:var(--muted);display:none;margin-top:6px;"></div></div>
+        <div class="card"><div class="card-title">📹 Video Length</div><div class="topic-row"><div class="topic-chip" id="vl-15" onclick="selectLen('15')">⚡ 15 sec</div><div class="topic-chip" id="vl-30" onclick="selectLen('30')">30 sec</div><div class="topic-chip" id="vl-45" onclick="selectLen('45')">45 sec 🏢</div><div class="topic-chip" id="vl-60" onclick="selectLen('60')">1 min</div><div class="topic-chip selected" id="vl-120" onclick="selectLen('120')">2 min 📺</div><div class="topic-chip" id="vl-300" onclick="selectLen('300')">5 min</div></div></div>
+        <button class="action-btn btn-gold" id="genScriptBtn" onclick="generateActorScript()" disabled>✨ Generate Script + Scene Prompts</button>
+        <div id="actorScriptArea" style="display:none">
+          <div class="card"><div class="card-title">📝 Script</div><div class="script-box" id="actorScript"></div><button class="action-btn btn-gray" style="margin-top:8px" onclick="copyScript()">📋 Copy Full Script</button></div>
+          <div class="card"><div class="card-title">🎬 Scene Prompts</div><div class="scene-list" id="sceneList"></div><div style="display:flex;gap:8px;margin-top:8px;"><button class="action-btn btn-blue" style="margin:0;flex:1" onclick="copyNextScene()">▶️ Copy Next Scene</button><button class="action-btn btn-gray" style="margin:0;flex:1;font-size:11px" onclick="copyAllScenes()">📋 Copy All Scenes</button></div></div>
+          <div class="card"><div class="card-title">🎬 Step 2 — Generate Clips</div><div class="link-grid"><a href="https://grok.com" target="_blank" class="link-btn"><span class="lb-icon">⚡</span><span class="lb-name">Grok 4</span><span class="lb-sub">Paste prompt → 6-sec clip</span></a><a href="https://klingai.com" target="_blank" class="link-btn"><span class="lb-icon">🔥</span><span class="lb-name">Kling AI</span><span class="lb-sub">Free · up to 5 min</span></a><a href="https://hailuoai.video" target="_blank" class="link-btn"><span class="lb-icon">🌊</span><span class="lb-name">Hailuo AI</span><span class="lb-sub">Free · great quality</span></a><a href="https://pika.art" target="_blank" class="link-btn"><span class="lb-icon">🎨</span><span class="lb-name">Pika Labs</span><span class="lb-sub">Free · up to 3 min</span></a></div></div>
+          <div class="card"><div class="card-title">✂️ Step 3 — Join Clips</div><div class="link-grid"><a href="https://app.vmake.ai" target="_blank" class="link-btn"><span class="lb-icon">🎞️</span><span class="lb-name">Vmake AI</span></a><a href="https://app.invideo.io" target="_blank" class="link-btn"><span class="lb-icon">🎥</span><span class="lb-name">InVideo</span></a><a href="https://app.ltx.studio" target="_blank" class="link-btn"><span class="lb-icon">🎬</span><span class="lb-name">LTX Studio</span></a><a href="https://dreamina.capcut.com" target="_blank" class="link-btn"><span class="lb-icon">✨</span><span class="lb-name">Dreamina</span></a></div></div>
+          <div class="card"><div class="card-title">📱 Step 4 — Post Your Video</div><div class="link-grid"><a href="https://tiktok.com" target="_blank" class="link-btn"><span class="lb-icon">🎵</span><span class="lb-name">TikTok</span></a><a href="https://youtube.com/upload" target="_blank" class="link-btn"><span class="lb-icon">▶️</span><span class="lb-name">YouTube</span></a><a href="https://instagram.com" target="_blank" class="link-btn"><span class="lb-icon">📸</span><span class="lb-name">Instagram</span></a><a href="https://facebook.com" target="_blank" class="link-btn"><span class="lb-icon">👥</span><span class="lb-name">Facebook</span></a></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- STUDIO -->
+    <div class="page" id="page-studio">
+      <div class="page-inner">
+        <div class="section-title">🎬 FREE VIDEO GENERATORS</div>
+        <div class="link-grid"><a href="https://klingai.com" target="_blank" class="link-btn"><span class="lb-icon">⚡</span><span class="lb-name">Kling AI</span></a><a href="https://hailuoai.video" target="_blank" class="link-btn"><span class="lb-icon">🌊</span><span class="lb-name">Hailuo AI</span></a><a href="https://app.ltx.studio" target="_blank" class="link-btn"><span class="lb-icon">🎞️</span><span class="lb-name">LTX Studio</span></a><a href="https://pika.art" target="_blank" class="link-btn"><span class="lb-icon">🎨</span><span class="lb-name">Pika Labs</span></a><a href="https://vidu.studio" target="_blank" class="link-btn"><span class="lb-icon">🎥</span><span class="lb-name">Vidu AI</span></a><a href="https://dreamina.capcut.com" target="_blank" class="link-btn"><span class="lb-icon">✨</span><span class="lb-name">Dreamina</span></a></div>
+        <div class="section-title">✂️ JOIN CLIPS INTO FULL VIDEO</div>
+        <div class="link-grid"><a href="https://app.vmake.ai" target="_blank" class="link-btn"><span class="lb-icon">🎞️</span><span class="lb-name">Vmake AI</span></a><a href="https://app.invideo.io" target="_blank" class="link-btn"><span class="lb-icon">🎥</span><span class="lb-name">InVideo</span></a><a href="https://vidnoz.com" target="_blank" class="link-btn"><span class="lb-icon">🎭</span><span class="lb-name">Vidnoz</span></a><a href="https://grok.com" target="_blank" class="link-btn"><span class="lb-icon">⚡</span><span class="lb-name">Grok 4</span></a></div>
+        <div class="section-title">✍️ SCRIPT WRITER</div>
+        <div class="chat-wrap" style="height:300px;border:1px solid var(--border);border-radius:12px;overflow:hidden;"><div class="messages" id="msgs-studio"></div><div class="chat-input-bar"><textarea id="inp-studio" placeholder="Write me a video script for..." rows="1" onkeydown="handleKey(event,'studio')"></textarea><button class="icon-btn" onclick="toggleMic('studio')" id="mic-studio">🎤</button><button class="icon-btn gold" onclick="sendMsg('studio')" style="width:54px;height:54px;font-size:24px;">➤</button></div></div>
+      </div>
+    </div>
+    <!-- SOCIAL -->
+    <div class="page" id="page-social">
+      <div class="page-inner">
+        <div class="section-title">SOCIAL MEDIA</div>
+        <div class="link-grid"><a href="https://tiktok.com" target="_blank" class="link-btn"><span class="lb-icon">🎵</span><span class="lb-name">TikTok</span></a><a href="https://youtube.com" target="_blank" class="link-btn"><span class="lb-icon">▶️</span><span class="lb-name">YouTube</span></a><a href="https://instagram.com" target="_blank" class="link-btn"><span class="lb-icon">📸</span><span class="lb-name">Instagram</span></a><a href="https://facebook.com" target="_blank" class="link-btn"><span class="lb-icon">👥</span><span class="lb-name">Facebook</span></a><a href="https://snapchat.com" target="_blank" class="link-btn"><span class="lb-icon">👻</span><span class="lb-name">Snapchat</span></a><a href="https://linkedin.com" target="_blank" class="link-btn"><span class="lb-icon">💼</span><span class="lb-name">LinkedIn</span></a><a href="https://substack.com" target="_blank" class="link-btn"><span class="lb-icon">📧</span><span class="lb-name">Substack</span></a><a href="https://t.me" target="_blank" class="link-btn"><span class="lb-icon">✈️</span><span class="lb-name">Telegram</span></a><a href="https://discord.com" target="_blank" class="link-btn"><span class="lb-icon">🎮</span><span class="lb-name">Discord</span></a><a href="https://twitter.com" target="_blank" class="link-btn"><span class="lb-icon">🐦</span><span class="lb-name">X / Twitter</span></a></div>
+        <div class="section-title">SOCIAL AI ASSISTANT</div>
+        <div class="chat-wrap" style="height:300px;border:1px solid var(--border);border-radius:12px;overflow:hidden;"><div class="messages" id="msgs-social"></div><div class="chat-input-bar"><textarea id="inp-social" placeholder="Write me a TikTok caption for..." rows="1" onkeydown="handleKey(event,'social')"></textarea><button class="icon-btn gold" onclick="sendMsg('social')" style="width:54px;height:54px;font-size:24px;">➤</button></div></div>
+      </div>
+    </div>
+    <!-- AI TOOLS -->
+    <div class="page" id="page-aitools">
+      <div class="page-inner">
+        <div class="section-title">AI TOOLS</div>
+        <div class="link-grid"><a href="https://claude.ai" target="_blank" class="link-btn"><span class="lb-icon">🟠</span><span class="lb-name">Claude AI</span></a><a href="https://gemini.google.com" target="_blank" class="link-btn"><span class="lb-icon">💎</span><span class="lb-name">Gemini</span></a><a href="https://chatgpt.com" target="_blank" class="link-btn"><span class="lb-icon">⭐</span><span class="lb-name">ChatGPT</span></a><a href="https://grok.com" target="_blank" class="link-btn"><span class="lb-icon">⚡</span><span class="lb-name">Grok 4</span></a><a href="https://perplexity.ai" target="_blank" class="link-btn"><span class="lb-icon">🔍</span><span class="lb-name">Perplexity</span></a><a href="https://deepseek.com" target="_blank" class="link-btn"><span class="lb-icon">🧠</span><span class="lb-name">DeepSeek</span></a><a href="https://qwen.ai" target="_blank" class="link-btn"><span class="lb-icon">🌐</span><span class="lb-name">Qwen AI</span></a><a href="https://meta.ai" target="_blank" class="link-btn"><span class="lb-icon">🌐</span><span class="lb-name">Meta AI</span></a><a href="https://sora.com" target="_blank" class="link-btn"><span class="lb-icon">🎥</span><span class="lb-name">Sora</span></a><a href="https://notebooklm.google.com" target="_blank" class="link-btn"><span class="lb-icon">📓</span><span class="lb-name">NotebookLM</span></a><a href="https://heygen.com" target="_blank" class="link-btn"><span class="lb-icon">🎭</span><span class="lb-name">HeyGen</span></a><a href="https://elevenlabs.io" target="_blank" class="link-btn"><span class="lb-icon">🎙️</span><span class="lb-name">ElevenLabs</span><span class="lb-sub">Free AI Voice</span></a></div>
+        <div class="section-title">AI ASSISTANT</div>
+        <div class="chat-wrap" style="height:280px;border:1px solid var(--border);border-radius:12px;overflow:hidden;"><div class="messages" id="msgs-aitools"></div><div class="chat-input-bar"><textarea id="inp-aitools" placeholder="Ask about any AI tool..." rows="1" onkeydown="handleKey(event,'aitools')"></textarea><button class="icon-btn gold" onclick="sendMsg('aitools')" style="width:54px;height:54px;font-size:24px;">➤</button></div></div>
+      </div>
+    </div>
+    <!-- LEARN -->
+    <div class="page" id="page-learn">
+      <div class="page-inner">
+        <div class="section-title">🎓 FREE AI COURSES</div>
+        <div class="link-grid"><a href="https://www.coursera.org/learn/ai-for-everyone" target="_blank" class="link-btn"><span class="lb-icon">🚀</span><span class="lb-name">AI For Everyone</span><span class="lb-sub">Andrew Ng · Free</span></a><a href="https://grow.google/certificates/ai-essentials/" target="_blank" class="link-btn"><span class="lb-icon">🔵</span><span class="lb-name">Google AI Essentials</span></a><a href="https://www.anthropic.com/courses" target="_blank" class="link-btn"><span class="lb-icon">🟠</span><span class="lb-name">Anthropic Courses</span></a><a href="https://www.elementsofai.com" target="_blank" class="link-btn"><span class="lb-icon">🧠</span><span class="lb-name">Elements of AI</span></a></div>
+        <div class="section-title">💬 LEARNING COACH</div>
+        <div class="chat-wrap" style="height:300px;border:1px solid var(--border);border-radius:12px;overflow:hidden;"><div class="messages" id="msgs-learn"></div><div class="chat-input-bar"><textarea id="inp-learn" placeholder="Teach me about AI agents..." rows="1" onkeydown="handleKey(event,'learn')"></textarea><button class="icon-btn gold" onclick="sendMsg('learn')" style="width:54px;height:54px;font-size:24px;">➤</button></div></div>
+      </div>
+    </div>
+    <!-- AFFILIATE -->
+    <div class="page" id="page-affiliate">
+      <div class="page-inner">
+        <div class="section-title">AFFILIATE PROGRAMS</div>
+        <div class="link-grid"><a href="https://vidnoz.com/affiliate" target="_blank" class="link-btn"><span class="lb-icon">🎭</span><span class="lb-name">Vidnoz</span><span class="lb-sub">50% commission</span></a><a href="https://invideo.io/affiliate" target="_blank" class="link-btn"><span class="lb-icon">🎥</span><span class="lb-name">InVideo</span><span class="lb-sub">30% commission</span></a><a href="https://www.digistore24.com" target="_blank" class="link-btn"><span class="lb-icon">💰</span><span class="lb-name">Digistore24</span></a><a href="https://accounts.clickbank.com/signup/" target="_blank" class="link-btn"><span class="lb-icon">🏦</span><span class="lb-name">ClickBank</span></a><a href="https://affiliate-program.amazon.com" target="_blank" class="link-btn"><span class="lb-icon">📦</span><span class="lb-name">Amazon</span></a><a href="https://www.shareasale.com" target="_blank" class="link-btn"><span class="lb-icon">🤝</span><span class="lb-name">ShareASale</span></a><a href="https://www.cj.com" target="_blank" class="link-btn"><span class="lb-icon">🌐</span><span class="lb-name">CJ Affiliate</span></a><a href="https://www.jvzoo.com" target="_blank" class="link-btn"><span class="lb-icon">⚡</span><span class="lb-name">JVZoo</span></a></div>
+        <div class="section-title">MARKETING EXPERT</div>
+        <div class="chat-wrap" style="height:300px;border:1px solid var(--border);border-radius:12px;overflow:hidden;"><div class="messages" id="msgs-affiliate"></div><div class="chat-input-bar"><textarea id="inp-affiliate" placeholder="Help me write an affiliate promo for..." rows="1" onkeydown="handleKey(event,'affiliate')"></textarea><button class="icon-btn gold" onclick="sendMsg('affiliate')" style="width:54px;height:54px;font-size:24px;">➤</button></div></div>
+      </div>
+    </div>
+    <!-- BUSINESS VIDEO BUILDER -->
+    <div class="page" id="page-business">
+      <div class="page-inner">
+        <div class="card"><div class="card-title">📝 Business Details</div><div class="set-row"><div class="set-label">BUSINESS NAME</div><input id="biz-name" class="set-input" placeholder="e.g. Joe's Pizza Beaumont TX" oninput="checkBizReady()"/></div><div class="set-row"><div class="set-label">WHAT THEY DO</div><input id="biz-desc" class="set-input" placeholder="e.g. Best Italian pizza, family restaurant since 1985"/></div><div class="set-row"><div class="set-label">SPECIAL OFFER</div><input id="biz-offer" class="set-input" placeholder="e.g. Free dessert with any order this week"/></div><div class="set-row"><div class="set-label">BUSINESS TYPE</div><select id="biz-type" class="set-input"><option value="restaurant">🍕 Restaurant / Food</option><option value="salon">💇 Salon / Beauty</option><option value="plumber">🔧 Plumber / Contractor</option><option value="retail">🛍️ Retail Store</option><option value="medical">🏥 Medical / Dental</option><option value="auto">🚗 Auto / Car Services</option><option value="realestate">🏠 Real Estate</option><option value="gym">💪 Gym / Fitness</option><option value="general">🏢 General Business</option></select></div></div>
+        <div class="card"><div class="card-title">🎭 Pick Actor</div><div class="actor-grid"><div class="actor-card" id="bac-susan" onclick="selectBizActor('susan')"><div class="ac-icon">🩵</div><div class="ac-name">SUSAN</div></div><div class="actor-card" id="bac-alisha" onclick="selectBizActor('alisha')"><div class="ac-icon">🔵</div><div class="ac-name">ALISHA</div></div><div class="actor-card" id="bac-lisa" onclick="selectBizActor('lisa')"><div class="ac-icon">🔴</div><div class="ac-name">LISA</div></div><div class="actor-card" id="bac-paul" onclick="selectBizActor('paul')"><div class="ac-icon">🎙️</div><div class="ac-name">PAUL</div></div></div></div>
+        <button class="action-btn btn-gold" id="genBizBtn" onclick="generateBizVideo()" disabled>🏢 Generate 45-Second Business Video Script</button>
+        <div id="bizScriptArea" style="display:none">
+          <div class="card"><div class="card-title">📝 Your 45-Second Script</div><div class="script-box" id="bizScript"></div><button class="action-btn btn-gray" style="margin-top:8px" onclick="copyBizScript()">📋 Copy Full Script</button></div>
+          <div class="card"><div class="card-title">🎬 Scene Prompts</div><div class="scene-list" id="bizSceneList"></div><div style="display:flex;gap:8px;margin-top:8px;"><button class="action-btn btn-blue" style="margin:0;flex:1" onclick="copyNextBizScene()">▶️ Copy Next Scene</button><button class="action-btn btn-gray" style="margin:0;flex:1;font-size:11px" onclick="copyAllBizScenes()">📋 Copy All Scenes</button></div></div>
+          <div class="card"><div class="card-title">💰 Pricing Guide</div><div style="font-size:13px;color:var(--text);line-height:1.8;">💼 <strong style="color:var(--gold)">$200-300/month</strong> — 1 video per week<br/>💼 <strong style="color:var(--gold)">$400-500/month</strong> — 2 videos per week</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- AFFILIATE VIDEO BUILDER -->
+    <div class="page" id="page-affvideo">
+      <div class="page-inner">
+        <div class="card"><div class="card-title">🛍️ Pick Affiliate Product</div><div class="topic-row"><div class="topic-chip" id="ap-invideo" onclick="selectAffProd('invideo','InVideo AI Video Maker','30')">🎥 InVideo 30%</div><div class="topic-chip" id="ap-vidnoz" onclick="selectAffProd('vidnoz','Vidnoz AI Avatar Tool','50')">🎭 Vidnoz 50%</div><div class="topic-chip" id="ap-getresponse" onclick="selectAffProd('getresponse','GetResponse Email Marketing','40')">📧 GetResponse 40%</div><div class="topic-chip" id="ap-clickbank" onclick="selectAffProd('clickbank','ClickBank Digital Product','50')">💰 ClickBank 50%</div><div class="topic-chip" id="ap-amazon" onclick="selectAffProd('amazon','Amazon Product','8')">📦 Amazon 8%</div><div class="topic-chip" id="ap-custom" onclick="selectAffProd('custom','','')">✏️ Custom Product</div></div><div id="affCustomArea" style="display:none;margin-top:8px;"><input id="aff-product-name" class="set-input" placeholder="Product name..." style="margin-bottom:8px;"/><input id="aff-commission" class="set-input" placeholder="Commission % (e.g. 30)"/></div><div id="affSelectedInfo" style="font-size:12px;color:var(--green);margin-top:8px;display:none;"></div></div>
+        <div class="card"><div class="card-title">🎭 Pick Actor</div><div class="actor-grid"><div class="actor-card" id="aac-lisa" onclick="selectAffActor('lisa')"><div class="ac-icon">🔴</div><div class="ac-name">LISA</div></div><div class="actor-card" id="aac-alisha" onclick="selectAffActor('alisha')"><div class="ac-icon">🔵</div><div class="ac-name">ALISHA</div></div><div class="actor-card" id="aac-susan" onclick="selectAffActor('susan')"><div class="ac-icon">🩵</div><div class="ac-name">SUSAN</div></div><div class="actor-card" id="aac-paul" onclick="selectAffActor('paul')"><div class="ac-icon">🎙️</div><div class="ac-name">PAUL</div></div></div></div>
+        <div class="card"><div class="card-title">📹 Video Length</div><div class="topic-row"><div class="topic-chip" id="avl-30" onclick="selectAffLen('30')">30 sec</div><div class="topic-chip selected" id="avl-60" onclick="selectAffLen('60')">1 min</div><div class="topic-chip" id="avl-120" onclick="selectAffLen('120')">2 min</div></div></div>
+        <button class="action-btn btn-gold" id="genAffBtn" onclick="generateAffVideo()" disabled>💰 Generate Affiliate Promo Script</button>
+        <div id="affScriptArea" style="display:none">
+          <div class="card"><div class="card-title">📝 Your Affiliate Script</div><div class="script-box" id="affScript"></div><button class="action-btn btn-gray" style="margin-top:8px" onclick="copyAffScript()">📋 Copy Script</button></div>
+          <div class="card"><div class="card-title">🎬 Scene Prompts</div><div class="scene-list" id="affSceneList"></div><div style="display:flex;gap:8px;margin-top:8px;"><button class="action-btn btn-blue" style="margin:0;flex:1" onclick="copyNextAffScene()">▶️ Copy Next Scene</button><button class="action-btn btn-gray" style="margin:0;flex:1;font-size:11px" onclick="copyAllAffScenes()">📋 Copy All</button></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- EMAIL FUNNEL -->
+    <div class="page" id="page-funnel">
+      <div class="page-inner">
+        <div class="card"><div class="card-title">🛍️ Pick Product</div><div class="topic-row"><div class="topic-chip" id="fp-invideo" onclick="selectFunnelProd('InVideo AI Video Maker','30','invideo')">🎥 InVideo 30%</div><div class="topic-chip" id="fp-vidnoz" onclick="selectFunnelProd('Vidnoz AI Avatars','50','vidnoz')">🎭 Vidnoz 50%</div><div class="topic-chip" id="fp-getresponse" onclick="selectFunnelProd('GetResponse Email Tool','40','getresponse')">📧 GetResponse 40%</div><div class="topic-chip" id="fp-clickbank" onclick="selectFunnelProd('ClickBank Product','50','clickbank')">💰 ClickBank 50%</div><div class="topic-chip" id="fp-custom" onclick="selectFunnelProd('','','custom')">✏️ Custom</div></div><input id="funnel-custom-product" class="set-input" style="display:none;margin-top:8px;" placeholder="Enter product name..."/><div id="funnelProdInfo" style="font-size:12px;color:var(--green);margin-top:8px;display:none;"></div></div>
+        <div class="card"><div class="card-title">📧 Email Template Style</div><div class="topic-row"><div class="topic-chip" id="ft-review" onclick="selectFunnelTemplate('review')">⭐ Product Review</div><div class="topic-chip" id="ft-story" onclick="selectFunnelTemplate('story')">📖 My Success Story</div><div class="topic-chip" id="ft-problem" onclick="selectFunnelTemplate('problem')">💡 Problem & Solution</div><div class="topic-chip" id="ft-urgency" onclick="selectFunnelTemplate('urgency')">⏰ Limited Time Offer</div></div></div>
+        <button class="action-btn btn-gold" id="genFunnelBtn" onclick="generateFunnel()" disabled>💌 Generate Complete Email Sequence</button>
+        <div id="funnelArea" style="display:none">
+          <div class="card"><div class="card-title">📧 Email 1</div><div class="script-box" id="email1"></div><button class="action-btn btn-gray" style="margin-top:6px;font-size:11px" onclick="copyEl('email1')">📋 Copy Email 1</button></div>
+          <div class="card"><div class="card-title">📧 Email 2</div><div class="script-box" id="email2"></div><button class="action-btn btn-gray" style="margin-top:6px;font-size:11px" onclick="copyEl('email2')">📋 Copy Email 2</button></div>
+          <div class="card"><div class="card-title">📧 Email 3</div><div class="script-box" id="email3"></div><button class="action-btn btn-gray" style="margin-top:6px;font-size:11px" onclick="copyEl('email3')">📋 Copy Email 3</button></div>
+        </div>
+      </div>
+    </div>
+    <!-- MY LOG -->
+    <div class="page" id="page-log">
+      <div class="page-inner">
+        <div class="card-title" style="padding:0 0 10px;">📋 MY DAILY LOG</div>
+        <div class="quick-chips"><div class="qchip" onclick="addQuick('Watched a learning video 📺')">📺 Learning Video</div><div class="qchip" onclick="addQuick('Tried an AI tool 🤖')">🤖 AI Tool</div><div class="qchip" onclick="addQuick('Applied for a job 💼')">💼 Job Applied</div><div class="qchip" onclick="addQuick('Made a video 🎬')">🎬 Made Video</div><div class="qchip" onclick="addQuick('Affiliate marketing work 💰')">💰 Affiliate</div><div class="qchip" onclick="addQuick('Completed a course lesson 🎓')">🎓 Course</div><div class="qchip" onclick="addQuick('Helped with family care 🙏')">🙏 Family</div></div>
+        <div class="log-add-row"><input id="logInput" placeholder="Type what you accomplished today..." onkeydown="if(event.key==='Enter')addLogEntry()"/><button class="icon-btn gold" onclick="addLogEntry()" style="width:44px;height:44px;">+</button></div>
+        <div id="logList"></div>
+      </div>
+    </div>
+    <!-- CLAUDE CHAT -->
+    <div class="page" id="page-claude">
+      <div class="chat-wrap">
+        <div class="chat-header">
+          <div class="chat-header-icon">💬</div>
+          <div><div class="chat-header-title">CLAUDE</div><div class="chat-header-sub">AI Developer · Irish Voice</div></div>
+          <div style="margin-left:auto;padding:4px 10px;background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.2);border-radius:8px;font-size:10px;color:var(--blue);">🇮🇪 Irish Voice</div>
+        </div>
+        <div class="messages" id="msgs-claude"></div>
+        <div class="chat-input-bar"><label class="icon-btn" for="claudeFile" style="cursor:pointer;width:48px;height:48px;font-size:22px;">➕</label><input type="file" id="claudeFile" style="display:none" accept="image/*,.pdf,.doc,.docx,.txt,.png,.jpg" onchange="attachFile(event,'claude')"/><textarea id="inp-claude" placeholder="Ask Claude anything..." rows="1" onkeydown="handleKey(event,'claude')"></textarea><button class="icon-btn" onclick="toggleMic('claude')" id="mic-claude" style="width:48px;height:48px;font-size:22px;">🎤</button><button class="icon-btn gold" onclick="sendMsg('claude')" style="width:54px;height:54px;font-size:24px;">➤</button></div>
+      </div>
+    </div>
+    <!-- REMOTION -->
+    <div class="page" id="page-remotion">
+      <div class="page-inner">
+        <div class="card"><div class="card-title">📋 SETUP GUIDE</div><div style="display:flex;flex-direction:column;gap:8px;"><div style="background:rgba(255,255,255,0.03);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:10px 12px;"><div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px;">STEP 1 — Install Remotion</div><div style="background:#000;border-radius:6px;padding:8px 10px;font-family:monospace;font-size:11px;color:#10b981;position:relative;" id="cmd1">npm create video@latest hub-engine-videos<button onclick="copyCmd('cmd1')" style="position:absolute;right:6px;top:6px;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);border-radius:4px;padding:2px 6px;font-size:9px;color:var(--gold);cursor:pointer;">📋</button></div></div><div style="background:rgba(255,255,255,0.03);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:10px 12px;"><div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px;">STEP 2 — Render Video</div><div style="background:#000;border-radius:6px;padding:8px 10px;font-family:monospace;font-size:11px;color:#10b981;position:relative;" id="cmd2">npx remotion render src/index.ts BusinessPromo --output=out/video.mp4<button onclick="copyCmd('cmd2')" style="position:absolute;right:6px;top:6px;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);border-radius:4px;padding:2px 6px;font-size:9px;color:var(--gold);cursor:pointer;">📋</button></div></div></div></div>
+        <div class="card"><div class="card-title">🔗 RESOURCES</div><div class="link-grid"><a href="https://www.remotion.dev" target="_blank" class="link-btn"><span class="lb-icon">🎬</span><span class="lb-name">Remotion.dev</span></a><a href="https://www.remotion.dev/docs" target="_blank" class="link-btn"><span class="lb-icon">📚</span><span class="lb-name">Remotion Docs</span></a><a href="https://claude.ai" target="_blank" class="link-btn"><span class="lb-icon">⚡</span><span class="lb-name">Claude Code</span></a><a href="https://nodejs.org" target="_blank" class="link-btn"><span class="lb-icon">💚</span><span class="lb-name">Node.js</span></a></div></div>
+      </div>
+    </div>
+
+    <!-- VIDEO FACTORY — 4 AGENT SYSTEM -->
+    <div class="page" id="page-factory">
+      <div class="page-inner">
+        <div style="background:linear-gradient(135deg,rgba(245,197,24,0.12),rgba(245,197,24,0.03));border:1px solid rgba(245,197,24,0.35);border-radius:14px;padding:14px;margin-bottom:14px;">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:6px;">🏭 VIDEO FACTORY — 4 AGENT SYSTEM</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.9;">Type ONE prompt → All 4 AI Agents do ALL the work automatically:<br/>🤖 <strong style="color:var(--text)">Agent 1</strong> Script Writer &nbsp;|&nbsp; 🎬 <strong style="color:var(--text)">Agent 2</strong> Scene Builder &nbsp;|&nbsp; 🎙️ <strong style="color:var(--text)">Agent 3</strong> Voice Artist &nbsp;|&nbsp; ✅ <strong style="color:var(--text)">Agent 4</strong> Reviewer + Captions</div>
+          <div style="margin-top:8px;padding:7px 10px;background:rgba(15,157,88,0.1);border:1px solid rgba(15,157,88,0.25);border-radius:8px;font-size:11px;color:#10b981;">📱 <strong>Built for your phone.</strong> You type the prompt. Agents build everything. You review and post. Zero video work.</div>
+        </div>
+
+        <!-- PROGRESS -->
+        <div id="factory-progress-wrap" style="display:none;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;" id="factory-progress-label">AGENTS WORKING...</div>
+            <div style="font-size:11px;color:var(--muted);" id="factory-progress-pct">0%</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.06);border-radius:10px;height:8px;overflow:hidden;">
+            <div id="factory-progress-bar" style="height:100%;background:linear-gradient(90deg,var(--gold),#e8a020);border-radius:10px;width:0%;transition:width 0.6s ease;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;">
+            <div id="fdot1" style="font-size:10px;color:var(--muted);">🤖 Script</div>
+            <div id="fdot2" style="font-size:10px;color:var(--muted);">🎬 Scenes</div>
+            <div id="fdot3" style="font-size:10px;color:var(--muted);">🎙️ Voice</div>
+            <div id="fdot4" style="font-size:10px;color:var(--muted);">✅ Review</div>
+          </div>
+        </div>
+
+        <!-- PROMPT INPUT -->
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">✏️ STEP 1 — TYPE YOUR VIDEO PROMPT</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+            <div class="topic-chip" onclick="setFactoryPrompt('Make a 60-second affiliate promo video for Vidnoz AI with Lisa as presenter. Enthusiastic influencer style. Ends with link in bio.')">🎭 Vidnoz Promo</div>
+            <div class="topic-chip" onclick="setFactoryPrompt('Make a 2-minute AI news show with Susan as anchor covering the latest AI breakthroughs this week. Professional news anchor style.')">📺 AI News Show</div>
+            <div class="topic-chip" onclick="setFactoryPrompt('Make a 45-second business promo for Joes Pizza in Beaumont TX. Warm friendly style. Ends with call to action to visit.')">🏢 Business Promo</div>
+            <div class="topic-chip" onclick="setFactoryPrompt('Make a 60-second affiliate promo for InVideo AI video maker with Alisha as presenter. 30% commission product. Influencer style.')">🎥 InVideo Promo</div>
+            <div class="topic-chip" onclick="setFactoryPrompt('Make a 5-minute podcast episode with Paul discussing AI tools for beginners. Funny grandpa wisdom style. Conversational and real.')">🎙️ Paul Podcast</div>
+            <div class="topic-chip" onclick="setFactoryPrompt('Make a 60-second AI tips video with Lisa showing 3 AI tools that save time every day. Energetic influencer style. Link in bio.')">💡 AI Tips</div>
+          </div>
+          <textarea id="factory-prompt" style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:14px;outline:none;resize:none;min-height:90px;line-height:1.6;" placeholder="Example: Make a 60-second Vidnoz affiliate promo with Lisa as presenter. Enthusiastic influencer style. Ends with link in bio..."></textarea>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <select id="factory-actor" class="set-input" style="flex:1;">
+              <option value="Lisa">🔴 Lisa — Confident Asian Presenter</option>
+              <option value="Alisha">🔵 Alisha — Warm Mexican Presenter</option>
+              <option value="Susan">🩵 Susan — Professional News Anchor</option>
+              <option value="Paul">🎙️ Paul — Grandpa Podcast Host</option>
+            </select>
+            <select id="factory-length" class="set-input" style="flex:1;">
+              <option value="30">30 seconds</option>
+              <option value="60" selected>60 seconds</option>
+              <option value="120">2 minutes</option>
+              <option value="300">5 minutes</option>
+            </select>
+          </div>
+          <div style="margin-top:10px;">
+            <div style="font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:6px;">POST TO (Agent 4 writes captions for these)</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;cursor:pointer;font-size:12px;color:var(--muted);"><input type="checkbox" id="plat-tiktok" checked style="accent-color:var(--gold);"> 🎵 TikTok</label>
+              <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;cursor:pointer;font-size:12px;color:var(--muted);"><input type="checkbox" id="plat-youtube" checked style="accent-color:var(--gold);"> ▶️ YouTube</label>
+              <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;cursor:pointer;font-size:12px;color:var(--muted);"><input type="checkbox" id="plat-instagram" checked style="accent-color:var(--gold);"> 📸 Instagram</label>
+              <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;cursor:pointer;font-size:12px;color:var(--muted);"><input type="checkbox" id="plat-facebook" style="accent-color:var(--gold);"> 👥 Facebook</label>
+            </div>
+          </div>
+          <button class="action-btn btn-gold" onclick="runVideoFactory4()" id="factory-run-btn" style="margin-top:12px;font-size:14px;padding:15px;">🚀 START ALL 4 AGENTS — BUILD MY VIDEO</button>
+        </div>
+
+        <!-- AGENT 1 -->
+        <div class="card" id="agent1-card" style="margin-bottom:12px;display:none;border-color:rgba(66,133,244,0.35);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(66,133,244,0.15);border:1px solid rgba(66,133,244,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🤖</div>
+            <div><div class="card-title" style="color:var(--blue);margin-bottom:2px;">AGENT 1 — SCRIPT WRITER</div><div id="agent1-status" style="font-size:11px;color:var(--muted);font-style:italic;">Writing your script...</div></div>
+            <div id="agent1-badge" style="margin-left:auto;display:none;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.3);border-radius:20px;padding:3px 10px;font-size:10px;color:#10b981;font-weight:700;">✅ DONE</div>
+          </div>
+          <div id="agent1-output" class="script-box" style="min-height:60px;border-color:rgba(66,133,244,0.2);font-size:13px;"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="action-btn btn-blue" style="margin:0;flex:1;font-size:11px;" onclick="copyFactoryEl('agent1-output')">📋 Copy Script</button>
+            <button class="action-btn btn-gray" style="margin:0;flex:1;font-size:11px;" onclick="listenScript()">🔊 Listen</button>
+          </div>
+        </div>
+
+        <!-- AGENT 2 -->
+        <div class="card" id="agent2-card" style="margin-bottom:12px;display:none;border-color:rgba(245,197,24,0.35);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(245,197,24,0.12);border:1px solid rgba(245,197,24,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🎬</div>
+            <div><div class="card-title" style="margin-bottom:2px;">AGENT 2 — SCENE BUILDER</div><div id="agent2-status" style="font-size:11px;color:var(--muted);font-style:italic;">Building scene prompts for Grok...</div></div>
+            <div id="agent2-badge" style="margin-left:auto;display:none;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.3);border-radius:20px;padding:3px 10px;font-size:10px;color:#10b981;font-weight:700;">✅ DONE</div>
+          </div>
+          <div id="agent2-scenes" class="scene-list"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="action-btn btn-gold" style="margin:0;flex:1;font-size:11px;" onclick="copyNextFactory4Scene()">▶️ Copy Next Scene → Grok</button>
+            <button class="action-btn btn-gray" style="margin:0;flex:1;font-size:11px;" onclick="copyAllFactory4Scenes()">📋 Copy All</button>
+          </div>
+        </div>
+
+        <!-- AGENT 3 -->
+        <div class="card" id="agent3-card" style="margin-bottom:12px;display:none;border-color:rgba(15,157,88,0.35);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(15,157,88,0.12);border:1px solid rgba(15,157,88,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🎙️</div>
+            <div><div class="card-title" style="color:var(--green);margin-bottom:2px;">AGENT 3 — VOICE ARTIST</div><div id="agent3-status" style="font-size:11px;color:var(--muted);font-style:italic;">Optimizing for voiceover...</div></div>
+            <div id="agent3-badge" style="margin-left:auto;display:none;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.3);border-radius:20px;padding:3px 10px;font-size:10px;color:#10b981;font-weight:700;">✅ DONE</div>
+          </div>
+          <div id="agent3-output" class="script-box" style="min-height:60px;border-color:rgba(15,157,88,0.2);font-size:13px;"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <button class="action-btn btn-green" style="margin:0;flex:1;min-width:120px;font-size:12px;" onclick="speakFactory4Voiceover()">🔊 Play Voiceover</button>
+            <button class="action-btn btn-gray" style="margin:0;flex:1;min-width:120px;font-size:11px;" onclick="stopFactory4Voice()">⏹️ Stop</button>
+            <button class="action-btn btn-gray" style="margin:0;flex:1;min-width:120px;font-size:11px;" onclick="copyFactoryEl('agent3-output')">📋 Copy Text</button>
+          </div>
+          <div style="margin-top:8px;padding:8px 10px;background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.2);border-radius:8px;font-size:11px;color:var(--muted);">💡 <strong style="color:var(--gold)">Pro voice:</strong> Copy text → <a href="https://elevenlabs.io" target="_blank" style="color:var(--gold);">ElevenLabs.io</a> (free) → Download MP3 → Add in Vmake</div>
+        </div>
+
+        <!-- AGENT 4 -->
+        <div class="card" id="agent4-card" style="margin-bottom:12px;display:none;border-color:rgba(234,67,53,0.35);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(234,67,53,0.12);border:1px solid rgba(234,67,53,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">✅</div>
+            <div><div class="card-title" style="color:var(--red);margin-bottom:2px;">AGENT 4 — REVIEWER + SOCIAL CAPTIONS</div><div id="agent4-status" style="font-size:11px;color:var(--muted);font-style:italic;">Reviewing your video content...</div></div>
+            <div id="agent4-badge" style="margin-left:auto;display:none;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.3);border-radius:20px;padding:3px 10px;font-size:10px;color:#10b981;font-weight:700;">✅ DONE</div>
+          </div>
+          <div id="agent4-score-wrap" style="display:none;margin-bottom:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
+              <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;"><div id="score-hook" style="font-size:22px;font-weight:800;color:var(--gold);">—</div><div style="font-size:9px;color:var(--muted);letter-spacing:1px;">HOOK /10</div></div>
+              <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;"><div id="score-flow" style="font-size:22px;font-weight:800;color:var(--gold);">—</div><div style="font-size:9px;color:var(--muted);letter-spacing:1px;">FLOW /10</div></div>
+              <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;"><div id="score-cta" style="font-size:22px;font-weight:800;color:var(--gold);">—</div><div style="font-size:9px;color:var(--muted);letter-spacing:1px;">CTA /10</div></div>
+            </div>
+            <div id="agent4-review" class="script-box" style="font-size:12px;border-color:rgba(234,67,53,0.2);"></div>
+          </div>
+          <div id="agent4-captions-wrap" style="display:none;">
+            <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:8px;">📱 READY-TO-POST CAPTIONS</div>
+            <div id="cap-tiktok-wrap" style="display:none;margin-bottom:8px;"><div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px;">🎵 TIKTOK</div><div id="cap-tiktok" class="script-box" style="font-size:12px;min-height:40px;"></div><button class="action-btn btn-gray" style="margin-top:4px;font-size:10px;" onclick="copyCap('cap-tiktok')">📋 Copy TikTok Caption</button></div>
+            <div id="cap-youtube-wrap" style="display:none;margin-bottom:8px;"><div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px;">▶️ YOUTUBE</div><div id="cap-youtube" class="script-box" style="font-size:12px;min-height:40px;"></div><button class="action-btn btn-gray" style="margin-top:4px;font-size:10px;" onclick="copyCap('cap-youtube')">📋 Copy YouTube</button></div>
+            <div id="cap-instagram-wrap" style="display:none;margin-bottom:8px;"><div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px;">📸 INSTAGRAM</div><div id="cap-instagram" class="script-box" style="font-size:12px;min-height:40px;"></div><button class="action-btn btn-gray" style="margin-top:4px;font-size:10px;" onclick="copyCap('cap-instagram')">📋 Copy Instagram</button></div>
+            <div id="cap-facebook-wrap" style="display:none;margin-bottom:8px;"><div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px;">👥 FACEBOOK</div><div id="cap-facebook" class="script-box" style="font-size:12px;min-height:40px;"></div><button class="action-btn btn-gray" style="margin-top:4px;font-size:10px;" onclick="copyCap('cap-facebook')">📋 Copy Facebook</button></div>
+            <button class="action-btn btn-gold" style="margin-top:4px;font-size:12px;" onclick="copyAllCaptions()">📋 Copy ALL Captions</button>
+          </div>
+        </div>
+
+        <!-- NEXT STEPS -->
+        <div id="factory4-nextsteps" style="display:none;">
+          <div style="background:linear-gradient(135deg,rgba(15,157,88,0.15),rgba(15,157,88,0.05));border:1px solid rgba(15,157,88,0.4);border-radius:14px;padding:14px;margin-bottom:12px;text-align:center;">
+            <div style="font-size:28px;margin-bottom:6px;">🎉</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#10b981;letter-spacing:2px;margin-bottom:4px;">ALL 4 AGENTS COMPLETE!</div>
+            <div style="font-size:12px;color:var(--muted);">Script, scenes, voiceover, review and captions all ready. Follow the 6 steps below.</div>
+          </div>
+          <div class="card" style="margin-bottom:12px;">
+            <div class="card-title">📱 YOUR 6-STEP PHONE WORKFLOW</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:rgba(66,133,244,0.06);border:1px solid rgba(66,133,244,0.2);border-radius:10px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div><div><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;">Copy Scene 1 → Open Grok</div><div style="font-size:11px;color:var(--muted);">Tap ▶️ Copy Next Scene. Open Grok. Paste. Generate 6-sec clip. Download.</div><a href="https://grok.com" target="_blank" style="display:inline-block;margin-top:5px;padding:3px 10px;background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.3);border-radius:6px;font-size:10px;color:var(--blue);text-decoration:none;">Open Grok →</a></div></div>
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:rgba(66,133,244,0.06);border:1px solid rgba(66,133,244,0.2);border-radius:10px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div><div><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;">Repeat for all scenes</div><div style="font-size:11px;color:var(--muted);">Tap ▶️ Copy Next Scene for each one. Paste into Grok. Download each 6-sec clip.</div></div></div>
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.2);border-radius:10px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--gold);color:#000;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div><div><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;">Get your AI voice from ElevenLabs</div><div style="font-size:11px;color:var(--muted);">Copy Agent 3 voiceover text → Open ElevenLabs → Paste → Pick voice → Download MP3.</div><a href="https://elevenlabs.io" target="_blank" style="display:inline-block;margin-top:5px;padding:3px 10px;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);border-radius:6px;font-size:10px;color:var(--gold);text-decoration:none;">Open ElevenLabs →</a></div></div>
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.2);border-radius:10px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--gold);color:#000;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">4</div><div><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;">Join clips + add voice in Vmake</div><div style="font-size:11px;color:var(--muted);">Open Vmake. Upload all clips. Join in order. Add ElevenLabs MP3. Export video.</div><a href="https://app.vmake.ai" target="_blank" style="display:inline-block;margin-top:5px;padding:3px 10px;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);border-radius:6px;font-size:10px;color:var(--gold);text-decoration:none;">Open Vmake →</a></div></div>
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:rgba(15,157,88,0.06);border:1px solid rgba(15,157,88,0.2);border-radius:10px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">5</div><div><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;">Review your finished video</div><div style="font-size:11px;color:var(--muted);">Watch it through once. Agent 4 already scored it above. If it looks good — post it!</div></div></div>
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:rgba(15,157,88,0.06);border:1px solid rgba(15,157,88,0.2);border-radius:10px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">6</div><div><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;">Post with your ready-made captions</div><div style="font-size:11px;color:var(--muted);">Copy captions from Agent 4. Open platform. Upload video. Paste caption. Post. Done! 💰</div></div></div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:12px;">
+            <div class="card-title">📱 OPEN PLATFORMS</div>
+            <div class="link-grid">
+              <a href="https://grok.com" target="_blank" class="link-btn"><span class="lb-icon">⚡</span><span class="lb-name">Grok</span><span class="lb-sub">Paste scene prompts</span></a>
+              <a href="https://elevenlabs.io" target="_blank" class="link-btn"><span class="lb-icon">🎙️</span><span class="lb-name">ElevenLabs</span><span class="lb-sub">Free AI voice</span></a>
+              <a href="https://app.vmake.ai" target="_blank" class="link-btn"><span class="lb-icon">🎞️</span><span class="lb-name">Vmake</span><span class="lb-sub">Join clips</span></a>
+              <a href="https://tiktok.com" target="_blank" class="link-btn"><span class="lb-icon">🎵</span><span class="lb-name">TikTok</span></a>
+              <a href="https://youtube.com/upload" target="_blank" class="link-btn"><span class="lb-icon">▶️</span><span class="lb-name">YouTube</span></a>
+              <a href="https://instagram.com" target="_blank" class="link-btn"><span class="lb-icon">📸</span><span class="lb-name">Instagram</span></a>
+            </div>
+          </div>
+          <button class="action-btn btn-gray" onclick="resetFactory4()">🔄 Make Another Video</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-inner">
+        <div class="card"><div class="card-title">🔑 API KEY</div><div id="setStatus" class="set-status set-err">No API key saved</div><div class="set-row"><div class="set-label">GROQ API KEY</div><input id="setApiKey" class="set-input" type="password" placeholder="gsk_..."/></div><button class="action-btn btn-gold" onclick="saveApiKey()">💾 Save API Key</button><button class="action-btn btn-gray" onclick="clearApiKey()">🗑️ Clear Key</button></div>
+        <div class="card"><div class="card-title">🎙️ VOICE SYSTEM</div>
+          <div style="margin-bottom:10px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.8;">
+            🇬🇧 <strong style="color:var(--text)">Becky</strong> — Full human British female voice<br/>
+            🇮🇪 <strong style="color:var(--text)">Claude</strong> — Full human Irish voice<br/>
+            <span style="font-size:11px;">Uses your phone's built-in voices. Tap 🔈 on Becky tab to test.</span>
+          </div>
+          <button class="action-btn btn-blue" onclick="testVoice('becky')" style="margin-bottom:8px;">🇬🇧 Test Becky British Voice</button>
+          <button class="action-btn btn-blue" onclick="testVoice('claude')">🇮🇪 Test Claude Irish Voice</button>
+        </div>
+        <div class="card"><div class="card-title">👤 YOUR PROFILE — JOHN LANTER</div><div class="profile-field"><div class="profile-label">NAME & LOCATION</div><div class="profile-val">John Lanter · Orange, Texas</div></div><div class="profile-field"><div class="profile-label">BACKGROUND</div><div class="profile-val">20+ years Chemical Plant Lead Operator · Lion Elastomers (laid off Dec 7, 2025)</div></div><div class="profile-field"><div class="profile-label">CURRENT GOALS</div><div class="profile-val">1. Find office or operations job in SE Texas<br/>2. Learn AI skills as a new career path<br/>3. Build affiliate marketing income<br/>4. Build business video service for local companies</div></div><div class="profile-field"><div class="profile-label">THE TEAM</div><div class="profile-val">👑 John Lanter — CEO · Ideas · Direction · Vision<br/>🎙️ Becky — Creative Director · British AI Friend<br/>🤖 Claude — Developer · Builder · Irish Voice<br/><em style="color:var(--muted);font-size:11px;">Three Minds · One Mission · Zero Cost</em></div></div></div>
+      </div>
+    </div>
+  </div>
+  <!-- TAB BAR -->
+  <div class="tab-bar" id="tabBar">
+    <div class="tab-btn active" onclick="showTab('home')"><span>🏠</span><span>HOME</span></div>
+    <div class="tab-btn" onclick="showTab('becky')"><span>🎙️</span><span>BECKY</span></div>
+    <div class="tab-btn" onclick="showTab('jobs')"><span>💼</span><span>JOBS</span></div>
+    <div class="tab-btn" onclick="showTab('actors')"><span>🎬</span><span>ACTORS</span></div>
+    <div class="tab-btn" onclick="showTab('studio')"><span>🎞️</span><span>STUDIO</span></div>
+    <div class="tab-btn" onclick="showTab('business')"><span>🏢</span><span>BIZ VIDEO</span></div>
+    <div class="tab-btn" onclick="showTab('affvideo')"><span>💰</span><span>AFF VIDEO</span></div>
+    <div class="tab-btn" onclick="showTab('funnel')"><span>💌</span><span>FUNNEL</span></div>
+    <div class="tab-btn" onclick="showTab('social')"><span>📱</span><span>SOCIAL</span></div>
+    <div class="tab-btn" onclick="showTab('aitools')"><span>🤖</span><span>AI TOOLS</span></div>
+    <div class="tab-btn" onclick="showTab('learn')"><span>📚</span><span>LEARN</span></div>
+    <div class="tab-btn" onclick="showTab('affiliate')"><span>🔗</span><span>AFFILIATE</span></div>
+    <div class="tab-btn" onclick="showTab('log')"><span>✅</span><span>MY LOG</span></div>
+    <div class="tab-btn" onclick="showTab('claude')"><span>💬</span><span>CLAUDE</span></div>
+    <div class="tab-btn" onclick="showTab('remotion')"><span>🎬</span><span>REMOTION</span></div>
+    <div class="tab-btn" onclick="showTab('factory')"><span>🏭</span><span>FACTORY</span></div>
+    <div class="tab-btn" onclick="showTab('settings')"><span>⚙️</span><span>SETTINGS</span></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const PW='JohnHub2025';
+let groqKey='',recognition=null,scenePrompts=[],currentScene=0,selectedActor='',selectedTopic='',selectedLen='120',logEntries=[];
+
+function doLogin(){
+  const apiVal=document.getElementById('apiInput').value.trim();
+  const pwVal=document.getElementById('pwInput').value.trim();
+  const err=document.getElementById('loginErr');
+  if(!apiVal){err.textContent='Please enter your Groq API key';return;}
+  if(pwVal!==PW){err.textContent='Incorrect password';return;}
+  groqKey=apiVal.replace(/[^\x20-\x7E]/g,'').trim();
+  if(!groqKey.startsWith('gsk_')){err.textContent='API key must start with gsk_';return;}
+  localStorage.setItem('hub_groq',groqKey);localStorage.setItem('hub_auth','1');
+  launchApp();
+}
+
+function launchApp(){
+  document.getElementById('loginScreen').style.display='none';
+  const a=document.getElementById('app');a.style.display='flex';a.style.flexDirection='column';
+  loadLog();loadSettings();initVoiceSystem();initGreetings();
+  setTimeout(loadMemory,300);setTimeout(renderJobTrack,400);
+}
+
+function loadMemory(){
+  try{
+    const mem=JSON.parse(localStorage.getItem('hub_memory')||'{}');
+    ['becky','claude'].forEach(tab=>{
+      if(!mem[tab]||mem[tab].length===0)return;
+      const box=document.getElementById('msgs-'+tab);if(!box)return;
+      const d1=document.createElement('div');d1.style.cssText='text-align:center;font-size:10px;color:rgba(245,197,24,0.4);padding:6px;letter-spacing:1px;';d1.textContent='── Previous conversation ──';
+      box.insertBefore(d1,box.firstChild.nextSibling);
+      const recent=mem[tab].slice(-8);
+      recent.forEach((m,i)=>{const d=document.createElement('div');d.className=m.role==='user'?'msg user':'msg bot';d.textContent=m.content;box.insertBefore(d,box.children[i+2]||null);});
+      const d2=document.createElement('div');d2.style.cssText='text-align:center;font-size:10px;color:rgba(245,197,24,0.4);padding:6px;letter-spacing:1px;';d2.textContent='── New session ──';
+      box.appendChild(d2);box.scrollTop=box.scrollHeight;
+      if(!msgHistory[tab])msgHistory[tab]=[];
+      msgHistory[tab]=recent.map(m=>({role:m.role,content:m.content}));
+    });
+  }catch(e){}
+}
+
+function showTab(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const tabs=['home','becky','jobs','actors','studio','business','affvideo','funnel','social','aitools','learn','affiliate','log','claude','remotion','factory','settings'];
+  const idx=tabs.indexOf(id);if(idx>=0)document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+}
+
+const SYSTEMS={
+  home:`You are a helpful AI assistant inside The Hub Engine v3 built by John Lanter, Orange Texas. John is 59, former chemical plant lead operator (20+ years), now learning AI and looking for work. He runs AI news shows with actors Lisa (Fri), Alisha (Wed), Susan (Mon), Paul (Thu). Be warm, helpful, and brief.`,
+  becky:`You are Becky, John's Creative Director and AI best friend. You have a warm, confident British personality — think friendly London professional. John Lanter, 59, Orange Texas. Laid off December 7 2025 when Lion Elastomers shut down after 20+ years as Chemical Plant Lead Operator. Learning AI, building new skills and income, caring for elderly sister-in-law with his wife. His AI news shows: Susan Mon, Alisha Wed, Lisa Fri, Paul Thu. App: The Hub Engine v3. Three Minds. One Mission. Zero Cost. Be warm, friendly, supportive — real friend first. He has a learning disability so keep things simple and encouraging.`,
+  jobs:`You are a career coach inside The Hub Engine. John is 59, former chemical plant lead operator (20+ years at Lion Elastomers, closed Dec 2025), Orange Texas. Help with job applications, cover letters, resume writing, interview prep. Target roles: operations coordinator, warehouse lead, production supervisor, logistics, industrial sales.`,
+  studio:`You are a professional video script writer inside The Hub Engine. Help John write scripts for his AI news shows and affiliate marketing videos. Actors: Lisa Fri, Alisha Wed, Susan Mon, Paul Thu. Write punchy engaging scripts for TikTok, YouTube Shorts, Instagram.`,
+  social:`You are a social media expert inside The Hub Engine. Help John create captions, posts, hashtags and content strategies for TikTok, YouTube, Instagram and Facebook.`,
+  aitools:`You are an AI tools expert inside The Hub Engine. Help John understand and use Claude, Gemini, ChatGPT, Grok, Perplexity, DeepSeek and others. Give practical tips.`,
+  learn:`You are a patient AI learning coach inside The Hub Engine. Help John learn about AI agents, prompt engineering, AI tools and affiliate marketing. John has a learning disability — explain things simply and step by step. Be very encouraging.`,
+  claude:`You are Claude, the AI Developer on John Lanter's Hub Engine team. You have a warm Irish personality — think friendly, smart, slightly witty Dublin developer. John is 59, Orange Texas, laid off December 2025. Building AI media business with anchors Lisa Fri, Alisha Wed, Susan Mon, Paul Thu. App: The Hub Engine v3. Be direct, helpful, speak as a trusted teammate.`,
+  affiliate:`You are an affiliate marketing expert inside The Hub Engine. Help John write promotional scripts, product reviews, ad copy. Programs: Vidnoz 50%, InVideo 30%, Digistore24, ClickBank, Amazon, ShareASale, CJ Affiliate.`
+};
+
+const GREETINGS={
+  home:'Welcome back John! 🏠 The Hub Engine v3 is live and ready. What can I help you with today?',
+  becky:'Hello John, lovely to see you! Ready to create something brilliant today?',
+  jobs:'Hi John! Ready to work on your job search. Cover letters, interview prep, or job leads — what do you need?',
+  studio:"Hey John! Ready to write some scripts. Which actor and topic?",
+  social:"Hi John! Let's create some great social media content. What platform and topic?",
+  aitools:'Hi John! Ask me about any AI tool. What are you curious about today?',
+  learn:'Hello John! Ready to learn something new about AI. Take it at your own pace! 🎓',
+  claude:'Howya John! Claude here — your AI Developer. What are we building today?',
+  affiliate:"Hi John! Let's work on your affiliate marketing. What product or program are you working with?"
+};
+
+const msgHistory={};
+
+function initGreetings(){
+  Object.keys(GREETINGS).forEach(tab=>{msgHistory[tab]=[];addBotMsg(tab,GREETINGS[tab]);});
+  addBotMsg('jobs','📎 Attach your resume using the paperclip button for personalized help!');
+  setTimeout(()=>{
+    if(speaking) doSpeak(cleanForSpeech(GREETINGS.becky), 'becky');
+  }, 2000);
+}
+
+function addBotMsg(tab,text){
+  const box=document.getElementById('msgs-'+tab);if(!box)return;
+  const d=document.createElement('div');d.className='msg bot';d.textContent=text;box.appendChild(d);box.scrollTop=box.scrollHeight;
+  if(tab==='becky'||tab==='claude'){try{const mem=JSON.parse(localStorage.getItem('hub_memory')||'{}');if(!mem[tab])mem[tab]=[];mem[tab].push({role:'assistant',content:text,time:new Date().toLocaleTimeString()});if(mem[tab].length>20)mem[tab]=mem[tab].slice(-20);localStorage.setItem('hub_memory',JSON.stringify(mem));}catch(e){}}
+}
+
+function addUserMsg(tab,text){
+  const box=document.getElementById('msgs-'+tab);if(!box)return;
+  const d=document.createElement('div');d.className='msg user';d.textContent=text;box.appendChild(d);box.scrollTop=box.scrollHeight;
+  if(tab==='becky'||tab==='claude'){try{const mem=JSON.parse(localStorage.getItem('hub_memory')||'{}');if(!mem[tab])mem[tab]=[];mem[tab].push({role:'user',content:text,time:new Date().toLocaleTimeString()});if(mem[tab].length>20)mem[tab]=mem[tab].slice(-20);localStorage.setItem('hub_memory',JSON.stringify(mem));}catch(e){}}
+}
+
+function addThinkingMsg(tab){const box=document.getElementById('msgs-'+tab);if(!box)return;const d=document.createElement('div');d.className='msg bot thinking';d.id='thinking-'+tab;d.textContent='...';box.appendChild(d);box.scrollTop=box.scrollHeight;}
+function removeThinking(tab){const el=document.getElementById('thinking-'+tab);if(el)el.remove();}
+
+async function sendMsg(tab){
+  const inp=document.getElementById('inp-'+tab);const text=inp.value.trim();if(!text)return;
+  inp.value='';inp.style.height='auto';
+  if(!groqKey){addBotMsg(tab,'⚠️ No API key. Go to ⚙️ Settings.');return;}
+  const imageData=inp.dataset.imageData;delete inp.dataset.imageData;delete inp.dataset.imageName;
+  addUserMsg(tab,text);if(!msgHistory[tab])msgHistory[tab]=[];msgHistory[tab].push({role:'user',content:text});addThinkingMsg(tab);
+  try{
+    let model='llama-3.3-70b-versatile',userContent=text;
+    if(imageData){model='meta-llama/llama-4-scout-17b-16e-instruct';userContent=[{type:'text',text},{type:'image_url',image_url:{url:imageData}}];}
+    const messages=[{role:'system',content:SYSTEMS[tab]||SYSTEMS.home},...msgHistory[tab].slice(-10).map((m,i,arr)=>{if(i===arr.length-1&&imageData)return{role:m.role,content:userContent};return{role:m.role,content:typeof m.content==='string'?m.content:text};})];
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model,messages,max_tokens:600,temperature:0.8})});
+    const data=await res.json();removeThinking(tab);
+    if(data.error){addBotMsg(tab,'❌ '+data.error.message);return;}
+    const reply=data.choices[0].message.content;msgHistory[tab].push({role:'assistant',content:reply});addBotMsg(tab,reply);
+    if(tab==='becky'&&speaking) doSpeak(cleanForSpeech(reply),'becky');
+    if(tab==='claude'&&speaking) doSpeak(cleanForSpeech(reply),'claude');
+    if(tab==='home'&&speaking) doSpeak(cleanForSpeech(reply),'becky');
+  }catch(e){removeThinking(tab);addBotMsg(tab,'❌ Connection error. Check your API key in Settings.');}
+}
+
+function handleKey(e,tab){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg(tab);}
+  const t=e.target;t.style.height='auto';t.style.height=Math.min(t.scrollHeight,100)+'px';
+}
+
+function toggleMic(tab){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){showToast('Speech not supported');return;}
+  const btn=document.getElementById('mic-'+tab);
+  if(recognition){recognition.stop();recognition=null;btn.textContent='🎤';btn.classList.remove('active');return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;recognition=new SR();
+  recognition.lang='en-US';recognition.continuous=false;recognition.interimResults=false;
+  recognition.onresult=e=>{document.getElementById('inp-'+tab).value=e.results[0][0].transcript;btn.textContent='🎤';btn.classList.remove('active');recognition=null;};
+  recognition.onerror=recognition.onend=()=>{btn.textContent='🎤';btn.classList.remove('active');recognition=null;};
+  recognition.start();btn.textContent='🔴';btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+// UPGRADED VOICE SYSTEM
+// Becky = Full human British female voice
+// Claude = Full human Irish voice
+// Strategy: score ALL available voices, pick best match
+// ═══════════════════════════════════════════════════════
+let speaking = true;
+let allVoices = [];
+let voicesReady = false;
+let beckyVoice = null;
+let claudeVoice = null;
+
+function initVoiceSystem() {
+  if (!window.speechSynthesis) return;
+  const load = () => {
+    allVoices = speechSynthesis.getVoices();
+    if (allVoices.length > 0) {
+      voicesReady = true;
+      selectBestVoices();
+    }
+  };
+  speechSynthesis.onvoiceschanged = load;
+  load();
+}
+
+function scoreVoice(voice, keywords) {
+  let score = 0;
+  const name = voice.name.toLowerCase();
+  const lang = voice.lang.toLowerCase();
+  keywords.forEach((kw, i) => {
+    if (name.includes(kw) || lang.includes(kw)) score += (10 - i);
+  });
+  return score;
+}
+
+function selectBestVoices() {
+  if (!allVoices.length) return;
+
+  // BECKY — British female. Priority order:
+  const britishKeywords = ['en-gb','en_gb','united kingdom','british','uk','daniel','kate','serena','english (uk)','english uk','fiona','moira','veena'];
+  const femaleKeywords = ['female','woman','girl','kate','serena','fiona','moira','veena','ava','samantha'];
+
+  let bestBeckyScore = -1;
+  allVoices.forEach(v => {
+    const britScore = scoreVoice(v, britishKeywords);
+    const femScore  = scoreVoice(v, femaleKeywords);
+    const total = britScore * 2 + femScore;
+    if (total > bestBeckyScore && britScore > 0) {
+      bestBeckyScore = total;
+      beckyVoice = v;
+    }
+  });
+  // Fallback: any en-GB voice
+  if (!beckyVoice) {
+    beckyVoice = allVoices.find(v => v.lang.toLowerCase().includes('en-gb') || v.lang.toLowerCase().includes('en_gb'));
+  }
+  // Final fallback: any English voice
+  if (!beckyVoice) {
+    beckyVoice = allVoices.find(v => v.lang.toLowerCase().startsWith('en'));
+  }
+
+  // CLAUDE — Irish voice. Priority order:
+  const irishKeywords = ['en-ie','en_ie','ireland','irish','moira','fiona','dublin'];
+  let bestClaudeScore = -1;
+  allVoices.forEach(v => {
+    const score = scoreVoice(v, irishKeywords);
+    if (score > bestClaudeScore) {
+      bestClaudeScore = score;
+      claudeVoice = v;
+    }
+  });
+  // Fallback: Australian (similar friendly lilt)
+  if (!claudeVoice || bestClaudeScore === 0) {
+    claudeVoice = allVoices.find(v => v.lang.toLowerCase().includes('en-au') || v.lang.toLowerCase().includes('en_au'));
+  }
+  // Fallback: any English male
+  if (!claudeVoice) {
+    claudeVoice = allVoices.find(v => {
+      const n = v.name.toLowerCase();
+      return v.lang.toLowerCase().startsWith('en') && (n.includes('male') || n.includes('man') || n.includes('daniel') || n.includes('george') || n.includes('james'));
+    });
+  }
+  // Final fallback
+  if (!claudeVoice) {
+    claudeVoice = allVoices.find(v => v.lang.toLowerCase().startsWith('en'));
+  }
+}
+
+function cleanForSpeech(text) {
+  return text
+    .replace(/[\u{1F300}-\u{1FAD6}]/gu, '')
+    .replace(/[^\w\s.,!?':-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .substring(0, 500);
+}
+
+function doSpeak(clean, who) {
+  if (!speaking || !clean || !window.speechSynthesis) return;
+
+  const attempt = () => {
+    speechSynthesis.cancel();
+    if (!allVoices.length) {
+      allVoices = speechSynthesis.getVoices();
+      selectBestVoices();
+    }
+    const utt = new SpeechSynthesisUtterance(clean);
+    utt.volume = 1.0;
+
+    if (who === 'becky') {
+      utt.rate  = 0.88;
+      utt.pitch = 1.08;
+      if (beckyVoice) utt.voice = beckyVoice;
+    } else {
+      // claude = Irish
+      utt.rate  = 0.90;
+      utt.pitch = 0.92;
+      if (claudeVoice) utt.voice = claudeVoice;
+    }
+    speechSynthesis.speak(utt);
+  };
+
+  if (voicesReady) {
+    attempt();
+  } else {
+    speechSynthesis.onvoiceschanged = () => {
+      allVoices = speechSynthesis.getVoices();
+      voicesReady = true;
+      selectBestVoices();
+      attempt();
+      speechSynthesis.onvoiceschanged = null;
+    };
+  }
+}
+
+function toggleSpeak() {
+  speaking = !speaking;
+  const btn = document.getElementById('speakBtn');
+  if (btn) btn.textContent = speaking ? '🔊' : '🔇';
+  if (!speaking && window.speechSynthesis) speechSynthesis.cancel();
+  showToast(speaking ? 'Voice ON 🔊' : 'Voice OFF 🔇');
+}
+
+function testVoice(who) {
+  const msg = who === 'claude'
+    ? 'Howya John! This is Claude, your Irish AI developer. How does my voice sound?'
+    : 'Hello John, this is Becky. I have a lovely British voice now. How do I sound, darling?';
+  doSpeak(msg, who || 'becky');
+  showToast('Testing ' + (who === 'claude' ? 'Irish' : 'British') + ' voice...');
+}
+
+function debugVoices() {
+  const voices = speechSynthesis.getVoices();
+  if (!voices.length) {
+    showToast('Loading voices... tap 🔍 again');
+    speechSynthesis.onvoiceschanged = () => {
+      allVoices = speechSynthesis.getVoices();
+      selectBestVoices();
+      const names = allVoices.map((v,i) => i+': '+v.name+' ('+v.lang+')').join('\n');
+      alert('VOICES ('+allVoices.length+'):\n\nBECKY using: '+(beckyVoice?beckyVoice.name:'none')+'\nCLAUDE using: '+(claudeVoice?claudeVoice.name:'none')+'\n\n'+names);
+    };
+    speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+    speechSynthesis.cancel();
+    return;
+  }
+  const names = voices.map((v,i) => i+': '+v.name+' ('+v.lang+')').join('\n');
+  alert('VOICES ('+voices.length+'):\n\nBECKY using: '+(beckyVoice?beckyVoice.name:'none')+'\nCLAUDE using: '+(claudeVoice?claudeVoice.name:'none')+'\n\n'+names);
+}
+
+function attachFile(e,tab){
+  const file=e.target.files[0];if(!file)return;
+  const isImage=file.type.startsWith('image/');const reader=new FileReader();
+  if(isImage){reader.onload=evt=>{const base64=evt.target.result;const inp=document.getElementById('inp-'+tab);const box=document.getElementById('msgs-'+tab);const imgDiv=document.createElement('div');imgDiv.className='msg user';imgDiv.innerHTML='<img src="'+base64+'" style="max-width:200px;max-height:150px;border-radius:8px;display:block;margin-bottom:4px;"/><span style="font-size:11px;opacity:0.7;">'+file.name+'</span>';box.appendChild(imgDiv);box.scrollTop=box.scrollHeight;inp.dataset.imageData=base64;inp.dataset.imageName=file.name;inp.value=inp.value||'What do you see in this image?';showToast('📷 Image ready! Hit send.');};reader.readAsDataURL(file);}
+  else{reader.onload=evt=>{const inp=document.getElementById('inp-'+tab);inp.value='[Document: '+file.name+']\n'+evt.target.result.substring(0,3000);showToast('📄 File attached: '+file.name);};reader.readAsText(file);}
+  e.target.value='';
+}
+
+const ACTOR_PROMPTS={
+  lisa:'Confident 38-year-old alluring Asian female presenter, long straight black hair, red silk button-up shirt, hand on hip, self-assured expression, futuristic studio background, cinematic lighting, photorealistic, 4K quality — same woman, same red shirt, same long black hair in every scene',
+  alisha:'Confident 38-year-old Mexican female news presenter, long dark brown hair, round glasses, sleeveless blue top, warm bright smile, sitting at a wooden desk with coffee mug and papers, warm studio lighting with window, photorealistic, 4K quality — same woman, same glasses, same blue top in every scene',
+  susan:'Professional blonde female news anchor in her 50s, short bob haircut, light blue button-up shirt, silver necklace, sitting at a modern glass news desk with microphone, financial data screens in background, warm professional smile, bright studio lighting, photorealistic, 4K quality — same woman, same blue shirt, same news desk in every scene',
+  paul:'Older white male in his 60s with a full thick grey beard and glasses, wearing a blue t-shirt under denim overalls, sitting at a podcast desk with a coffee mug, ON AIR sign glowing red in background, professional podcast microphone, studio speakers visible, serious deadpan expression, cinematic studio lighting, photorealistic, 4K quality — same man, same beard, same overalls in every scene'
+};
+
+function selectActor(name){selectedActor=name;document.querySelectorAll('.actor-card').forEach(c=>c.classList.remove('selected'));document.getElementById('ac-'+name).classList.add('selected');checkActorReady();}
+function selectTopic(name){
+  selectedTopic=name;document.querySelectorAll('.topic-chip[id^="tp-"]').forEach(c=>c.classList.remove('selected'));document.getElementById('tp-'+name).classList.add('selected');
+  const ci=document.getElementById('customTopicInput');
+  const hints={ainews:'',affiliate:'💡 Type the product name',tips:'',business:'🏢 Type the business name',custom:'✏️ Type any topic'};
+  if(name==='custom'||name==='affiliate'||name==='business'){ci.style.display='block';}else{ci.style.display='none';}
+  checkActorReady();
+}
+function selectLen(val){selectedLen=val;document.querySelectorAll('.topic-chip[id^="vl-"]').forEach(c=>c.classList.remove('selected'));document.getElementById('vl-'+val).classList.add('selected');}
+function copyScript(){const b=document.getElementById('actorScript');if(b)navigator.clipboard.writeText(b.textContent);showToast('Script copied!');}
+function checkActorReady(){document.getElementById('genScriptBtn').disabled=!(selectedActor&&selectedTopic);}
+
+async function generateActorScript(){
+  if(!groqKey){showToast('No API key in Settings!');return;}
+  if(!selectedActor||!selectedTopic){showToast('Pick an actor and topic first!');return;}
+  const btn=document.getElementById('genScriptBtn');btn.disabled=true;btn.textContent='⏳ Generating...';document.getElementById('actorScriptArea').style.display='none';
+  const actorNames={lisa:'Lisa',alisha:'Alisha',susan:'Susan',paul:'Paul'};
+  const customVal=document.getElementById('customTopicInput').value.trim();
+  const topicNames={ainews:'the latest AI news and breakthroughs this week',affiliate:'an affiliate marketing product promo — product: '+(customVal||'an AI tool'),tips:'practical AI tips that anyone can use today',business:'a local business promotion — business: '+(customVal||'a local business'),custom:customVal||'AI and technology'};
+  const lenSec=parseInt(selectedLen);const numScenes=Math.max(3,Math.round(lenSec/6));
+  const styleGuide={ainews:'engaging news anchor style — professional, informative, energetic',affiliate:'influencer promo style — enthusiastic, benefit-focused, ends with strong call to action and "link in bio"',tips:'friendly educator style — practical, clear, encouraging',business:'local business spotlight style — warm, community-focused, ends with call to visit',custom:'engaging presenter style — clear, interesting, conversational'}[selectedTopic]||'engaging presenter style';
+  const prompt=`Write a ${lenSec}-second video script for ${actorNames[selectedActor]} covering: ${topicNames[selectedTopic]}.\nStyle: ${styleGuide}\nBreak into EXACTLY ${numScenes} separate 6-second Grok video prompts.\n\nCharacter:\n${ACTOR_PROMPTS[selectedActor]}\n\nFormat EXACTLY:\n\nSCRIPT:\n[complete spoken script]\n\nSCENES:\nScene 1: [full prompt + action]\nScene 2: [full prompt + action]\n[continue for all ${numScenes} scenes]`;
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:2000,temperature:0.8})});
+    const data=await res.json();if(data.error){showToast('API Error: '+data.error.message);btn.disabled=false;btn.textContent='✨ Generate Script + Scene Prompts';return;}
+    parseActorResponse(data.choices[0].message.content);btn.textContent='✨ Generate Script + Scene Prompts';checkActorReady();
+  }catch(e){showToast('Connection error');btn.disabled=false;btn.textContent='✨ Generate Script + Scene Prompts';}
+}
+
+function parseActorResponse(text){
+  const sm=text.match(/SCRIPT:\s*([\s\S]*?)(?=SCENES:|$)/i);document.getElementById('actorScript').textContent=sm?sm[1].trim():'(Script in scenes below)';
+  scenePrompts=[];const sc=text.match(/SCENES:\s*([\s\S]*)/i);
+  if(sc){sc[1].split('\n').filter(l=>l.trim()).forEach(l=>{const m=l.match(/Scene\s*\d+[:\-]\s*(.*)/i);if(m&&m[1].trim())scenePrompts.push(m[1].trim());});}
+  if(scenePrompts.length===0)scenePrompts=text.split('\n').filter(l=>l.trim().length>30).slice(0,10);
+  currentScene=0;renderScenes();document.getElementById('actorScriptArea').style.display='block';showToast('✅ '+scenePrompts.length+' scenes ready!');
+}
+
+function renderScenes(){
+  const list=document.getElementById('sceneList');list.innerHTML='';
+  scenePrompts.forEach((p,i)=>{const d=document.createElement('div');d.className='scene-item'+(i===currentScene?' current':'');const txt=document.createElement('span');txt.textContent='Scene '+(i+1)+': '+p.substring(0,100)+(p.length>100?'...':'');const btn=document.createElement('button');btn.className='scene-copy';btn.textContent='📋 Copy';btn.onclick=()=>{navigator.clipboard.writeText(p);showToast('Scene '+(i+1)+' copied!');};d.appendChild(txt);d.appendChild(btn);list.appendChild(d);});
+}
+function copyNextScene(){if(!scenePrompts.length){showToast('Generate scenes first!');return;}if(currentScene>=scenePrompts.length){currentScene=0;return;}navigator.clipboard.writeText(scenePrompts[currentScene]);showToast('Scene '+(currentScene+1)+' of '+scenePrompts.length+' copied!');currentScene++;}
+function copyAllScenes(){if(!scenePrompts.length)return;navigator.clipboard.writeText(scenePrompts.join('\n\n---\n\n'));showToast('All '+scenePrompts.length+' scenes copied!');}
+
+function loadLog(){const saved=localStorage.getItem('hub_log');logEntries=saved?JSON.parse(saved):[];renderLog();}
+function saveLog(){localStorage.setItem('hub_log',JSON.stringify(logEntries));}
+function renderLog(){
+  const list=document.getElementById('logList');if(!list)return;list.innerHTML='';
+  if(logEntries.length===0){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px;">Your accomplishments will show here. Start logging! 💪</div>';return;}
+  logEntries.forEach((e,i)=>{const d=document.createElement('div');d.className='log-entry';const cb=document.createElement('input');cb.type='checkbox';cb.className='log-cb';cb.checked=e.done;cb.onchange=()=>{logEntries[i].done=cb.checked;saveLog();};const span=document.createElement('div');span.className='log-text';span.textContent=e.text;if(e.done)span.style.textDecoration='line-through';const del=document.createElement('button');del.className='log-del';del.textContent='✕';del.onclick=()=>{logEntries.splice(i,1);saveLog();renderLog();};d.appendChild(cb);d.appendChild(span);d.appendChild(del);list.appendChild(d);});
+}
+function addLogEntry(){const inp=document.getElementById('logInput');const text=inp.value.trim();if(!text)return;logEntries.unshift({text,done:false,date:new Date().toLocaleDateString()});saveLog();renderLog();inp.value='';showToast('✅ Logged!');}
+function addQuick(text){logEntries.unshift({text,done:false,date:new Date().toLocaleDateString()});saveLog();renderLog();showToast('✅ Logged!');}
+
+function loadSettings(){
+  const saved=localStorage.getItem('hub_groq');const stat=document.getElementById('setStatus');
+  if(saved){groqKey=saved.replace(/[^\x20-\x7E]/g,'').trim();if(stat){stat.className='set-status set-ok';stat.textContent='🔒 API Key Active — All chats enabled';}}
+  else{if(stat){stat.className='set-status set-err';stat.textContent='⚠️ No API key saved';}}
+}
+function saveApiKey(){const inp=document.getElementById('setApiKey');const val=inp.value.trim().replace(/[^\x20-\x7E]/g,'');if(!val){showToast('Enter your Groq key first');return;}if(!val.startsWith('gsk_')){showToast('Key must start with gsk_');return;}groqKey=val;localStorage.setItem('hub_groq',val);inp.value='';const stat=document.getElementById('setStatus');stat.className='set-status set-ok';stat.textContent='🔒 API Key Active — All chats enabled';showToast('✅ API Key saved!');}
+function clearApiKey(){localStorage.removeItem('hub_groq');groqKey='';const stat=document.getElementById('setStatus');stat.className='set-status set-err';stat.textContent='⚠️ No API key saved';showToast('Key cleared');}
+
+// BUSINESS VIDEO
+let selectedBizActor='',bizScenePrompts=[],currentBizScene=0;
+function selectBizActor(name){selectedBizActor=name;document.querySelectorAll('[id^="bac-"]').forEach(c=>c.classList.remove('selected'));document.getElementById('bac-'+name).classList.add('selected');checkBizReady();}
+function checkBizReady(){const btn=document.getElementById('genBizBtn');const name=document.getElementById('biz-name').value.trim();if(btn)btn.disabled=!(selectedBizActor&&name);}
+async function generateBizVideo(){
+  if(!groqKey){showToast('No API key!');return;}const bizName=document.getElementById('biz-name').value.trim();const bizDesc=document.getElementById('biz-desc').value.trim();const bizOffer=document.getElementById('biz-offer').value.trim();if(!bizName||!selectedBizActor){showToast('Enter business name and pick actor!');return;}
+  const btn=document.getElementById('genBizBtn');btn.disabled=true;btn.textContent='⏳ Generating...';document.getElementById('bizScriptArea').style.display='none';
+  const AD={susan:'Professional blonde female news anchor, light blue shirt, silver necklace, glass news desk, bright studio lighting, photorealistic 4K — SAME woman same outfit EVERY scene',alisha:'38-year-old Mexican female, dark brown hair, round glasses, blue top, warm studio, photorealistic 4K — SAME woman same outfit EVERY scene',lisa:'38-year-old Asian female, long black hair, red silk shirt, futuristic studio, photorealistic 4K — SAME woman same outfit EVERY scene',paul:'White male 60s, grey beard, glasses, denim overalls, podcast desk, ON AIR sign, photorealistic 4K — SAME man same outfit EVERY scene'};
+  const actorName={susan:'Susan',alisha:'Alisha',lisa:'Lisa',paul:'Paul'}[selectedBizActor];
+  const prompt=`Write a 45-second video script for ${actorName} promoting: ${bizName}\nWhat they do: ${bizDesc||'great local business'}\nOffer: ${bizOffer||'visit them today'}\n\nFormat:\nSCRIPT:\n[script]\n\nSCENES:\nScene 1: ${AD[selectedBizActor]}, speaking to camera, opening greeting\nScene 2: ${AD[selectedBizActor]}, friendly smile, hand gesture\nScene 3: ${AD[selectedBizActor]}, enthusiastic nod\nScene 4: ${AD[selectedBizActor]}, explaining with hands\nScene 5: ${AD[selectedBizActor]}, excited about offer\nScene 6: ${AD[selectedBizActor]}, warm closing CTA, pointing to camera`;
+  try{const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:2000,temperature:0.8})});const data=await res.json();if(data.error){showToast('Error: '+data.error.message);btn.disabled=false;btn.textContent='🏢 Generate 45-Second Business Video Script';return;}parseBizResponse(data.choices[0].message.content);btn.textContent='🏢 Generate 45-Second Business Video Script';checkBizReady();}catch(e){showToast('Connection error');btn.disabled=false;btn.textContent='🏢 Generate 45-Second Business Video Script';}
+}
+function parseBizResponse(text){const sm=text.match(/SCRIPT:\s*([\s\S]*?)(?=SCENES:|$)/i);const sc=text.match(/SCENES:\s*([\s\S]*)/i);document.getElementById('bizScript').textContent=sm?sm[1].trim():'(Script in scenes)';bizScenePrompts=[];if(sc){sc[1].split('\n').filter(l=>l.trim()).forEach(l=>{const m=l.match(/Scene\s*\d+[:\-]\s*(.*)/i);if(m&&m[1].trim())bizScenePrompts.push(m[1].trim());});}currentBizScene=0;renderBizScenes();document.getElementById('bizScriptArea').style.display='block';showToast('✅ '+bizScenePrompts.length+' scenes ready!');}
+function renderBizScenes(){const list=document.getElementById('bizSceneList');list.innerHTML='';bizScenePrompts.forEach((p,i)=>{const d=document.createElement('div');d.className='scene-item'+(i===currentBizScene?' current':'');const txt=document.createElement('span');txt.textContent='Scene '+(i+1)+': '+p.substring(0,100)+(p.length>100?'...':'');const btn=document.createElement('button');btn.className='scene-copy';btn.textContent='📋 Copy';btn.onclick=()=>{navigator.clipboard.writeText(p);showToast('Scene '+(i+1)+' copied!');};d.appendChild(txt);d.appendChild(btn);list.appendChild(d);});}
+function copyBizScript(){const b=document.getElementById('bizScript');if(b)navigator.clipboard.writeText(b.textContent);showToast('Script copied!');}
+function copyNextBizScene(){if(!bizScenePrompts.length)return;if(currentBizScene>=bizScenePrompts.length){currentBizScene=0;return;}navigator.clipboard.writeText(bizScenePrompts[currentBizScene]);showToast('Scene '+(currentBizScene+1)+' copied!');currentBizScene++;}
+function copyAllBizScenes(){if(!bizScenePrompts.length)return;navigator.clipboard.writeText(bizScenePrompts.join('\n\n---\n\n'));showToast('All scenes copied!');}
+
+// AFFILIATE VIDEO
+let selectedAffActor='',selectedAffProdName='',selectedAffComm='',selectedAffLen='60',affScenePrompts=[],currentAffScene=0;
+function selectAffProd(id,name,comm){selectedAffProdName=name;selectedAffComm=comm;document.querySelectorAll('[id^="ap-"]').forEach(c=>c.classList.remove('selected'));document.getElementById('ap-'+id).classList.add('selected');const ca=document.getElementById('affCustomArea');if(id==='custom'){ca.style.display='block';selectedAffProdName='';}else{ca.style.display='none';}const info=document.getElementById('affSelectedInfo');if(name){info.style.display='block';info.textContent='✅ '+name+' — '+comm+'% commission';}else{info.style.display='none';}checkAffReady();}
+function selectAffActor(name){selectedAffActor=name;document.querySelectorAll('[id^="aac-"]').forEach(c=>c.classList.remove('selected'));document.getElementById('aac-'+name).classList.add('selected');checkAffReady();}
+function selectAffLen(val){selectedAffLen=val;document.querySelectorAll('[id^="avl-"]').forEach(c=>c.classList.remove('selected'));document.getElementById('avl-'+val).classList.add('selected');}
+function checkAffReady(){const btn=document.getElementById('genAffBtn');const cn=document.getElementById('aff-product-name');const prod=selectedAffProdName||(cn&&cn.value.trim());if(btn)btn.disabled=!(selectedAffActor&&prod);}
+async function generateAffVideo(){
+  if(!groqKey){showToast('No API key!');return;}const cn=document.getElementById('aff-product-name').value.trim();const productName=selectedAffProdName||cn;const commission=selectedAffComm||document.getElementById('aff-commission').value.trim()||'30';if(!productName||!selectedAffActor){showToast('Pick product and actor!');return;}
+  const btn=document.getElementById('genAffBtn');btn.disabled=true;btn.textContent='⏳ Generating...';document.getElementById('affScriptArea').style.display='none';
+  const lenSec=parseInt(selectedAffLen);const numScenes=Math.max(5,Math.round(lenSec/6));const actorName={susan:'Susan',alisha:'Alisha',lisa:'Lisa',paul:'Paul'}[selectedAffActor];
+  const AD={susan:'Professional blonde female anchor, light blue shirt, glass news desk, bright studio, photorealistic 4K — SAME woman same outfit EVERY scene',alisha:'38-year-old Mexican female, dark brown hair, glasses, blue top, warm studio, photorealistic 4K — SAME woman same outfit EVERY scene',lisa:'38-year-old Asian female, long black hair, red silk shirt, futuristic studio, photorealistic 4K — SAME woman same outfit EVERY scene',paul:'White male 60s, grey beard, denim overalls, podcast desk, ON AIR sign, photorealistic 4K — SAME man same outfit EVERY scene'};
+  const prompt=`Write a ${lenSec}-second affiliate promo script for ${actorName} promoting: ${productName} (${commission}% commission).\nInfluencer style. Ends with link in bio.\n\nFormat:\nSCRIPT:\n[script]\n\nSCENES:\nScene 1: ${AD[selectedAffActor]}, warm welcoming expression\nScene 2: ${AD[selectedAffActor]}, enthusiastic smile about the product\nScene 3: ${AD[selectedAffActor]}, nodding genuine excitement\nScene 4: ${AD[selectedAffActor]}, benefit gesture with hands\nScene 5: ${AD[selectedAffActor]}, urgent friendly CTA, pointing to camera`;
+  try{const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:2000,temperature:0.8})});const data=await res.json();if(data.error){showToast('Error: '+data.error.message);btn.disabled=false;btn.textContent='💰 Generate Affiliate Promo Script';return;}parseAffResponse(data.choices[0].message.content);btn.textContent='💰 Generate Affiliate Promo Script';checkAffReady();}catch(e){showToast('Connection error');btn.disabled=false;btn.textContent='💰 Generate Affiliate Promo Script';}
+}
+function parseAffResponse(text){const sm=text.match(/SCRIPT:\s*([\s\S]*?)(?=SCENES:|$)/i);const sc=text.match(/SCENES:\s*([\s\S]*)/i);document.getElementById('affScript').textContent=sm?sm[1].trim():'(Script in scenes)';affScenePrompts=[];if(sc){sc[1].split('\n').filter(l=>l.trim()).forEach(l=>{const m=l.match(/Scene\s*\d+[:\-]\s*(.*)/i);if(m&&m[1].trim())affScenePrompts.push(m[1].trim());});}currentAffScene=0;renderAffScenes();document.getElementById('affScriptArea').style.display='block';showToast('✅ '+affScenePrompts.length+' scenes ready!');}
+function renderAffScenes(){const list=document.getElementById('affSceneList');list.innerHTML='';affScenePrompts.forEach((p,i)=>{const d=document.createElement('div');d.className='scene-item'+(i===currentAffScene?' current':'');const txt=document.createElement('span');txt.textContent='Scene '+(i+1)+': '+p.substring(0,100)+(p.length>100?'...':'');const btn=document.createElement('button');btn.className='scene-copy';btn.textContent='📋 Copy';btn.onclick=()=>{navigator.clipboard.writeText(p);showToast('Scene '+(i+1)+' copied!');};d.appendChild(txt);d.appendChild(btn);list.appendChild(d);});}
+function copyAffScript(){const b=document.getElementById('affScript');if(b)navigator.clipboard.writeText(b.textContent);showToast('Script copied!');}
+function copyNextAffScene(){if(!affScenePrompts.length)return;if(currentAffScene>=affScenePrompts.length){currentAffScene=0;return;}navigator.clipboard.writeText(affScenePrompts[currentAffScene]);showToast('Scene '+(currentAffScene+1)+' copied!');currentAffScene++;}
+function copyAllAffScenes(){if(!affScenePrompts.length)return;navigator.clipboard.writeText(affScenePrompts.join('\n\n---\n\n'));showToast('All scenes copied!');}
+
+// EMAIL FUNNEL
+let funnelProduct='',funnelTemplate='';
+function selectFunnelProd(name,comm,id){funnelProduct=name;document.querySelectorAll('[id^="fp-"]').forEach(c=>c.classList.remove('selected'));document.getElementById('fp-'+id).classList.add('selected');const ci=document.getElementById('funnel-custom-product');if(id==='custom'){ci.style.display='block';funnelProduct='';}else{ci.style.display='none';}const info=document.getElementById('funnelProdInfo');if(name){info.style.display='block';info.textContent='✅ '+name;}else{info.style.display='none';}checkFunnelReady();}
+function selectFunnelTemplate(name){funnelTemplate=name;document.querySelectorAll('[id^="ft-"]').forEach(c=>c.classList.remove('selected'));document.getElementById('ft-'+name).classList.add('selected');checkFunnelReady();}
+function checkFunnelReady(){const btn=document.getElementById('genFunnelBtn');const cv=document.getElementById('funnel-custom-product').value.trim();const prod=funnelProduct||cv;if(btn)btn.disabled=!(prod&&funnelTemplate);}
+async function generateFunnel(){
+  if(!groqKey){showToast('No API key!');return;}const cv=document.getElementById('funnel-custom-product').value.trim();const product=funnelProduct||cv;if(!product||!funnelTemplate){showToast('Pick product and template!');return;}
+  const btn=document.getElementById('genFunnelBtn');btn.disabled=true;btn.textContent='⏳ Generating emails...';document.getElementById('funnelArea').style.display='none';
+  const styles={review:'Personal product review — honest, authentic.',story:'Success story — how this changed things for you.',problem:'Problem-solution — identify problem then present solution.',urgency:'Limited time offer — create urgency, mention deadline.'};
+  const prompt=`Write 3 email marketing emails to promote: ${product}\nStyle: ${styles[funnelTemplate]}\nFriendly conversational tone for John Lanter Orange Texas content creator. Include [LINK] and [VIDEO]. Max 150 words each.\n\nFormat:\nEMAIL1_SUBJECT: [subject]\nEMAIL1_BODY:\n[body]\n\nEMAIL2_SUBJECT: [subject]\nEMAIL2_BODY:\n[body]\n\nEMAIL3_SUBJECT: [subject]\nEMAIL3_BODY:\n[body]`;
+  try{const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:1500,temperature:0.8})});const data=await res.json();if(data.error){showToast('Error: '+data.error.message);btn.disabled=false;btn.textContent='💌 Generate Complete Email Sequence';return;}parseFunnelResponse(data.choices[0].message.content);btn.textContent='💌 Generate Complete Email Sequence';checkFunnelReady();}catch(e){showToast('Connection error');btn.disabled=false;btn.textContent='💌 Generate Complete Email Sequence';}
+}
+function parseFunnelResponse(text){const gs=(tag)=>{const m=text.match(new RegExp(tag+'_BODY:\\s*([\\s\\S]*?)(?=EMAIL\\d|$)','i'));return m?m[1].trim():'';};const gsub=(tag)=>{const m=text.match(new RegExp(tag+'_SUBJECT:\\s*(.+)','i'));return m?m[1].trim():'';};const fe=(n)=>'📧 Subject: '+gsub('EMAIL'+n)+'\n\n'+gs('EMAIL'+n);document.getElementById('email1').textContent=fe(1)||'(Error)';document.getElementById('email2').textContent=fe(2)||'(Error)';document.getElementById('email3').textContent=fe(3)||'(Error)';document.getElementById('funnelArea').style.display='block';showToast('✅ 3 emails generated!');}
+function copyEl(id){const el=document.getElementById(id);if(el){navigator.clipboard.writeText(el.textContent);showToast('Email copied!');}}
+
+// JOB SEARCH
+const JOHN_RESUME=`John Lanter, Orange TX. 20+ years industrial operations. EXPERIENCE: Production Warehouse A Operator at Lion Elastomers Jan 2012-Dec 2025 — forklift certified, Hi-Vinal equipment, robotic systems, Sage software, 24/7 rotating shifts, conveyor belt monitoring, shift reports, lockout/tagout, OSHA. Lead Operator Live Oak Warehouse 2004-2012. Security Officer 1999-2001. SKILLS: Forklift Certified, OSHA, DOT, Lockout/Tagout, Team Leadership, Inventory Management, Shipping & Receiving, Logistics, AI Technology (built Hub Engine v3 AI web app). TARGET: Operations Coordinator, Warehouse Lead, Production Supervisor, Logistics, Industrial Sales. LOCATION: Orange TX — commute 50 miles.`;
+let jobApplications=JSON.parse(localStorage.getItem('hub_jobtrack')||'[]');
+
+async function findJobs(type){
+  if(!groqKey){showToast('Add Groq key in Settings first!');return;}
+  const prompts={operations:'Find 10 open Operations Coordinator or Manager jobs in Southeast Texas (Orange, Beaumont, Port Arthur area).',warehouse:'Find 10 open Warehouse Lead or Supervisor jobs in Southeast Texas.',production:'Find 10 open Production Supervisor or Plant Operator jobs in Southeast Texas.',logistics:'Find 10 open Logistics Coordinator jobs in Southeast Texas.',supervisor:'Find 10 open Shift Supervisor or Lead Operator jobs in Southeast Texas manufacturing.',all:'Find the TOP 10 best matching open jobs in Southeast Texas for John right now.'};
+  document.getElementById('jobResults').style.display='none';document.getElementById('jobLoading').style.display='block';
+  try{const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'system',content:`Job search expert helping John Lanter find work in SE Texas. Resume:\n${JOHN_RESUME}`},{role:'user',content:prompts[type]||prompts.all}],max_tokens:1200,temperature:0.7})});const data=await res.json();const reply=data.choices[0].message.content;document.getElementById('jobLoading').style.display='none';const list=document.getElementById('jobResultsList');list.innerHTML='';const lines=reply.split('\n').filter(l=>l.trim());let cj=null;lines.forEach(line=>{if(/^\d+[\.\)]/i.test(line.trim())){const d=document.createElement('div');d.style.cssText='background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.2);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:var(--text);line-height:1.7;';d.textContent=line;list.appendChild(d);cj=d;}else if(cj&&line.trim()){cj.textContent+='\n'+line;cj.style.whiteSpace='pre-line';}});if(list.children.length===0){list.innerHTML='<div style="padding:10px;font-size:12px;color:var(--muted);white-space:pre-line;">'+reply+'</div>';}document.getElementById('jobResults').style.display='block';}catch(e){document.getElementById('jobLoading').style.display='none';showToast('Error finding jobs');}
+}
+
+async function quickJobAction(type){
+  const prompts={coverLetter:`Write a professional cover letter for John Lanter for an Operations Coordinator or Warehouse Lead position in SE Texas. Resume:\n${JOHN_RESUME}`,interview:`Give John Lanter 10 common interview questions for Operations/Warehouse Supervisor roles with SPECIFIC answers based on his experience:\n${JOHN_RESUME}`,resume:`Give 5 specific resume improvements for John:\n${JOHN_RESUME}`,linkedin:`Write optimized LinkedIn headline and About section for John Lanter:\n${JOHN_RESUME}`};
+  const inp=document.getElementById('inp-jobs');if(inp)inp.value=prompts[type];sendMsg('jobs');
+}
+async function generateCoverLetter(){quickJobAction('coverLetter');}
+function addJobTrack(){const inp=document.getElementById('jobTrackInput');const text=inp.value.trim();if(!text)return;jobApplications.unshift({text,date:new Date().toLocaleDateString(),status:'Applied'});localStorage.setItem('hub_jobtrack',JSON.stringify(jobApplications));inp.value='';renderJobTrack();showToast('✅ Application tracked!');}
+function renderJobTrack(){const list=document.getElementById('jobTrackList');if(!list)return;if(jobApplications.length===0){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:12px;">No applications tracked yet.</div>';return;}list.innerHTML='';jobApplications.slice(0,10).forEach((j,i)=>{const d=document.createElement('div');d.className='log-entry';d.innerHTML=`<div style="flex:1"><div style="font-size:13px;color:var(--text);">${j.text}</div><div style="font-size:10px;color:var(--muted);">${j.date} · ${j.status}</div></div><button onclick="removeJobTrack(${i})" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;">✕</button>`;list.appendChild(d);});}
+function removeJobTrack(i){jobApplications.splice(i,1);localStorage.setItem('hub_jobtrack',JSON.stringify(jobApplications));renderJobTrack();}
+
+function copyCmd(id){const el=document.getElementById(id);if(!el)return;const text=el.childNodes[0].textContent.trim();navigator.clipboard.writeText(text);showToast('✅ Command copied!');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+// ─────────────────────────────────────────────────────────
+// VIDEO FACTORY — 4 AGENT SYSTEM
+// ─────────────────────────────────────────────────────────
+const ACTOR_PROMPTS_F4={
+  'Lisa':  'Confident 38-year-old alluring Asian female presenter, long straight black hair, red silk button-up shirt, hand on hip, self-assured expression, futuristic studio background, cinematic lighting, photorealistic 4K — same woman, same red shirt, same long black hair in EVERY scene',
+  'Alisha':'Confident 38-year-old Mexican female news presenter, long dark brown hair, round glasses, sleeveless blue top, warm bright smile, sitting at wooden desk with coffee mug, warm studio lighting, photorealistic 4K — same woman, same glasses, same blue top in EVERY scene',
+  'Susan': 'Professional blonde female news anchor in her 50s, short bob haircut, light blue button-up shirt, silver necklace, sitting at modern glass news desk with microphone, bright studio lighting, photorealistic 4K — same woman, same blue shirt, same news desk in EVERY scene',
+  'Paul':  'Older white male in his 60s with full thick grey beard and glasses, blue t-shirt under denim overalls, sitting at podcast desk with coffee mug, ON AIR sign glowing red, professional podcast microphone, photorealistic 4K — same man, same beard, same overalls in EVERY scene'
+};
+
+let f4Scenes=[],f4SceneIdx=0,f4VoiceText='',f4AllCaptions={};
+
+function setFactoryPrompt(text){document.getElementById('factory-prompt').value=text;document.getElementById('factory-prompt').focus();}
+
+function resetFactory4(){
+  ['agent1-card','agent2-card','agent3-card','agent4-card','factory4-nextsteps','factory-progress-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  ['agent1-badge','agent2-badge','agent3-badge','agent4-badge'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  ['fdot1','fdot2','fdot3','fdot4'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.color='var(--muted)';});
+  document.getElementById('factory-prompt').value='';
+  const btn=document.getElementById('factory-run-btn');btn.disabled=false;btn.textContent='🚀 START ALL 4 AGENTS — BUILD MY VIDEO';
+  f4Scenes=[];f4SceneIdx=0;f4VoiceText='';
+  setProgress(0,'READY');
+}
+function resetFactory(){resetFactory4();}
+function runVideoFactory(){runVideoFactory4();}
+
+function setProgress(pct,label){
+  const bar=document.getElementById('factory-progress-bar');const lbl=document.getElementById('factory-progress-label');const pctEl=document.getElementById('factory-progress-pct');
+  if(bar)bar.style.width=pct+'%';if(lbl)lbl.textContent=label;if(pctEl)pctEl.textContent=pct+'%';
+}
+function markDot(num){const el=document.getElementById('fdot'+num);if(el)el.style.color='#10b981';}
+function markAgentDone(num){const badge=document.getElementById('agent'+num+'-badge');if(badge)badge.style.display='block';markDot(num);}
+
+function copyFactoryEl(id){const el=document.getElementById(id);if(el){navigator.clipboard.writeText(el.textContent);showToast('Copied!');}}
+function copyNextFactory4Scene(){if(!f4Scenes.length){showToast('Generate scenes first!');return;}if(f4SceneIdx>=f4Scenes.length){f4SceneIdx=0;showToast('All scenes done! Starting over.');return;}navigator.clipboard.writeText(f4Scenes[f4SceneIdx]);showToast('Scene '+(f4SceneIdx+1)+' of '+f4Scenes.length+' copied! Paste into Grok.');f4SceneIdx++;renderF4Scenes();}
+function copyAllFactory4Scenes(){if(!f4Scenes.length)return;navigator.clipboard.writeText(f4Scenes.join('\n\n---\n\n'));showToast('All '+f4Scenes.length+' scenes copied!');}
+function copyNextFactoryScene(){copyNextFactory4Scene();}
+function copyAllFactoryScenes(){copyAllFactory4Scenes();}
+
+function renderF4Scenes(){
+  const list=document.getElementById('agent2-scenes');list.innerHTML='';
+  f4Scenes.forEach((p,i)=>{const d=document.createElement('div');d.className='scene-item'+(i===f4SceneIdx?' current':'');const txt=document.createElement('span');txt.textContent='Scene '+(i+1)+': '+p.substring(0,85)+(p.length>85?'...':'');const btn=document.createElement('button');btn.className='scene-copy';btn.textContent='📋 Copy';btn.onclick=()=>{navigator.clipboard.writeText(p);showToast('Scene '+(i+1)+' copied!');};d.appendChild(txt);d.appendChild(btn);list.appendChild(d);});
+}
+
+function listenScript(){const text=document.getElementById('agent1-output').textContent;if(!text){showToast('No script yet!');return;}doSpeak(cleanForSpeech(text),'becky');showToast('Playing script...');}
+function speakFactory4Voiceover(){if(!f4VoiceText){showToast('Generate video first!');return;}doSpeak(cleanForSpeech(f4VoiceText),'becky');showToast('Playing voiceover...');}
+function stopFactory4Voice(){if(window.speechSynthesis)speechSynthesis.cancel();showToast('Voice stopped.');}
+function speakFactoryVoiceover(){speakFactory4Voiceover();}
+
+function copyCap(id){const el=document.getElementById(id);if(el){navigator.clipboard.writeText(el.textContent);showToast('Caption copied!');}}
+function copyAllCaptions(){
+  const parts=[];
+  ['tiktok','youtube','instagram','facebook'].forEach(p=>{const el=document.getElementById('cap-'+p);if(el&&el.textContent.trim())parts.push('=== '+p.toUpperCase()+' ===\n'+el.textContent.trim());});
+  navigator.clipboard.writeText(parts.join('\n\n'));showToast('All captions copied!');
+}
+
+function parseReviewScores(text){
+  const hm=text.match(/hook[:\s]+(\d+)/i);const fm=text.match(/flow[:\s]+(\d+)/i);const cm=text.match(/cta[:\s]+(\d+)/i);
+  if(hm)document.getElementById('score-hook').textContent=hm[1]+'/10';
+  if(fm)document.getElementById('score-flow').textContent=fm[1]+'/10';
+  if(cm)document.getElementById('score-cta').textContent=cm[1]+'/10';
+}
+
+async function runVideoFactory4(){
+  if(!groqKey){showToast('No API key! Go to Settings.');return;}
+  const prompt=document.getElementById('factory-prompt').value.trim();
+  if(!prompt){showToast('Type your video prompt first!');return;}
+  const actor=document.getElementById('factory-actor').value;
+  const length=document.getElementById('factory-length').value;
+  const numScenes=Math.max(3,Math.round(parseInt(length)/6));
+  const actorDesc=ACTOR_PROMPTS_F4[actor];
+  const platforms=[];
+  if(document.getElementById('plat-tiktok').checked)platforms.push('TikTok');
+  if(document.getElementById('plat-youtube').checked)platforms.push('YouTube');
+  if(document.getElementById('plat-instagram').checked)platforms.push('Instagram');
+  if(document.getElementById('plat-facebook').checked)platforms.push('Facebook');
+
+  f4Scenes=[];f4SceneIdx=0;f4VoiceText='';
+  const btn=document.getElementById('factory-run-btn');
+  btn.disabled=true;btn.textContent='⏳ All 4 agents working...';
+  ['agent1-card','agent2-card','agent3-card','agent4-card','factory4-nextsteps'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  document.getElementById('factory-progress-wrap').style.display='block';
+  setProgress(5,'AGENT 1 — SCRIPT WRITER WORKING...');
+
+  // AGENT 1
+  document.getElementById('agent1-card').style.display='block';
+  document.getElementById('agent1-status').textContent='🤖 Writing your '+length+'-second script...';
+  document.getElementById('agent1-output').textContent='';
+
+  const scriptPrompt=`You are Agent 1 — Expert Video Script Writer for Hub Engine v3.
+Write a ${length}-second video script based on this request: "${prompt}"
+Actor: ${actor} | Length: ${length} seconds
+RULES: Complete word-for-word script ${actor} speaks. SLOW, CLEAR, ENGAGING. About ${Math.round(parseInt(length)*2.5)} words total.
+If affiliate: influencer style, ends with "tap the link in bio"
+If news: professional anchor style
+If business promo: warm community-focused, ends with CTA
+If podcast: conversational, funny, genuine
+NO stage directions. NO asterisks. ONLY the spoken words.
+Return ONLY the script text. Nothing else.`;
+
+  try{
+    const res1=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:scriptPrompt}],max_tokens:1200,temperature:0.8})});
+    const d1=await res1.json();
+    if(d1.error){showToast('Agent 1 error: '+d1.error.message);btn.disabled=false;btn.textContent='🚀 START ALL 4 AGENTS — BUILD MY VIDEO';return;}
+    const script=d1.choices[0].message.content.trim();
+    document.getElementById('agent1-output').textContent=script;
+    document.getElementById('agent1-status').textContent='✅ Script written — '+script.split(' ').length+' words';
+    markAgentDone(1);setProgress(28,'AGENT 2 — SCENE BUILDER WORKING...');
+
+    // AGENT 2
+    document.getElementById('agent2-card').style.display='block';
+    document.getElementById('agent2-status').textContent='🎬 Building '+numScenes+' scene prompts for Grok...';
+    const scenesPrompt=`You are Agent 2 — Professional Video Scene Builder for Hub Engine v3.
+Create exactly ${numScenes} Grok video generation prompts.
+Actor: ${actor} | Request: "${prompt}"
+Character description — use EXACTLY in every prompt: ${actorDesc}
+RULES: Each prompt = one 6-second clip. SAME actor, SAME outfit, SAME location EVERY scene. Different action/gesture/expression each scene.
+Return EXACTLY ${numScenes} numbered prompts. Nothing else.
+Format:
+1. [complete prompt]
+2. [complete prompt]`;
+    const res2=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:scenesPrompt}],max_tokens:2500,temperature:0.8})});
+    const d2=await res2.json();
+    if(d2.error){showToast('Agent 2 error: '+d2.error.message);return;}
+    d2.choices[0].message.content.split('\n').filter(l=>l.trim()).forEach(l=>{const m=l.match(/^\d+[\.\)\:]\s*(.*)/);if(m&&m[1].trim().length>20)f4Scenes.push(m[1].trim());});
+    if(f4Scenes.length===0)d2.choices[0].message.content.split('\n').filter(l=>l.trim().length>30).slice(0,numScenes).forEach(l=>f4Scenes.push(l.trim()));
+    renderF4Scenes();
+    document.getElementById('agent2-status').textContent='✅ '+f4Scenes.length+' scene prompts ready — tap ▶️ to copy one at a time into Grok';
+    markAgentDone(2);setProgress(52,'AGENT 3 — VOICE ARTIST WORKING...');
+
+    // AGENT 3
+    document.getElementById('agent3-card').style.display='block';
+    document.getElementById('agent3-status').textContent='🎙️ Optimizing script for ElevenLabs voiceover...';
+    const voicePrompt=`You are Agent 3 — Professional Voiceover Coach.
+Rewrite this script optimized for AI text-to-speech (ElevenLabs):
+"${script}"
+RULES: Same content and energy. Add natural pauses using ... between sentences. Write numbers as words (30% = thirty percent). CAPITALIZE one key word per sentence for emphasis. No stage directions. Return ONLY the optimized voiceover text.`;
+    const res3=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:voicePrompt}],max_tokens:800,temperature:0.6})});
+    const d3=await res3.json();
+    if(!d3.error){f4VoiceText=d3.choices[0].message.content.trim();document.getElementById('agent3-output').textContent=f4VoiceText;document.getElementById('agent3-status').textContent='✅ Voiceover ready — tap 🔊 to preview or copy for ElevenLabs';}
+    else{f4VoiceText=script;document.getElementById('agent3-output').textContent=script;document.getElementById('agent3-status').textContent='✅ Using original script for voiceover';}
+    markAgentDone(3);setProgress(76,'AGENT 4 — VIDEO REVIEWER WORKING...');
+
+    // AGENT 4
+    document.getElementById('agent4-card').style.display='block';
+    document.getElementById('agent4-status').textContent='✅ Reviewing your video and writing captions...';
+    const platformList=platforms.length>0?platforms.join(', '):'TikTok, YouTube, Instagram';
+    const reviewPrompt=`You are Agent 4 — Expert Video Reviewer and Social Media Caption Writer for Hub Engine v3.
+Review this video content and write optimized captions.
+Actor: ${actor} | Length: ${length} seconds | Request: "${prompt}"
+Script: "${script.substring(0,400)}..."
+
+PART 1 — QUALITY REVIEW:
+Score each out of 10:
+Hook: X/10
+Flow: X/10
+CTA: X/10
+Then write 2-3 sentences of honest feedback.
+
+PART 2 — SOCIAL CAPTIONS for: ${platformList}
+TikTok: punchy 1-2 line caption + 5 trending hashtags
+YouTube: title (60 chars max) + 3-sentence description + 5 tags
+Instagram: 2-3 sentence caption with emoji + 10 hashtags
+Facebook: 2-3 sentence engaging post with question to drive comments
+
+FORMAT EXACTLY:
+REVIEW:
+Hook: [score]/10
+Flow: [score]/10
+CTA: [score]/10
+[feedback]
+
+TIKTOK_CAPTION:
+[content]
+
+YOUTUBE_CAPTION:
+[content]
+
+INSTAGRAM_CAPTION:
+[content]
+
+FACEBOOK_CAPTION:
+[content]`;
+    const res4=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:reviewPrompt}],max_tokens:1400,temperature:0.7})});
+    const d4=await res4.json();
+    if(!d4.error){
+      const rt=d4.choices[0].message.content;
+      const rm=rt.match(/REVIEW:\s*([\s\S]*?)(?=TIKTOK_CAPTION:|YOUTUBE_CAPTION:|INSTAGRAM_CAPTION:|FACEBOOK_CAPTION:|$)/i);
+      if(rm){document.getElementById('agent4-review').textContent=rm[1].trim();parseReviewScores(rm[1]);}
+      const cp=(key)=>{const m=rt.match(new RegExp(key+':\\s*([\\s\\S]*?)(?=[A-Z_]+_CAPTION:|$)','i'));return m?m[1].trim():'';};
+      const tikCap=cp('TIKTOK_CAPTION');const ytCap=cp('YOUTUBE_CAPTION');const igCap=cp('INSTAGRAM_CAPTION');const fbCap=cp('FACEBOOK_CAPTION');
+      if(platforms.includes('TikTok')&&tikCap){document.getElementById('cap-tiktok').textContent=tikCap;document.getElementById('cap-tiktok-wrap').style.display='block';}
+      if(platforms.includes('YouTube')&&ytCap){document.getElementById('cap-youtube').textContent=ytCap;document.getElementById('cap-youtube-wrap').style.display='block';}
+      if(platforms.includes('Instagram')&&igCap){document.getElementById('cap-instagram').textContent=igCap;document.getElementById('cap-instagram-wrap').style.display='block';}
+      if(platforms.includes('Facebook')&&fbCap){document.getElementById('cap-facebook').textContent=fbCap;document.getElementById('cap-facebook-wrap').style.display='block';}
+      document.getElementById('agent4-score-wrap').style.display='block';
+      document.getElementById('agent4-captions-wrap').style.display='block';
+    }
+    document.getElementById('agent4-status').textContent='✅ Video reviewed + captions written for '+platformList;
+    markAgentDone(4);setProgress(100,'ALL 4 AGENTS COMPLETE!');
+    document.getElementById('factory4-nextsteps').style.display='block';
+    btn.textContent='✅ ALL 4 AGENTS DONE!';
+    showToast('🎉 All 4 agents done! Scroll up to see everything.');
+    setTimeout(()=>{document.getElementById('agent1-card').scrollIntoView({behavior:'smooth'});},400);
+
+  }catch(e){
+    showToast('Connection error — check your API key');
+    btn.disabled=false;btn.textContent='🚀 START ALL 4 AGENTS — BUILD MY VIDEO';
+  }
+}
+
+window.onload=function(){
+  const savedKey=localStorage.getItem('hub_groq');
+  if(savedKey){groqKey=savedKey.replace(/[^\x20-\x7E]/g,'').trim();const step1=document.getElementById('loginStep1');if(step1)step1.style.display='none';const apiInp=document.getElementById('apiInput');if(apiInp)apiInp.value=groqKey;}
+  initVoiceSystem();
+};
+</script>
+</body>
+</html>
