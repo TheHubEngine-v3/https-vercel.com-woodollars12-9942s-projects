@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Hub Engine Patcher Tool</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#07070f;color:#eeeef5;font-family:'Segoe UI',Arial,sans-serif;padding:20px;}
+h1{color:#f5c518;font-size:22px;margin-bottom:6px;letter-spacing:2px;}
+.sub{color:rgba(238,238,245,0.45);font-size:13px;margin-bottom:20px;}
+.card{background:#0e0e1a;border:1px solid rgba(245,197,24,0.2);border-radius:12px;padding:18px;margin-bottom:16px;}
+.card h2{color:#f5c518;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+textarea{width:100%;height:180px;background:rgba(255,255,255,0.04);border:1px solid rgba(245,197,24,0.2);border-radius:8px;color:#eeeef5;font-family:monospace;font-size:12px;padding:10px;outline:none;resize:vertical;}
+textarea:focus{border-color:#f5c518;}
+.btn{padding:13px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;letter-spacing:1px;margin-right:8px;margin-bottom:8px;}
+.btn-gold{background:linear-gradient(135deg,#f5c518,#e8a020);color:#000;}
+.btn-blue{background:rgba(66,133,244,0.15);border:1px solid rgba(66,133,244,0.4);color:#4285f4;}
+.btn-green{background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.4);color:#0f9d58;}
+.btn-gray{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#eeeef5;}
+.status{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:12px;display:none;}
+.status.ok{background:rgba(15,157,88,0.1);border:1px solid rgba(15,157,88,0.3);color:#0f9d58;display:block;}
+.status.err{background:rgba(234,67,53,0.1);border:1px solid rgba(234,67,53,0.3);color:#ea4335;display:block;}
+.status.info{background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.3);color:#4285f4;display:block;}
+.patch-list{list-style:none;padding:0;}
+.patch-list li{padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;display:flex;align-items:center;gap:8px;}
+.patch-list li:last-child{border:none;}
+.badge{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.badge-ready{background:rgba(15,157,88,0.15);color:#0f9d58;border:1px solid rgba(15,157,88,0.3);}
+.badge-applied{background:rgba(245,197,24,0.15);color:#f5c518;border:1px solid rgba(245,197,24,0.3);}
+.badge-skip{background:rgba(255,255,255,0.05);color:rgba(238,238,245,0.4);border:1px solid rgba(255,255,255,0.1);}
+.output-area{width:100%;height:300px;background:rgba(255,255,255,0.04);border:1px solid rgba(245,197,24,0.2);border-radius:8px;color:#eeeef5;font-family:monospace;font-size:11px;padding:10px;outline:none;resize:vertical;}
+.step{background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.15);border-radius:8px;padding:12px;margin-bottom:8px;}
+.step-num{display:inline-block;width:22px;height:22px;background:#f5c518;color:#000;border-radius:50%;font-size:11px;font-weight:700;text-align:center;line-height:22px;margin-right:8px;flex-shrink:0;}
+.step-text{font-size:13px;color:rgba(238,238,245,0.7);}
+</style>
+</head>
+<body>
+
+<h1>⚡ HUB ENGINE PATCHER TOOL</h1>
+<div class="sub">Paste your index.html → Click Apply All Fixes → Copy the result → Paste into GitHub</div>
+
+<!-- HOW TO USE -->
+<div class="card">
+  <div class="card h2" style="color:#f5c518;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">📋 HOW TO USE THIS TOOL</div>
+  <div class="step"><span class="step-num">1</span><span class="step-text">Go to GitHub → click index.html → click <strong style="color:#f5c518;">Raw</strong> → Select All → Copy</span></div>
+  <div class="step"><span class="step-num">2</span><span class="step-text">Paste it into the box below</span></div>
+  <div class="step"><span class="step-num">3</span><span class="step-text">Click <strong style="color:#f5c518;">Apply All Fixes</strong></span></div>
+  <div class="step"><span class="step-num">4</span><span class="step-text">Click <strong style="color:#f5c518;">Copy Fixed File</strong> → go to GitHub → edit index.html → Select All → Paste → Commit</span></div>
+</div>
+
+<!-- FIXES LIST -->
+<div class="card">
+  <div class="card h2" style="color:#f5c518;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">🔧 FIXES THIS TOOL APPLIES</div>
+  <ul class="patch-list" id="patchList">
+    <li><span class="badge badge-ready" id="b1">READY</span> Password-only login (public sees clean login, no API field)</li>
+    <li><span class="badge badge-ready" id="b2">READY</span> Auto-login if already logged in before</li>
+    <li><span class="badge badge-ready" id="b3">READY</span> Claude Irish voice dropdown + separate voice system</li>
+    <li><span class="badge badge-ready" id="b4">READY</span> Claude speaks with his own voice (not Becky's)</li>
+    <li><span class="badge badge-ready" id="b5">READY</span> Work history updated to 22 years (all 3 positions)</li>
+    <li><span class="badge badge-ready" id="b6">READY</span> Settings shows Becky voice + Claude voice tip</li>
+  </ul>
+</div>
+
+<!-- INPUT -->
+<div class="card">
+  <div class="card h2" style="color:#f5c518;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">📥 PASTE YOUR INDEX.HTML HERE</div>
+  <div id="inputStatus" class="status"></div>
+  <textarea id="inputHtml" placeholder="Paste your entire index.html here..."></textarea>
+  <br/><br/>
+  <button class="btn btn-gold" onclick="applyAllFixes()">⚡ Apply All Fixes</button>
+  <button class="btn btn-gray" onclick="clearAll()">🗑️ Clear</button>
+</div>
+
+<!-- OUTPUT -->
+<div class="card" id="outputCard" style="display:none;">
+  <div class="card h2" style="color:#f5c518;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">✅ FIXED FILE — READY TO UPLOAD</div>
+  <div id="outputStatus" class="status ok">All fixes applied! Copy the file below and paste it into GitHub.</div>
+  <textarea class="output-area" id="outputHtml" readonly></textarea>
+  <br/><br/>
+  <button class="btn btn-green" onclick="copyOutput()">📋 Copy Fixed File</button>
+  <button class="btn btn-blue" onclick="downloadOutput()">⬇️ Download index.html</button>
+</div>
+
+<script>
+function applyAllFixes(){
+  const input = document.getElementById('inputHtml').value.trim();
+  const status = document.getElementById('inputStatus');
+
+  if(!input){
+    status.className='status err';
+    status.textContent='Please paste your index.html first!';
+    return;
+  }
+  if(!input.includes('<html') || !input.includes('</html>')){
+    status.className='status err';
+    status.textContent='This does not look like a complete HTML file. Please paste the full index.html content.';
+    return;
+  }
+
+  status.className='status info';
+  status.textContent='Applying fixes...';
+
+  let html = input;
+  let fixCount = 0;
+
+  // ── FIX 1: Password-only login (hide API field from public) ──
+  // Replace the login screen to show a clean professional login
+  const loginOld = `<div id="loginScreen">
+  <div class="login-glow">⚡</div>
+  <div class="login-title">THE HUB ENGINE v3</div>
+  <div class="login-sub">AFFILIATEMEDIAHUB STUDIO</div>
+  <div id="loginStep1" class="login-step">
+    <div class="login-label">GROQ API KEY</div>
+    <input id="apiInput" class="login-input" type="password" placeholder="gsk_..." autocomplete="off"/>
+  </div>
+  <div class="login-step">
+    <div class="login-label">ACCESS PASSWORD</div>
+    <input id="pwInput" class="login-input" type="password" placeholder="••••••••" autocomplete="off"/>
+  </div>
+  <button class="login-btn" onclick="doLogin()">🚀 ENTER THE HUB</button>
+  <div class="login-err" id="loginErr"></div>
+  <div style="font-size:10px;color:rgba(238,238,245,0.2);margin-top:20px;text-align:center;letter-spacing:1px;">JOHN LANTER · CEO · ORANGE TEXAS<br/>THREE MINDS · ONE MISSION · ZERO COST</div>
+</div>`;
+
+  const loginNew = `<div id="loginScreen">
+  <div class="login-glow">⚡</div>
+  <div class="login-title">THE HUB ENGINE v3</div>
+  <div class="login-sub">AFFILIATEMEDIAHUB STUDIO</div>
+  <!-- API key stored hidden — only password shown to public -->
+  <input id="apiInput" type="hidden" value=""/>
+  <div class="login-step">
+    <div class="login-label">ACCESS PASSWORD</div>
+    <input id="pwInput" class="login-input" type="password" placeholder="Enter password..." autocomplete="off"/>
+  </div>
+  <button class="login-btn" onclick="doLogin()">🚀 ENTER THE HUB</button>
+  <div class="login-err" id="loginErr"></div>
+  <div style="font-size:10px;color:rgba(238,238,245,0.2);margin-top:20px;text-align:center;letter-spacing:1px;">JOHN LANTER · CEO · ORANGE TEXAS<br/>THREE MINDS · ONE MISSION · ZERO COST</div>
+</div>`;
+
+  if(html.includes('GROQ API KEY') && html.includes('loginStep1')){
+    html = html.replace(
+      /<!-- LOGIN -->[\s\S]*?<\/div>\s*\n\s*<!-- APP -->/,
+      loginNew + '\n\n<!-- APP -->'
+    );
+    setBadge('b1','APPLIED');
+    fixCount++;
+  } else {
+    setBadge('b1','SKIP');
+  }
+
+  // ── FIX 2: doLogin uses saved key, auto-launches ──
+  const doLoginOld1 = `function doLogin(){
+  const pwVal = document.getElementById('pwInput').value.trim();
+  const err = document.getElementById('loginErr');
+  const apiInput = document.getElementById('apiInput');
+  const apiVal = (apiInput && apiInput.style.display !== 'none' && apiInput.value.trim())
+                 || localStorage.getItem('hub_groq') || '';
+  if(!apiVal){
+    err.textContent = 'No API key found — enter your Groq key';
+    const step1 = document.getElementById('loginStep1');
+    if(step1) step1.style.display = 'block';
+    return;
+  }
+  if(pwVal !== PW){ err.textContent = 'Incorrect password'; return; }
+  const cleanKey = apiVal.replace(/[^\\x20-\\x7E]/g,'').trim();
+  if(!cleanKey.startsWith('gsk_')){ err.textContent = 'API key must start with gsk_'; return; }
+  groqKey = cleanKey;
+  localStorage.setItem('hub_groq', groqKey);
+  localStorage.setItem('hub_auth', '1');
+  launchApp();
+}`;
+
+  const doLoginNew = `function doLogin(){
+  const pwVal = document.getElementById('pwInput').value.trim();
+  const err = document.getElementById('loginErr');
+  // Public only enters password — API key comes from localStorage
+  const savedKey = localStorage.getItem('hub_groq') || '';
+  if(!savedKey){
+    err.textContent = 'System not configured. Contact John.';
+    return;
+  }
+  if(pwVal !== PW){ err.textContent = 'Incorrect password'; return; }
+  const cleanKey = savedKey.replace(/[^\\x20-\\x7E]/g,'').trim();
+  if(!cleanKey.startsWith('gsk_')){ err.textContent = 'API configuration error.'; return; }
+  groqKey = cleanKey;
+  localStorage.setItem('hub_auth', '1');
+  launchApp();
+}`;
+
+  if(html.includes('doLogin(){')){
+    html = html.replace(/function doLogin\(\)\{[\s\S]*?^\}/m, doLoginNew);
+    setBadge('b2','APPLIED');
+    fixCount++;
+  } else {
+    setBadge('b2','SKIP');
+  }
+
+  // ── FIX 3 & 4: Claude voice — add claudeVoice variable and functions ──
+  if(!html.includes('claudeVoice')){
+    // Add claudeVoice variable
+    html = html.replace(
+      'let chosenVoice = null;',
+      'let chosenVoice = null;    // Becky voice\nlet claudeVoice = null;    // Claude voice (Irish preferred)'
+    );
+
+    // Add buildClaudeVoiceSelect + saveClaudeVoice + speakClaudeVoice before window.onload
+    const claudeFunctions = `
+// ── CLAUDE VOICE — Irish preferred ──
+function buildClaudeVoiceSelect(){
+  const sel=document.getElementById('claudeVoiceSelect');
+  if(!sel||voices.length===0)return;
+  sel.innerHTML='';
+  const irish=voices.filter(v=>v.lang==='en-IE');
+  const english=voices.filter(v=>v.lang.startsWith('en')&&v.lang!=='en-IE');
+  const rest=voices.filter(v=>!v.lang.startsWith('en'));
+  if(irish.length>0){
+    const g=document.createElement('optgroup');g.label='🍀 Irish';
+    irish.forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name;g.appendChild(o);});
+    sel.appendChild(g);
+  }
+  const g2=document.createElement('optgroup');g2.label='🇬🇧 English';
+  english.forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+' ('+v.lang+')';g2.appendChild(o);});
+  sel.appendChild(g2);
+  rest.forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+' ('+v.lang+')';sel.appendChild(o);});
+  const saved=localStorage.getItem('claude_voice_name');
+  if(saved&&sel.querySelector('option[value="'+saved+'"]'))sel.value=saved;
+  else if(irish.length>0)sel.value=irish[0].name;
+  claudeVoice=voices.find(v=>v.name===sel.value)||voices.find(v=>v.lang.startsWith('en'))||voices[0];
+}
+
+function saveClaudeVoice(){
+  const sel=document.getElementById('claudeVoiceSelect');
+  if(!sel)return;
+  claudeVoice=voices.find(v=>v.name===sel.value)||claudeVoice;
+  localStorage.setItem('claude_voice_name',sel.value);
+  showToast('Claude voice saved!');
+  speakClaudeVoice('Hello John, this is Claude your AI Developer. How do I sound?');
+}
+
+function speakClaudeVoice(text){
+  if(!speaking||!synth||!text)return;
+  synth.cancel();
+  const utter=new SpeechSynthesisUtterance(text);
+  if(claudeVoice)utter.voice=claudeVoice;
+  utter.rate=0.92;utter.pitch=1.0;utter.volume=1.0;
+  synth.speak(utter);
+}
+
+`;
+    html = html.replace('window.onload = function()', claudeFunctions + 'window.onload = function()');
+
+    // Add buildClaudeVoiceSelect() call inside buildVoiceSelects
+    html = html.replace(
+      "if(v1 && v2) v2.value = v1.value;\n}",
+      "if(v1 && v2) v2.value = v1.value;\n  buildClaudeVoiceSelect();\n}"
+    );
+
+    setBadge('b3','APPLIED');
+    fixCount++;
+  } else {
+    setBadge('b3','SKIP');
+  }
+
+  // ── FIX 4: Claude speaks with his own voice in sendMsg ──
+  if(!html.includes('speakClaudeVoice') || html.includes("tab==='becky'||tab==='claude'||tab==='home'")){
+    html = html.replace(
+      `if(speaking && (tab==='becky'||tab==='claude'||tab==='home')){
+      speakText(cleanForSpeech(reply));
+    }`,
+      `if(speaking && (tab==='becky'||tab==='home')){
+      speakText(cleanForSpeech(reply));
+    }
+    if(speaking && tab==='claude'){
+      speakClaudeVoice(cleanForSpeech(reply));
+    }`
+    );
+    // Also fix in runLiveMic
+    html = html.replace(
+      "if(speaking) speakText(cleanForSpeech(reply));",
+      "if(speaking){\n        if(tab==='claude') speakClaudeVoice(cleanForSpeech(reply));\n        else speakText(cleanForSpeech(reply));\n      }"
+    );
+    setBadge('b4','APPLIED');
+    fixCount++;
+  } else {
+    setBadge('b4','SKIP');
+  }
+
+  // ── FIX 5: Work history 22 years ──
+  if(html.includes('20+ years Chemical Plant Lead Operator') || html.includes('Lion Elastomers (laid off Dec 7, 2025)')){
+    html = html.replace(
+      /20\+ years Chemical Plant Lead Operator.*?2025\)/g,
+      '22 years operations: Lead Operator · Live Oak Warehouse (2004-2012) · Firestone Polymers (2012-2019) · Lion Elastomers (2019-2025)'
+    );
+    setBadge('b5','APPLIED');
+    fixCount++;
+  } else {
+    setBadge('b5','SKIP');
+  }
+
+  // ── FIX 6: Settings label for voice ──
+  if(html.includes('CHOOSE VOICE') && !html.includes("BECKY'S VOICE")){
+    html = html.replace(
+      '<div class="set-label">CHOOSE VOICE</div>',
+      '<div class="set-label">BECKY\'S VOICE</div>'
+    );
+    setBadge('b6','APPLIED');
+    fixCount++;
+  } else {
+    setBadge('b6','SKIP');
+  }
+
+  // ── Show result ──
+  document.getElementById('outputHtml').value = html;
+  document.getElementById('outputCard').style.display = 'block';
+
+  status.className='status ok';
+  status.textContent = fixCount + ' fixes applied successfully! Scroll down to copy your updated file.';
+
+  document.getElementById('outputStatus').textContent =
+    fixCount + ' fixes applied! Copy the file below → paste into GitHub → commit → done!';
+
+  document.getElementById('outputCard').scrollIntoView({behavior:'smooth'});
+}
+
+function setBadge(id, status){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.className = 'badge ' + (status==='APPLIED' ? 'badge-applied' : 'badge-skip');
+  el.textContent = status;
+}
+
+function copyOutput(){
+  const out = document.getElementById('outputHtml');
+  out.select();
+  document.execCommand('copy');
+  // Modern way
+  navigator.clipboard.writeText(out.value).then(()=>{
+    const btn = event.target;
+    btn.textContent = '✅ Copied!';
+    setTimeout(()=>{ btn.textContent = '📋 Copy Fixed File'; }, 2000);
+  }).catch(()=>{
+    document.execCommand('copy');
+  });
+}
+
+function downloadOutput(){
+  const content = document.getElementById('outputHtml').value;
+  if(!content){ alert('Apply fixes first!'); return; }
+  const blob = new Blob([content], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'index.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearAll(){
+  document.getElementById('inputHtml').value = '';
+  document.getElementById('outputHtml').value = '';
+  document.getElementById('outputCard').style.display = 'none';
+  document.getElementById('inputStatus').className = 'status';
+  ['b1','b2','b3','b4','b5','b6'].forEach(id => setBadge(id,'READY'));
+}
+</script>
+</body>
+</html>
