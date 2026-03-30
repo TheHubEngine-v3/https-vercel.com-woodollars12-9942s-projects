@@ -754,13 +754,25 @@ let currentAgentScene = 0;
 // LOGIN
 // ═══════════════════════════════════════════
 function doLogin(){
-  const apiVal = document.getElementById('apiInput').value.trim();
-  const pwVal  = document.getElementById('pwInput').value.trim();
-  const err    = document.getElementById('loginErr');
-  if(!apiVal){ err.textContent = 'Please enter your Groq API key'; return; }
+  const pwVal = document.getElementById('pwInput').value.trim();
+  const err = document.getElementById('loginErr');
+
+  // Grab key from input OR from saved localStorage
+  const apiInput = document.getElementById('apiInput');
+  const apiVal = (apiInput && apiInput.style.display !== 'none' && apiInput.value.trim())
+                 || localStorage.getItem('hub_groq') || '';
+
+  if(!apiVal){
+    err.textContent = 'No API key found — enter your Groq key';
+    const step1 = document.getElementById('loginStep1');
+    if(step1) step1.style.display = 'block';
+    return;
+  }
   if(pwVal !== PW){ err.textContent = 'Incorrect password'; return; }
+
   const cleanKey = apiVal.replace(/[^\x20-\x7E]/g,'').trim();
   if(!cleanKey.startsWith('gsk_')){ err.textContent = 'API key must start with gsk_'; return; }
+
   groqKey = cleanKey;
   localStorage.setItem('hub_groq', groqKey);
   localStorage.setItem('hub_auth', '1');
@@ -1528,11 +1540,17 @@ function showToast(msg){
 // ═══════════════════════════════════════════
 window.onload = function(){
   const savedKey = localStorage.getItem('hub_groq');
+  const savedAuth = localStorage.getItem('hub_auth');
+
+  if(savedKey && savedAuth === '1'){
+    groqKey = savedKey.replace(/[^\x20-\x7E]/g,'').trim();
+    launchApp();
+    return;
+  }
   if(savedKey){
     groqKey = savedKey.replace(/[^\x20-\x7E]/g,'').trim();
-    // Hide key field if already saved
     const step1 = document.getElementById('loginStep1');
-    if(step1) step1.style.display='none';
+    if(step1) step1.style.display = 'none';
   }
 };
 </script>
