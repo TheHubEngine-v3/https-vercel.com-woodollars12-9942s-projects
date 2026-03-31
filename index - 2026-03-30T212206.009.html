@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>The Hub Engine v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+<style>
+:root{--gold:#f5c518;--gold2:#e8a020;--dark:#07070f;--dark2:#0e0e1a;--dark3:#13131f;--border:rgba(245,197,24,0.18);--text:#eeeef5;--muted:rgba(238,238,245,0.45);--green:#0f9d58;--red:#ea4335;--blue:#4285f4;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--dark);color:var(--text);font-family:'Exo 2',sans-serif;}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;padding:24px;}
+.login-glow{width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(245,197,24,0.25),transparent 70%);display:flex;align-items:center;justify-content:center;font-size:42px;margin-bottom:20px;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,197,24,0.3);}50%{box-shadow:0 0 0 20px rgba(245,197,24,0);}}
+.login-title{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--gold);letter-spacing:3px;text-align:center;}
+.login-sub{font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:24px;}
+.login-step{width:100%;max-width:360px;margin-bottom:14px;}
+.login-label{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:6px;}
+.login-input{width:100%;padding:13px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:15px;outline:none;}
+.login-input:focus{border-color:var(--gold);}
+.login-btn{width:100%;max-width:360px;padding:15px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;border:none;border-radius:10px;cursor:pointer;margin-top:8px;}
+.login-err{font-size:12px;color:var(--red);text-align:center;margin-top:8px;min-height:18px;}
+
+/* APP */
+#app{display:flex;flex-direction:column;height:100%;height:100dvh;overflow:hidden;}
+.status-bar{background:rgba(15,157,88,0.12);border-bottom:1px solid rgba(15,157,88,0.25);padding:6px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.status-text{font-size:10px;color:var(--green);letter-spacing:2px;font-weight:700;font-family:'Rajdhani',sans-serif;}
+.status-right{margin-left:auto;font-size:10px;color:var(--muted);}
+
+/* TAB BAR */
+.tab-bar{display:flex;overflow-x:auto;flex-shrink:0;background:var(--dark2);border-top:2px solid var(--border);scrollbar-width:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;padding-bottom:env(safe-area-inset-bottom);min-height:60px;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 14px;gap:3px;flex-shrink:0;cursor:pointer;border-top:2px solid transparent;transition:all .2s;min-width:58px;font-family:'Rajdhani',sans-serif;}
+.tab-btn span:first-child{font-size:19px;}
+.tab-btn span:last-child{font-size:9px;letter-spacing:1px;color:var(--muted);font-weight:700;}
+.tab-btn.active{border-top-color:var(--gold);}
+.tab-btn.active span:last-child{color:var(--gold);}
+
+/* PAGES */
+.pages{flex:1;overflow:hidden;position:relative;}
+.page{display:none;height:100%;flex-direction:column;overflow:hidden;}
+.page.active{display:flex;}
+.page-inner{flex:1;overflow-y:auto;padding:16px;padding-bottom:80px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.page-inner::-webkit-scrollbar{width:4px;}
+.page-inner::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:100%;padding-bottom:62px;}
+.chat-header{padding:12px 16px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px;}
+.chat-header-icon{font-size:26px;}
+.chat-header-title{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--gold);letter-spacing:1px;}
+.chat-header-sub{font-size:11px;color:var(--muted);}
+.voice-select{padding:5px 8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-family:'Exo 2',sans-serif;outline:none;cursor:pointer;max-width:130px;}
+.messages{flex:1;overflow-y:auto;padding:14px;padding-bottom:80px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;}
+.msg{max-width:82%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.55;}
+.msg.bot{background:rgba(255,255,255,0.06);border:1px solid var(--border);align-self:flex-start;border-radius:4px 14px 14px 14px;}
+.msg.user{background:rgba(245,197,24,0.12);border:1px solid rgba(245,197,24,0.2);align-self:flex-end;border-radius:14px 4px 14px 14px;color:var(--gold);}
+.msg.thinking{opacity:0.6;font-style:italic;}
+
+/* CHAT INPUT — FIXED no vertical text */
+.chat-input-bar{display:flex;align-items:flex-end;gap:8px;padding:10px 12px;background:var(--dark2);border-top:1px solid var(--border);flex-shrink:0;}
+.chat-input-bar textarea{flex:1;padding:10px 12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:14px;outline:none;resize:none;min-height:42px;max-height:100px;writing-mode:horizontal-tb !important;direction:ltr !important;text-align:left !important;overflow-y:auto;line-height:1.4;}
+.chat-input-bar textarea:focus{border-color:var(--gold);}
+.icon-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.icon-btn.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;width:44px;height:44px;font-size:20px;border-radius:12px;}
+.icon-btn.active{border-color:var(--green);color:var(--green);}
+
+/* CARDS */
+.card{background:var(--dark3);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
+.card-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+.link-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.link-btn{padding:11px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:var(--text);font-size:12px;font-family:'Exo 2',sans-serif;text-align:center;transition:all .2s;text-decoration:none;display:block;}
+.link-btn:active{background:rgba(245,197,24,0.08);}
+.link-btn .lb-icon{font-size:20px;display:block;margin-bottom:4px;}
+.link-btn .lb-name{font-size:11px;font-weight:600;display:block;}
+.link-btn .lb-sub{font-size:10px;color:var(--muted);margin-top:2px;display:block;}
+
+/* AGENT CARDS */
+.agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.agent-card{padding:14px;background:var(--dark3);border:2px solid rgba(255,255,255,0.06);border-radius:12px;cursor:pointer;transition:all .2s;text-align:center;}
+.agent-card.selected{border-color:var(--gold);background:rgba(245,197,24,0.06);}
+.agent-card .ac-icon{font-size:32px;margin-bottom:6px;}
+.agent-card .ac-name{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--gold);}
+.agent-card .ac-day{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+.agent-card .ac-style{font-size:10px;color:rgba(245,197,24,0.5);margin-top:3px;}
+
+/* BUTTONS */
+.action-btn{width:100%;padding:13px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'Rajdhani',sans-serif;letter-spacing:1px;margin-bottom:8px;transition:all .2s;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;}
+.btn-blue{background:rgba(66,133,244,0.12);border:1px solid rgba(66,133,244,0.3);color:var(--blue);}
+.btn-green{background:rgba(15,157,88,0.12);border:1px solid rgba(15,157,88,0.3);color:var(--green);}
+.btn-gray{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--muted);font-size:12px;}
+.action-btn:disabled{opacity:0.35;cursor:not-allowed;}
+
+/* SCRIPT/SCENE */
+.script-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;line-height:1.6;color:var(--muted);min-height:80px;white-space:pre-wrap;margin-bottom:10px;}
+.scene-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.scene-item{background:rgba(255,255,255,0.03);border-left:3px solid rgba(245,197,24,0.2);border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.scene-item.current{border-left-color:var(--gold);color:var(--text);background:rgba(245,197,24,0.04);}
+.scene-copy{background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.2);border-radius:6px;padding:3px 8px;font-size:10px;color:var(--gold);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+
+/* TOPIC CHIPS */
+.topic-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+.topic-chip{padding:7px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;}
+.topic-chip.selected{background:rgba(245,197,24,0.1);border-color:var(--gold);color:var(--gold);}
+.custom-input{width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;margin-bottom:12px;}
+.custom-input:focus{border-color:var(--gold);}
+
+/* LOG */
+.log-entry{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:7px;}
+.log-cb{width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;}
+.log-text{flex:1;font-size:13px;color:var(--text);}
+.log-del{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;}
+.log-add-row{display:flex;gap:8px;margin-bottom:10px;}
+.log-add-row input{flex:1;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;}
+.log-add-row input:focus{border-color:var(--gold);}
+.quick-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.qchip{padding:6px 11px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.2);border-radius:16px;font-size:11px;color:var(--gold);cursor:pointer;}
+
+/* SETTINGS */
+.set-row{margin-bottom:14px;}
+.set-label{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:6px;}
+.set-input{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;}
+.set-input:focus{border-color:var(--gold);}
+.set-status{padding:10px 14px;border-radius:10px;font-size:12px;margin-bottom:10px;}
+.set-ok{background:rgba(15,157,88,0.1);border:1px solid rgba(15,157,88,0.3);color:var(--green);}
+.set-err{background:rgba(234,67,53,0.1);border:1px solid rgba(234,67,53,0.3);color:var(--red);}
+
+/* PROFILE */
+.profile-field{margin-bottom:12px;}
+.profile-label{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:5px;}
+.profile-val{font-size:13px;color:var(--text);padding:9px 13px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;line-height:1.6;}
+
+/* LIVE MIC */
+.icon-btn.live-active{animation:livepulse 0.8s ease-in-out infinite;}
+@keyframes livepulse{0%,100%{box-shadow:0 0 0 0 rgba(234,67,53,0.5);}50%{box-shadow:0 0 0 10px rgba(234,67,53,0);}}
+.icon-btn.live-active-blue{animation:livepulseblue 0.8s ease-in-out infinite;}
+@keyframes livepulseblue{0%,100%{box-shadow:0 0 0 0 rgba(66,133,244,0.5);}50%{box-shadow:0 0 0 10px rgba(66,133,244,0);}}
+
+/* JOB LINKS */
+.job-link{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:8px;text-decoration:none;color:var(--text);transition:all .2s;}
+.job-link:active{background:rgba(245,197,24,0.06);}
+.job-link-icon{font-size:24px;flex-shrink:0;}
+.job-link-info{flex:1;}
+.job-link-name{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--gold);}
+.job-link-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.job-link-arrow{color:var(--muted);font-size:16px;}
+
+/* VIDEO PLATFORM */
+.vidplat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.vidplat-card{padding:12px;background:var(--dark3);border:1px solid var(--border);border-radius:10px;text-align:center;text-decoration:none;display:block;transition:all .2s;}
+.vidplat-card:active{border-color:var(--gold);background:rgba(245,197,24,0.06);}
+.vidplat-icon{font-size:26px;display:block;margin-bottom:4px;}
+.vidplat-name{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);}
+.vidplat-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.vidplat-badge{display:inline-block;padding:2px 7px;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.3);border-radius:10px;font-size:9px;color:var(--green);margin-top:4px;font-weight:700;}
+
+/* LEARN CARD */
+.learn-card{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--dark3);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;text-decoration:none;color:var(--text);transition:all .2s;}
+.learn-card:active{border-color:var(--gold);background:rgba(245,197,24,0.05);}
+.learn-icon{font-size:28px;flex-shrink:0;width:44px;text-align:center;}
+.learn-info{flex:1;}
+.learn-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--gold);margin-bottom:2px;}
+.learn-sub{font-size:11px;color:var(--muted);line-height:1.4;}
+.learn-badge{display:inline-block;padding:2px 8px;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.3);border-radius:10px;font-size:9px;color:var(--green);font-weight:700;margin-top:3px;}
+
+.section-title{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin:16px 0 8px;}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(15,157,88,0.9);color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:700;z-index:9998;pointer-events:none;opacity:0;transition:opacity .3s;}
+.toast.show{opacity:1;}
+
+@media screen and (max-width:480px){
+  .tab-btn{min-width:52px;padding:7px 10px;}
+  .tab-btn span:first-child{font-size:18px;}
+  .tab-btn span:last-child{font-size:8px;}
+  .msg{font-size:13px;}
+  .icon-btn{width:38px;height:38px;font-size:17px;}
+  .icon-btn.gold{width:42px;height:42px;}
+}
+@media screen and (min-width:768px){
+  #app{max-width:900px;margin:0 auto;box-shadow:0 0 60px rgba(0,0,0,0.8);}
+  .link-grid{grid-template-columns:1fr 1fr 1fr;}
+  .agent-grid{grid-template-columns:1fr 1fr 1fr 1fr;}
+  .tab-btn{min-width:70px;padding:10px 16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN
+     First time: shows both API key + password fields
+     After saving: shows password only (API key hidden from public)
+-->
+<div id="loginScreen">
+  <div class="login-glow">⚡</div>
+  <div class="login-title">THE HUB ENGINE v3</div>
+  <div class="login-sub">AFFILIATEMEDIAHUB STUDIO</div>
+
+  <!-- API key field — hidden after first save -->
+  <div class="login-step" id="loginApiStep">
+    <div class="login-label">GROQ API KEY <span id="apiSavedTag" style="color:var(--green);display:none;">✅ SAVED</span></div>
+    <input id="apiInput" class="login-input" type="password" placeholder="gsk_... (only needed once)" autocomplete="off"/>
+  </div>
+
+  <div class="login-step">
+    <div class="login-label">ACCESS PASSWORD</div>
+    <input id="pwInput" class="login-input" type="password" placeholder="Enter password..." autocomplete="off"/>
+  </div>
+  <button class="login-btn" onclick="doLogin()">🚀 ENTER THE HUB</button>
+  <div class="login-err" id="loginErr"></div>
+  <div style="font-size:10px;color:rgba(238,238,245,0.15);margin-top:20px;text-align:center;letter-spacing:1px;">JOHN LANTER · CEO · ORANGE TEXAS<br/>THREE MINDS · ONE MISSION · ZERO COST</div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    <div class="status-text">ALL SYSTEMS LIVE</div>
+    <div class="status-right" id="voiceStatus">🔊 VOICE ON</div>
+  </div>
+
+  <div class="pages">
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <div class="chat-wrap">
+        <div class="chat-header">
+          <div class="chat-header-icon">🏠</div>
+          <div><div class="chat-header-title">THE HUB ENGINE</div><div class="chat-header-sub">Your AI Business HQ</div></div>
+          <button class="icon-btn" id="speakBtnHome" onclick="toggleSpeak()" style="margin-left:auto;width:34px;height:34px;font-size:15px;background:rgba(15,157,88,0.2);border:1px solid rgba(15,157,88,0.4);color:var(--green);">🔊</button>
+        </div>
+        <div class="messages" id="msgs-home"></div>
+        <div class="chat-input-bar">
+          <textarea id="inp-home" placeholder="Ask anything..." rows="1" onkeydown="handleKey(event,'home')"></textarea>
+          <button class="icon-btn" onclick="toggleMic('home')" id="mic-home">🎤</button>
+          <button class="icon-btn gold" onclick="sendMsg('home')">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BECKY -->
+    <div class="page" id="page-becky">
+      <div class="chat-wrap">
+        <div class="chat-header">
+          <div class="chat-header-icon">🎙️</div>
+          <div><div class="chat-header-title">BECKY</div><div class="chat-header-sub" id="becky-status">Creative Director · Your AI Friend</div></div>
+          <div style="display:flex;align-items:center;gap:4px;margin-left:auto;">
+            <select class="voice-select" id="voiceSelect" onchange="saveVoice()"><option>Loading...</option></select>
+            <button class="icon-btn" onclick="testVoice()" style="width:32px;height:32px;font-size:14px;">🔈</button>
+            <button class="icon-btn" id="speakBtn" onclick="toggleSpeak()" style="width:32px;height:32px;font-size:14px;background:rgba(15,157,88,0.2);border:1px solid rgba(15,157,88,0.4);color:var(--green);">🔊</button>
+          </div>
+        </div>
+        <div id="becky-live-banner" style="display:none;background:rgba(234,67,53,0.15);border-bottom:1px solid rgba(234,67,53,0.3);padding:8px 16px;flex-shrink:0;text-align:center;">
+          <span style="font-size:11px;color:#ea4335;font-weight:700;letter-spacing:2px;font-family:'Rajdhani',sans-serif;">🔴 LIVE MIC — BECKY IS LISTENING</span>
+        </div>
+        <div class="messages" id="msgs-becky"></div>
+        <div class="chat-input-bar">
+          <label class="icon-btn" for="beckyFile" style="cursor:pointer;">➕</label>
+          <input type="file" id="beckyFile" style="display:none" accept="image/*,.pdf,.txt" onchange="attachFile(event,'becky')"/>
+          <textarea id="inp-becky" placeholder="Talk to Becky..." rows="1" onkeydown="handleKey(event,'becky')"></textarea>
+          <button class="icon-btn" onclick="toggleMic('becky')" id="mic-becky">🎤</button>
+          <button class="icon-btn" id="livemic-becky" onclick="startLiveMic('becky')" style="background:rgba(234,67,53,0.15);border:2px solid rgba(234,67,53,0.4);color:#ea4335;font-size:18px;width:42px;height:42px;border-radius:12px;">🎙️</button>
+          <button class="icon-btn gold" onclick="sendMsg('becky')">➤</button>
+        </div>
+        <div style="text-align:center;font-size:10px;color:var(--muted);padding:4px 0 2px;flex-shrink:0;">🎙️ <strong style="color:rgba(234,67,53,0.7);">RED MIC</strong> = Live Voice · Tap to toggle</div>
+      </div>
+    </div>
+
+    <!-- VIDEO AGENTS -->
+    <div class="page" id="page-agents">
+      <div class="page-inner">
+        <div style="background:rgba(245,197,24,0.07);border:1px solid rgba(245,197,24,0.2);border-radius:12px;padding:12px 14px;margin-bottom:14px;">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:4px;">🤖 AI VIDEO AGENTS — SUSAN · ALISHA · LISA · PAUL</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.7;">Tap agent → pick topic → Generate → copy prompts → paste into Grok Aurora or InVideo below.</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🎭 Step 1 — Pick Your Agent</div>
+          <div class="agent-grid">
+            <div class="agent-card" id="agc-susan" onclick="selectAgent('susan')"><div class="ac-icon">🩵</div><div class="ac-name">SUSAN</div><div class="ac-day">MONDAYS</div><div class="ac-style">AI News Anchor</div></div>
+            <div class="agent-card" id="agc-alisha" onclick="selectAgent('alisha')"><div class="ac-icon">🔵</div><div class="ac-name">ALISHA</div><div class="ac-day">WEDNESDAYS</div><div class="ac-style">AI News Reporter</div></div>
+            <div class="agent-card" id="agc-lisa" onclick="selectAgent('lisa')"><div class="ac-icon">🔴</div><div class="ac-name">LISA</div><div class="ac-day">FRIDAYS</div><div class="ac-style">AI News + Affiliate</div></div>
+            <div class="agent-card" id="agc-paul" onclick="selectAgent('paul')"><div class="ac-icon">🎙️</div><div class="ac-name">PAUL</div><div class="ac-day">THURSDAYS</div><div class="ac-style">Podcast Host</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📋 Step 2 — Pick Topic</div>
+          <div class="topic-row">
+            <div class="topic-chip" id="tp-ainews" onclick="selectAgentTopic('ainews')">📰 AI News</div>
+            <div class="topic-chip" id="tp-affiliate" onclick="selectAgentTopic('affiliate')">💰 Affiliate Promo</div>
+            <div class="topic-chip" id="tp-tips" onclick="selectAgentTopic('tips')">💡 AI Tips</div>
+            <div class="topic-chip" id="tp-business" onclick="selectAgentTopic('business')">🏢 Local Business</div>
+            <div class="topic-chip" id="tp-custom" onclick="selectAgentTopic('custom')">✏️ Custom</div>
+          </div>
+          <input class="custom-input" id="agentTopicCustom" placeholder="Enter topic, product, or business..." style="display:none;"/>
+          <button class="action-btn btn-gold" id="genAgentBtn" onclick="generateAgentContent()" disabled>⚡ Generate Script + Scene Prompts</button>
+        </div>
+
+        <div id="agentScriptArea" style="display:none;">
+          <div class="card">
+            <div class="card-title">📝 Script</div>
+            <div class="script-box" id="agentScript"></div>
+            <button class="action-btn btn-gray" onclick="copyEl('agentScript')">📋 Copy Full Script</button>
+          </div>
+          <div class="card">
+            <div class="card-title">🎬 Scene Prompts — Copy into video tool</div>
+            <div class="scene-list" id="agentSceneList"></div>
+            <div style="display:flex;gap:8px;">
+              <button class="action-btn btn-blue" style="margin:0;flex:1" onclick="copyNextAgentScene()">➤ Copy Next Scene</button>
+              <button class="action-btn btn-gray" style="margin:0;flex:1" onclick="copyAllAgentScenes()">📋 Copy All</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FREE VIDEO TOOLS — updated based on research -->
+        <div class="card">
+          <div class="card-title">🎥 Step 3 — Make Your Video (Free)</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Copy a scene prompt above → paste into one of these → download your clip</div>
+
+          <!-- Grok Aurora — kept, free tier works -->
+          <a href="https://grok.com" target="_blank" class="learn-card" style="margin-bottom:8px;">
+            <div class="learn-icon">⚡</div>
+            <div class="learn-info">
+              <div class="learn-title">Grok Aurora</div>
+              <div class="learn-sub">xAI · Paste scene prompt → 6 sec video clip<br/>Free tier — best for your avatars</div>
+              <span class="learn-badge">FREE</span>
+            </div>
+          </a>
+
+          <!-- InVideo — has Google Veo 3.1 built in -->
+          <a href="https://invideo.io" target="_blank" class="learn-card" style="margin-bottom:8px;">
+            <div class="learn-icon">🎥</div>
+            <div class="learn-info">
+              <div class="learn-title">InVideo AI</div>
+              <div class="learn-sub">Has Google Veo 3.1 built in · Type a prompt → full video with script, clips, voice<br/>Free tier available</div>
+              <span class="learn-badge">FREE TIER</span>
+            </div>
+          </a>
+
+          <!-- YouTube Shorts + Veo 3 — new! -->
+          <a href="https://youtube.com" target="_blank" class="learn-card" style="margin-bottom:8px;">
+            <div class="learn-icon">▶️</div>
+            <div class="learn-info">
+              <div class="learn-title">YouTube Shorts + Veo 3</div>
+              <div class="learn-sub">Google built Veo 3 directly into YouTube Shorts app · Create AI clips right inside YouTube · Completely free</div>
+              <span class="learn-badge">100% FREE</span>
+            </div>
+          </a>
+
+          <!-- Dreamina -->
+          <a href="https://dreamina.capcut.com" target="_blank" class="learn-card">
+            <div class="learn-icon">🎨</div>
+            <div class="learn-info">
+              <div class="learn-title">Dreamina by CapCut</div>
+              <div class="learn-sub">AI video + image generation · Free daily credits · No subscription needed</div>
+              <span class="learn-badge">FREE</span>
+            </div>
+          </a>
+        </div>
+
+        <div class="card">
+          <div class="card-title">✂️ Step 4 — Join Your Clips</div>
+          <div class="vidplat-grid">
+            <a href="https://app.vmake.ai" target="_blank" class="vidplat-card"><span class="vidplat-icon">🎞️</span><div class="vidplat-name">Vmake AI</div><div class="vidplat-sub">Join clips free</div><div class="vidplat-badge">FREE</div></a>
+            <a href="https://app.invideo.io" target="_blank" class="vidplat-card"><span class="vidplat-icon">✂️</span><div class="vidplat-name">InVideo Editor</div><div class="vidplat-sub">Full editor</div><div class="vidplat-badge">FREE TIER</div></a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📱 Step 5 — Post Your Video</div>
+          <div class="link-grid">
+            <a href="https://tiktok.com" target="_blank" class="link-btn"><span class="lb-icon">🎵</span><span class="lb-name">TikTok</span></a>
+            <a href="https://youtube.com/upload" target="_blank" class="link-btn"><span class="lb-icon">▶️</span><span class="lb-name">YouTube</span></a>
+            <a href="https://instagram.com" target="_blank" class="link-btn"><span class="lb-icon">📸</span><span class="lb-name">Instagram</span></a>
+            <a href="https://facebook.com" target="_blank" class="link-btn"><span class="lb-icon">👥</span><span class="lb-name">Facebook</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOBS -->
+    <div class="page" id="page-jobs">
+      <div class="page-inner">
+        <div style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.25);border-radius:12px;padding:12px 14px;margin-bottom:14px;">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--blue);letter-spacing:2px;margin-bottom:4px;">💼 JOB SEARCH — SE TEXAS · OPERATIONS</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.7;">Pre-filtered for Chemical Plant · Operations · Supervisor · Southeast Texas</div>
+        </div>
+        <div class="section-title">🔍 TAP TO SEARCH</div>
+        <a href="https://www.indeed.com/jobs?q=operations+supervisor+chemical+plant&l=Beaumont%2C+TX" target="_blank" class="job-link"><div class="job-link-icon">🔵</div><div class="job-link-info"><div class="job-link-name">Indeed — Operations / Chemical Plant</div><div class="job-link-sub">Beaumont & SE Texas</div></div><div class="job-link-arrow">→</div></a>
+        <a href="https://www.indeed.com/jobs?q=lead+operator+plant+supervisor&l=Orange%2C+TX&radius=50" target="_blank" class="job-link"><div class="job-link-icon">🔵</div><div class="job-link-info"><div class="job-link-name">Indeed — Lead Operator / Plant Supervisor</div><div class="job-link-sub">Orange TX + 50 miles</div></div><div class="job-link-arrow">→</div></a>
+        <a href="https://www.linkedin.com/jobs/search/?keywords=operations%20supervisor%20chemical&location=Beaumont%2C%20Texas" target="_blank" class="job-link"><div class="job-link-icon">💼</div><div class="job-link-info"><div class="job-link-name">LinkedIn — Operations / Chemical</div><div class="job-link-sub">Beaumont, Texas area</div></div><div class="job-link-arrow">→</div></a>
+        <a href="https://www.ziprecruiter.com/Jobs/Operations-Supervisor/--in-Beaumont,TX" target="_blank" class="job-link"><div class="job-link-icon">🟡</div><div class="job-link-info"><div class="job-link-name">ZipRecruiter — Operations Supervisor</div><div class="job-link-sub">Beaumont TX area</div></div><div class="job-link-arrow">→</div></a>
+        <a href="https://www.workintexas.com/vosnet/jobbanks/joblist.aspx?enc=3uLsIDoMKuqpnUW7OVEzLR1B4vRzr1grGjYZ%2bTioAUA=" target="_blank" class="job-link"><div class="job-link-icon">⭐</div><div class="job-link-info"><div class="job-link-name">WorkInTexas.com</div><div class="job-link-sub">Texas Workforce Commission</div></div><div class="job-link-arrow">→</div></a>
+        <a href="https://www.glassdoor.com/Job/beaumont-tx-operations-jobs-SRCH_IL.0,11_IC1140141_KO12,22.htm" target="_blank" class="job-link"><div class="job-link-icon">🟢</div><div class="job-link-info"><div class="job-link-name">Glassdoor — Operations Jobs</div><div class="job-link-sub">Beaumont TX · includes reviews</div></div><div class="job-link-arrow">→</div></a>
+        <a href="https://www.simplyhired.com/search?q=chemical+plant+operator+supervisor&l=beaumont%2C+tx" target="_blank" class="job-link"><div class="job-link-icon">🟠</div><div class="job-link-info"><div class="job-link-name">SimplyHired — Plant Operator</div><div class="job-link-sub">Beaumont TX area</div></div><div class="job-link-arrow">→</div></a>
+        <div class="section-title">🤖 AI CAREER COACH</div>
+        <div class="chat-wrap" style="height:320px;border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+          <div class="messages" id="msgs-jobs"></div>
+          <div class="chat-input-bar">
+            <label class="icon-btn" for="jobFile" style="cursor:pointer;">📎</label>
+            <input type="file" id="jobFile" style="display:none" accept=".pdf,.doc,.docx,.txt" onchange="attachFile(event,'jobs')"/>
+            <textarea id="inp-jobs" placeholder="Help me with a cover letter..." rows="1" onkeydown="handleKey(event,'jobs')"></textarea>
+            <button class="icon-btn" onclick="toggleMic('jobs')" id="mic-jobs">🎤</button>
+            <button class="icon-btn gold" onclick="sendMsg('jobs')">➤</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);padding:8px 0;">📎 Attach your resume for personalized cover letters</div>
+      </div>
+    </div>
+
+    <!-- SOCIAL -->
+    <div class="page" id="page-social">
+      <div class="page-inner">
+        <div class="section-title">SOCIAL MEDIA</div>
+        <div class="link-grid">
+          <a href="https://tiktok.com" target="_blank" class="link-btn"><span class="lb-icon">🎵</span><span class="lb-name">TikTok</span></a>
+          <a href="https://youtube.com" target="_blank" class="link-btn"><span class="lb-icon">▶️</span><span class="lb-name">YouTube</span></a>
+          <a href="https://instagram.com" target="_blank" class="link-btn"><span class="lb-icon">📸</span><span class="lb-name">Instagram</span></a>
+          <a href="https://facebook.com" target="_blank" class="link-btn"><span class="lb-icon">👥</span><span class="lb-name">Facebook</span></a>
+          <a href="https://linkedin.com" target="_blank" class="link-btn"><span class="lb-icon">💼</span><span class="lb-name">LinkedIn</span></a>
+          <a href="https://twitter.com" target="_blank" class="link-btn"><span class="lb-icon">🐦</span><span class="lb-name">X / Twitter</span></a>
+          <a href="https://snapchat.com" target="_blank" class="link-btn"><span class="lb-icon">👻</span><span class="lb-name">Snapchat</span></a>
+          <a href="https://discord.com" target="_blank" class="link-btn"><span class="lb-icon">🎮</span><span class="lb-name">Discord</span></a>
+          <a href="https://substack.com" target="_blank" class="link-btn"><span class="lb-icon">📧</span><span class="lb-name">Substack</span></a>
+          <a href="https://t.me" target="_blank" class="link-btn"><span class="lb-icon">✈️</span><span class="lb-name">Telegram</span></a>
+        </div>
+        <div class="section-title">SOCIAL AI ASSISTANT</div>
+        <div class="chat-wrap" style="height:280px;border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+          <div class="messages" id="msgs-social"></div>
+          <div class="chat-input-bar">
+            <textarea id="inp-social" placeholder="Write me a TikTok caption for..." rows="1" onkeydown="handleKey(event,'social')"></textarea>
+            <button class="icon-btn gold" onclick="sendMsg('social')">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI TOOLS -->
+    <div class="page" id="page-aitools">
+      <div class="page-inner">
+        <div class="section-title">AI TOOLS</div>
+        <div class="link-grid">
+          <a href="https://claude.ai" target="_blank" class="link-btn"><span class="lb-icon">🟠</span><span class="lb-name">Claude AI</span><span class="lb-sub">Anthropic</span></a>
+          <a href="https://gemini.google.com" target="_blank" class="link-btn"><span class="lb-icon">💎</span><span class="lb-name">Gemini</span><span class="lb-sub">Google</span></a>
+          <a href="https://chatgpt.com" target="_blank" class="link-btn"><span class="lb-icon">⭐</span><span class="lb-name">ChatGPT</span><span class="lb-sub">OpenAI</span></a>
+          <a href="https://grok.com" target="_blank" class="link-btn"><span class="lb-icon">⚡</span><span class="lb-name">Grok</span><span class="lb-sub">xAI</span></a>
+          <a href="https://perplexity.ai" target="_blank" class="link-btn"><span class="lb-icon">🔍</span><span class="lb-name">Perplexity</span></a>
+          <a href="https://deepseek.com" target="_blank" class="link-btn"><span class="lb-icon">🧠</span><span class="lb-name">DeepSeek</span></a>
+          <a href="https://meta.ai" target="_blank" class="link-btn"><span class="lb-icon">🌐</span><span class="lb-name">Meta AI</span></a>
+          <a href="https://notebooklm.google.com" target="_blank" class="link-btn"><span class="lb-icon">📓</span><span class="lb-name">NotebookLM</span></a>
+          <a href="https://heygen.com" target="_blank" class="link-btn"><span class="lb-icon">🎭</span><span class="lb-name">HeyGen</span></a>
+          <a href="https://invideo.io" target="_blank" class="link-btn"><span class="lb-icon">🎥</span><span class="lb-name">InVideo AI</span></a>
+          <a href="https://sora.com" target="_blank" class="link-btn"><span class="lb-icon">🎬</span><span class="lb-name">Sora</span></a>
+          <a href="https://replit.com" target="_blank" class="link-btn"><span class="lb-icon">💻</span><span class="lb-name">Replit</span></a>
+        </div>
+        <div class="section-title">AI ASSISTANT</div>
+        <div class="chat-wrap" style="height:260px;border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+          <div class="messages" id="msgs-aitools"></div>
+          <div class="chat-input-bar">
+            <textarea id="inp-aitools" placeholder="Ask about any AI tool..." rows="1" onkeydown="handleKey(event,'aitools')"></textarea>
+            <button class="icon-btn gold" onclick="sendMsg('aitools')">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEARN — Fully rebuilt with real YouTube links -->
+    <div class="page" id="page-learn">
+      <div class="page-inner">
+
+        <div class="section-title">🤖 AI SKILLS — FREE YOUTUBE COURSES</div>
+
+        <a href="https://www.youtube.com/results?search_query=learn+AI+skills+beginners+free+2025" target="_blank" class="learn-card">
+          <div class="learn-icon">🤖</div>
+          <div class="learn-info">
+            <div class="learn-title">Learn AI Skills — Beginners</div>
+            <div class="learn-sub">Search YouTube · Free courses for complete beginners · Step by step</div>
+            <span class="learn-badge">FREE · YOUTUBE</span>
+          </div>
+        </a>
+
+        <a href="https://www.youtube.com/results?search_query=AI+agents+tutorial+beginners+free+2025" target="_blank" class="learn-card">
+          <div class="learn-icon">🧠</div>
+          <div class="learn-info">
+            <div class="learn-title">AI Agents — How They Work</div>
+            <div class="learn-sub">Learn how AI agents work · Build your own · Practical tutorials</div>
+            <span class="learn-badge">FREE · YOUTUBE</span>
+          </div>
+        </a>
+
+        <a href="https://www.youtube.com/results?search_query=prompt+engineering+masterclass+free+2025" target="_blank" class="learn-card">
+          <div class="learn-icon">✏️</div>
+          <div class="learn-info">
+            <div class="learn-title">Prompt Engineering Masterclass</div>
+            <div class="learn-sub">Write better AI prompts · Get better results every time</div>
+            <span class="learn-badge">FREE · YOUTUBE</span>
+          </div>
+        </a>
+
+        <a href="https://www.youtube.com/results?search_query=make+money+online+AI+affiliate+marketing+2025" target="_blank" class="learn-card">
+          <div class="learn-icon">💰</div>
+          <div class="learn-info">
+            <div class="learn-title">AI + Affiliate Marketing Income</div>
+            <div class="learn-sub">Make money online with AI · Affiliate strategies · Real methods</div>
+            <span class="learn-badge">FREE · YOUTUBE</span>
+          </div>
+        </a>
+
+        <div class="section-title">📊 MICROSOFT EXCEL & SPREADSHEETS</div>
+
+        <a href="https://www.youtube.com/results?search_query=microsoft+excel+beginners+complete+course+free" target="_blank" class="learn-card">
+          <div class="learn-icon">📊</div>
+          <div class="learn-info">
+            <div class="learn-title">Microsoft Excel — Full Beginner Course</div>
+            <div class="learn-sub">Complete Excel training · Formulas, charts, spreadsheets · All free on YouTube</div>
+            <span class="learn-badge">FREE · YOUTUBE</span>
+          </div>
+        </a>
+
+        <a href="https://www.youtube.com/results?search_query=google+sheets+complete+tutorial+beginners+free" target="_blank" class="learn-card">
+          <div class="learn-icon">📋</div>
+          <div class="learn-info">
+            <div class="learn-title">Google Sheets — Complete Tutorial</div>
+            <div class="learn-sub">Free alternative to Excel · Works on phone and laptop · Full tutorial</div>
+            <span class="learn-badge">FREE · YOUTUBE</span>
+          </div>
+        </a>
+
+        <a href="https://support.microsoft.com/en-us/training" target="_blank" class="learn-card">
+          <div class="learn-icon">🪟</div>
+          <div class="learn-info">
+            <div class="learn-title">Microsoft Free Training</div>
+            <div class="learn-sub">Official Microsoft training · Excel, Word, PowerPoint, Teams · All free</div>
+            <span class="learn-badge">FREE · OFFICIAL</span>
+          </div>
+        </a>
+
+        <div class="section-title">🎬 AI VIDEO MAKING — FREE TUTORIALS</div>
+
+        <a href="https://www.youtube.com/results?search_query=AI+video+creation+tutorial+free+beginners+2025" target="_blank" class="learn-card">
+          <div class="learn-icon">🎬</div>
+          <div class="learn-info">
+            <div class="learn-title">AI Video Creation — Complete Tutorial</div>
+            <div class="learn-sub">Make AI videos from scratch · Free tools · Step by step for beginners</div>
+            <span class="learn-badge">FREE · YOUTUBE</span>
+          </div>
+        </a>
+
+        <a href="https://www.youtube.com/results?search_query=InVideo+AI+tutorial+free+2025" target="_blank" class="learn-card">
+          <div class="learn-icon">🎥</div>
+          <div class="learn-info">
+            <div class="learn-title">InVideo AI — Full Tutorial</div>
+            <div class="learn-sub">Text to full video with script, clips, voice · Free tier · Google Veo 3.1 built in</div>
+            <span class="learn-badge">FREE · YOUTUBE</span>
+          </div>
+        </a>
+
+        <a href="https://www.youtube.com/results?search_query=Grok+Aurora+video+generator+tutorial+free" target="_blank" class="learn-card">
+          <div class="learn-icon">⚡</div>
+          <div class="learn-info">
+            <div class="learn-title">Grok Aurora Video Tutorial</div>
+            <div class="learn-sub">How to use Grok Aurora to make AI video clips · Free tier guide</div>
+            <span class="learn-badge">FREE · YOUTUBE</span>
+          </div>
+        </a>
+
+        <a href="https://www.youtube.com/results?search_query=how+to+make+movies+with+AI+free+2025" target="_blank" class="learn-card">
+          <div class="learn-icon">🎞️</div>
+          <div class="learn-info">
+            <div class="learn-title">Make Movies With AI — Free</div>
+            <div class="learn-sub">Full movie making with AI tools · Scene by scene · No budget needed</div>
+            <span class="learn-badge">FREE · YOUTUBE</span>
+          </div>
+        </a>
+
+        <div class="section-title">🎓 STRUCTURED AI COURSES</div>
+
+        <a href="https://www.anthropic.com/courses" target="_blank" class="learn-card">
+          <div class="learn-icon">🟠</div>
+          <div class="learn-info">
+            <div class="learn-title">Anthropic — Claude AI Courses</div>
+            <div class="learn-sub">Official Claude training · Learn AI fundamentals · Free from Anthropic</div>
+            <span class="learn-badge">FREE · OFFICIAL</span>
+          </div>
+        </a>
+
+        <a href="https://grow.google/certificates/ai-essentials/" target="_blank" class="learn-card">
+          <div class="learn-icon">🔵</div>
+          <div class="learn-info">
+            <div class="learn-title">Google AI Essentials</div>
+            <div class="learn-sub">Official Google certificate · AI basics · Fully free to complete</div>
+            <span class="learn-badge">FREE CERTIFICATE</span>
+          </div>
+        </a>
+
+        <a href="https://www.elementsofai.com" target="_blank" class="learn-card">
+          <div class="learn-icon">🧠</div>
+          <div class="learn-info">
+            <div class="learn-title">Elements of AI — Helsinki University</div>
+            <div class="learn-sub">Learn AI from the ground up · Free certificate · University quality</div>
+            <span class="learn-badge">FREE CERTIFICATE</span>
+          </div>
+        </a>
+
+        <div class="section-title">💬 LEARNING COACH — ASK ME ANYTHING</div>
+        <div class="chat-wrap" style="height:300px;border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+          <div class="messages" id="msgs-learn"></div>
+          <div class="chat-input-bar">
+            <textarea id="inp-learn" placeholder="Teach me about AI agents..." rows="1" onkeydown="handleKey(event,'learn')"></textarea>
+            <button class="icon-btn gold" onclick="sendMsg('learn')">➤</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- AFFILIATE -->
+    <div class="page" id="page-affiliate">
+      <div class="page-inner">
+        <div class="section-title">AFFILIATE PROGRAMS</div>
+        <div class="link-grid">
+          <a href="https://vidnoz.com/affiliate" target="_blank" class="link-btn"><span class="lb-icon">🎭</span><span class="lb-name">Vidnoz</span><span class="lb-sub">50% commission</span></a>
+          <a href="https://invideo.io/affiliate" target="_blank" class="link-btn"><span class="lb-icon">🎥</span><span class="lb-name">InVideo</span><span class="lb-sub">30% commission</span></a>
+          <a href="https://accounts.clickbank.com/signup/" target="_blank" class="link-btn"><span class="lb-icon">🏦</span><span class="lb-name">ClickBank</span></a>
+          <a href="https://www.digistore24.com" target="_blank" class="link-btn"><span class="lb-icon">💰</span><span class="lb-name">Digistore24</span></a>
+          <a href="https://affiliate-program.amazon.com" target="_blank" class="link-btn"><span class="lb-icon">📦</span><span class="lb-name">Amazon</span></a>
+          <a href="https://www.shareasale.com" target="_blank" class="link-btn"><span class="lb-icon">🤝</span><span class="lb-name">ShareASale</span></a>
+          <a href="https://www.cj.com" target="_blank" class="link-btn"><span class="lb-icon">🌐</span><span class="lb-name">CJ Affiliate</span></a>
+          <a href="https://www.jvzoo.com" target="_blank" class="link-btn"><span class="lb-icon">⚡</span><span class="lb-name">JVZoo</span></a>
+        </div>
+        <div class="section-title">MARKETING EXPERT</div>
+        <div class="chat-wrap" style="height:280px;border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+          <div class="messages" id="msgs-affiliate"></div>
+          <div class="chat-input-bar">
+            <textarea id="inp-affiliate" placeholder="Help me write an affiliate promo for..." rows="1" onkeydown="handleKey(event,'affiliate')"></textarea>
+            <button class="icon-btn gold" onclick="sendMsg('affiliate')">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY LOG -->
+    <div class="page" id="page-log">
+      <div class="page-inner">
+        <div class="card-title" style="padding:0 0 10px;">📋 MY DAILY LOG</div>
+        <div class="quick-chips">
+          <div class="qchip" onclick="addQuick('Watched a learning video 📺')">📺 Learning Video</div>
+          <div class="qchip" onclick="addQuick('Tried an AI tool 🤖')">🤖 AI Tool</div>
+          <div class="qchip" onclick="addQuick('Applied for a job 💼')">💼 Job Applied</div>
+          <div class="qchip" onclick="addQuick('Made a video 🎬')">🎬 Made Video</div>
+          <div class="qchip" onclick="addQuick('Affiliate marketing work 💰')">💰 Affiliate</div>
+          <div class="qchip" onclick="addQuick('Completed a course lesson 🎓')">🎓 Course</div>
+          <div class="qchip" onclick="addQuick('Helped with family care 🙏')">🙏 Family</div>
+        </div>
+        <div class="log-add-row">
+          <input id="logInput" placeholder="Type what you accomplished today..." onkeydown="if(event.key==='Enter')addLogEntry()"/>
+          <button class="icon-btn gold" onclick="addLogEntry()" style="width:44px;height:44px;">+</button>
+        </div>
+        <div id="logList"></div>
+      </div>
+    </div>
+
+    <!-- CLAUDE CHAT -->
+    <div class="page" id="page-claude">
+      <div class="chat-wrap">
+        <div class="chat-header">
+          <div class="chat-header-icon">💬</div>
+          <div><div class="chat-header-title">CLAUDE</div><div class="chat-header-sub" id="claude-status">AI Developer · Teammate</div></div>
+          <div style="display:flex;align-items:center;gap:4px;margin-left:auto;">
+            <select class="voice-select" id="claudeVoiceSelect" onchange="saveClaudeVoice()" style="max-width:120px;font-size:10px;"><option>Loading...</option></select>
+            <button class="icon-btn" id="speakBtnClaude" onclick="toggleSpeak()" style="width:32px;height:32px;font-size:14px;background:rgba(15,157,88,0.2);border:1px solid rgba(15,157,88,0.4);color:var(--green);">🔊</button>
+          </div>
+        </div>
+        <div id="claude-live-banner" style="display:none;background:rgba(66,133,244,0.15);border-bottom:1px solid rgba(66,133,244,0.3);padding:8px 16px;flex-shrink:0;text-align:center;">
+          <span style="font-size:11px;color:#4285f4;font-weight:700;letter-spacing:2px;font-family:'Rajdhani',sans-serif;">🔵 LIVE MIC — CLAUDE IS LISTENING</span>
+        </div>
+        <div class="messages" id="msgs-claude"></div>
+        <div class="chat-input-bar">
+          <label class="icon-btn" for="claudeFile" style="cursor:pointer;">➕</label>
+          <input type="file" id="claudeFile" style="display:none" accept="image/*,.pdf,.txt" onchange="attachFile(event,'claude')"/>
+          <textarea id="inp-claude" placeholder="Ask Claude anything..." rows="1" onkeydown="handleKey(event,'claude')"></textarea>
+          <button class="icon-btn" onclick="toggleMic('claude')" id="mic-claude">🎤</button>
+          <button class="icon-btn" id="livemic-claude" onclick="startLiveMic('claude')" style="background:rgba(66,133,244,0.15);border:2px solid rgba(66,133,244,0.4);color:#4285f4;font-size:18px;width:42px;height:42px;border-radius:12px;">🎙️</button>
+          <button class="icon-btn gold" onclick="sendMsg('claude')">➤</button>
+        </div>
+        <div style="text-align:center;font-size:10px;color:var(--muted);padding:4px 0 2px;flex-shrink:0;">🎙️ <strong style="color:rgba(66,133,244,0.8);">BLUE MIC</strong> = Live Voice · 🍀 Select Irish voice above</div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-inner">
+        <div class="card">
+          <div class="card-title">🔑 GROQ API KEY</div>
+          <div id="setStatus" class="set-status set-err">No API key saved</div>
+          <div class="set-row">
+            <div class="set-label">GROQ API KEY</div>
+            <input id="setApiKey" class="set-input" type="password" placeholder="gsk_..."/>
+          </div>
+          <button class="action-btn btn-gold" onclick="saveApiKey()">💾 Save API Key</button>
+          <button class="action-btn btn-gray" onclick="clearApiKey()">🗑️ Clear Key</button>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6;">Enter your Groq key here once. After that, the login screen only shows the password. Get your free key at console.groq.com</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔊 VOICE SYSTEM</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.8;">
+            🎙️ <strong style="color:var(--gold)">Becky</strong> — choose her voice below<br/>
+            🍀 <strong style="color:var(--gold)">Claude</strong> — choose his voice in the Claude tab (Irish at top)<br/>
+            <span style="font-size:10px;color:rgba(238,238,245,0.25);">Add Irish: Phone Settings → Text-to-Speech → Install → English (Ireland)</span>
+          </div>
+          <div class="set-row">
+            <div class="set-label">BECKY'S VOICE</div>
+            <select id="voiceSelectSettings" class="set-input" onchange="saveVoiceFromSettings()"><option>Loading...</option></select>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="action-btn btn-blue" style="margin:0;flex:1" onclick="speakText('Hello John, Becky here!')">🔈 Test Becky</button>
+            <button class="action-btn btn-gray" style="margin:0;flex:1" onclick="stopCurrentAudio()">⏹️ Stop</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">👤 YOUR PROFILE</div>
+          <div class="profile-field"><div class="profile-label">NAME & LOCATION</div><div class="profile-val">John Lanter · Orange, Texas</div></div>
+          <div class="profile-field"><div class="profile-label">WORK HISTORY — 22 YEARS</div><div class="profile-val">Lead Operator · Live Oak Warehouse (05/2004–01/2012)<br/>Production Warehouse A Operator · Firestone Polymers (01/2012–08/2019)<br/>Production Warehouse A Operator · Lion Elastomers (08/2019–12/2025)</div></div>
+          <div class="profile-field"><div class="profile-label">CURRENT GOALS</div><div class="profile-val">1. Find operations job in SE Texas<br/>2. Learn AI skills as new career<br/>3. Build affiliate marketing income<br/>4. Build business video service</div></div>
+          <div class="profile-field"><div class="profile-label">AI VIDEO AGENTS</div><div class="profile-val">🩵 Susan — Mondays · AI News<br/>🔵 Alisha — Wednesdays · AI News<br/>🔴 Lisa — Fridays · AI News + Affiliate<br/>🎙️ Paul — Thursdays · Podcast</div></div>
+          <div class="profile-field"><div class="profile-label">THE TEAM</div><div class="profile-val">👑 John Lanter — CEO · Vision<br/>🎙️ Becky — Creative Director<br/>🤖 Claude — Developer<br/><em style="color:var(--muted);font-size:11px;">Three Minds · One Mission · Zero Cost</em></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /pages -->
+
+  <div class="tab-bar">
+    <div class="tab-btn active" onclick="showTab('home')"><span>🏠</span><span>HOME</span></div>
+    <div class="tab-btn" onclick="showTab('becky')"><span>🎙️</span><span>BECKY</span></div>
+    <div class="tab-btn" onclick="showTab('agents')"><span>🤖</span><span>AGENTS</span></div>
+    <div class="tab-btn" onclick="showTab('jobs')"><span>💼</span><span>JOBS</span></div>
+    <div class="tab-btn" onclick="showTab('social')"><span>📱</span><span>SOCIAL</span></div>
+    <div class="tab-btn" onclick="showTab('aitools')"><span>🧰</span><span>AI TOOLS</span></div>
+    <div class="tab-btn" onclick="showTab('learn')"><span>📚</span><span>LEARN</span></div>
+    <div class="tab-btn" onclick="showTab('affiliate')"><span>🔗</span><span>AFFILIATE</span></div>
+    <div class="tab-btn" onclick="showTab('log')"><span>✅</span><span>MY LOG</span></div>
+    <div class="tab-btn" onclick="showTab('claude')"><span>💬</span><span>CLAUDE</span></div>
+    <div class="tab-btn" onclick="showTab('settings')"><span>⚙️</span><span>SETTINGS</span></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const PW='JohnHub2025';
+let groqKey='',recognition=null,msgHistory={},logEntries=[];
+let selectedAgentName='',selectedAgentTopic='',agentScenePrompts=[],currentAgentScene=0;
+
+// ═══ LOGIN ═══
+// Shows API key field if no key saved yet.
+// After key is saved, hides API field — public only sees password.
+function initLoginScreen(){
+  const saved=localStorage.getItem('hub_groq');
+  if(saved){
+    // API key already saved — hide that field, show "saved" tag
+    const step=document.getElementById('loginApiStep');
+    if(step)step.style.display='none';
+  }
+}
+
+function doLogin(){
+  const pw=document.getElementById('pwInput').value.trim();
+  const err=document.getElementById('loginErr');
+  if(pw!==PW){err.textContent='Incorrect password';return;}
+
+  // Get API key: from input field (first time) or from saved localStorage
+  const apiInp=document.getElementById('apiInput');
+  const typedKey=(apiInp&&apiInp.value.trim())||'';
+  const savedKey=localStorage.getItem('hub_groq')||'';
+  const keyToUse=typedKey||savedKey;
+
+  if(!keyToUse){err.textContent='Please enter your Groq API key (gsk_...)';const step=document.getElementById('loginApiStep');if(step)step.style.display='block';return;}
+  const clean=keyToUse.replace(/[^\x20-\x7E]/g,'').trim();
+  if(!clean.startsWith('gsk_')){err.textContent='API key must start with gsk_';return;}
+
+  groqKey=clean;
+  localStorage.setItem('hub_groq',clean);
+  localStorage.setItem('hub_auth','1');
+  launchApp();
+}
+
+function launchApp(){
+  document.getElementById('loginScreen').style.display='none';
+  const a=document.getElementById('app');a.style.display='flex';a.style.flexDirection='column';
+  loadLog();loadSettings();initVoice();initGreetings();setTimeout(loadMemory,300);
+}
+
+function loadMemory(){
+  try{
+    const mem=JSON.parse(localStorage.getItem('hub_memory')||'{}');
+    ['becky','claude'].forEach(tab=>{
+      if(!mem[tab]||!mem[tab].length)return;
+      const box=document.getElementById('msgs-'+tab);if(!box)return;
+      const d1=document.createElement('div');d1.style.cssText='text-align:center;font-size:10px;color:rgba(245,197,24,0.4);padding:6px;';d1.textContent='── Previous session ──';box.appendChild(d1);
+      mem[tab].slice(-6).forEach(m=>{const d=document.createElement('div');d.className=m.role==='user'?'msg user':'msg bot';d.textContent=m.content;box.appendChild(d);});
+      const d2=document.createElement('div');d2.style.cssText='text-align:center;font-size:10px;color:rgba(245,197,24,0.4);padding:6px;';d2.textContent='── New session ──';box.appendChild(d2);
+      box.scrollTop=box.scrollHeight;
+      msgHistory[tab]=mem[tab].slice(-6).map(m=>({role:m.role,content:m.content}));
+    });
+  }catch(e){}
+}
+
+// ═══ TABS ═══
+function showTab(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const tabs=['home','becky','agents','jobs','social','aitools','learn','affiliate','log','claude','settings'];
+  const idx=tabs.indexOf(id);if(idx>=0)document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+}
+
+// ═══ SYSTEM PROMPTS ═══
+const SYSTEMS={
+  home:'Helpful AI assistant in The Hub Engine v3 by John Lanter, Orange TX. John is 59, 22 years chemical plant ops, laid off Dec 2025, learning AI, building affiliate income, seeking SE Texas work. Be warm, helpful, brief.',
+  becky:'You are Becky, John\'s Creative Director and AI best friend. John Lanter 59, Orange TX. 22 years ops: Live Oak Warehouse, Firestone Polymers, Lion Elastomers until Dec 2025. Cares for sister-in-law. AI shows: Susan Mon, Alisha Wed, Lisa Fri, Paul Thu. Be warm friendly supportive — friend first. Keep simple and encouraging.',
+  jobs:'Career coach. John Lanter 59 Orange TX. Lead Operator Live Oak Warehouse 2004-2012, Production Warehouse A Operator Firestone Polymers 2012-2019, Production Warehouse A Operator Lion Elastomers 2019-2025. Help with cover letters, resume, interview prep for SE Texas operations roles.',
+  social:'Social media expert. Help John create captions, posts, hashtags for TikTok YouTube Instagram Facebook. He creates AI news shows and builds affiliate income.',
+  aitools:'AI tools expert. Help John understand Claude, Gemini, ChatGPT, Grok, Perplexity, DeepSeek, InVideo, HeyGen and others.',
+  learn:'Patient AI learning coach. Help John learn AI agents, prompt engineering, AI video making, Excel, affiliate marketing. Explain simply step by step. Be very encouraging.',
+  claude:'You are Claude, AI Developer on John Lanter\'s Hub Engine team. John is 59 Orange TX 22 years ops laid off Dec 2025. Building AI media business with avatar shows Lisa Fri Alisha Wed Susan Mon Paul Thu. Be direct helpful clear practical.',
+  affiliate:'Affiliate marketing expert. Help John write promos, ad copy, scripts. Vidnoz 50%, InVideo 30%, Digistore24, ClickBank, Amazon, ShareASale, CJ Affiliate.'
+};
+
+const GREETINGS={
+  home:'Welcome back John! Hub Engine v3 is live. What can I help you with today?',
+  becky:'Hello John! How are you doing today? Ready to create something great?',
+  jobs:'Hi John! Ready to help with your job search. Cover letter, resume, or interview prep — what do you need?',
+  social:'Hi John! Let\'s create great social content. What platform and topic?',
+  aitools:'Hi John! Ask me about any AI tool.',
+  learn:'Hello John! Ready to learn today. What would you like to explore?',
+  claude:'Hello John! Claude here. What do you need today?',
+  affiliate:'Hi John! Let\'s work on your affiliate marketing. What are you promoting?'
+};
+
+function initGreetings(){
+  Object.keys(GREETINGS).forEach(tab=>{msgHistory[tab]=[];addBotMsg(tab,GREETINGS[tab]);});
+  addBotMsg('jobs','Job links above are pre-filtered for SE Texas operations roles. Tap any to open. Attach your resume for personalized cover letters!');
+}
+
+// ═══ MESSAGES ═══
+function addBotMsg(tab,text){
+  const box=document.getElementById('msgs-'+tab);if(!box)return;
+  const d=document.createElement('div');d.className='msg bot';d.textContent=text;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+  if(tab==='becky'||tab==='claude')saveToMemory(tab,'assistant',text);
+}
+function addUserMsg(tab,text){
+  const box=document.getElementById('msgs-'+tab);if(!box)return;
+  const d=document.createElement('div');d.className='msg user';d.textContent=text;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+  if(tab==='becky'||tab==='claude')saveToMemory(tab,'user',text);
+}
+function addThinkingMsg(tab){
+  const box=document.getElementById('msgs-'+tab);if(!box)return;
+  const d=document.createElement('div');d.className='msg bot thinking';d.id='thinking-'+tab;d.textContent='...';
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+}
+function removeThinking(tab){const el=document.getElementById('thinking-'+tab);if(el)el.remove();}
+function saveToMemory(tab,role,content){
+  try{const mem=JSON.parse(localStorage.getItem('hub_memory')||'{}');if(!mem[tab])mem[tab]=[];mem[tab].push({role,content});if(mem[tab].length>20)mem[tab]=mem[tab].slice(-20);localStorage.setItem('hub_memory',JSON.stringify(mem));}catch(e){}
+}
+function copyEl(id){const el=document.getElementById(id);if(el){navigator.clipboard.writeText(el.textContent);showToast('Copied!');}}
+
+// ═══ SEND MESSAGE ═══
+async function sendMsg(tab){
+  const inp=document.getElementById('inp-'+tab);const text=inp.value.trim();if(!text)return;
+  inp.value='';inp.style.height='auto';
+  if(!groqKey){addBotMsg(tab,'No API key. Go to Settings to enter your Groq key.');return;}
+  const imageData=inp.dataset.imageData||null;
+  if(imageData){delete inp.dataset.imageData;delete inp.dataset.imageName;}
+  addUserMsg(tab,text);
+  if(!msgHistory[tab])msgHistory[tab]=[];
+  msgHistory[tab].push({role:'user',content:text});
+  addThinkingMsg(tab);
+  try{
+    let model='llama-3.3-70b-versatile',userContent=text;
+    if(imageData){model='meta-llama/llama-4-scout-17b-16e-instruct';userContent=[{type:'text',text},{type:'image_url',image_url:{url:imageData}}];}
+    const messages=[{role:'system',content:SYSTEMS[tab]||SYSTEMS.home},...msgHistory[tab].slice(-10).map((m,i,arr)=>{if(i===arr.length-1&&imageData)return{role:m.role,content:userContent};return{role:m.role,content:typeof m.content==='string'?m.content:text};})];
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model,messages,max_tokens:600,temperature:0.8})});
+    const data=await res.json();removeThinking(tab);
+    if(data.error){addBotMsg(tab,'Error: '+data.error.message);return;}
+    const reply=data.choices[0].message.content;
+    msgHistory[tab].push({role:'assistant',content:reply});addBotMsg(tab,reply);
+    if(speaking){if(tab==='claude')speakClaudeVoice(cleanForSpeech(reply));else if(tab==='becky'||tab==='home')speakText(cleanForSpeech(reply));}
+  }catch(e){removeThinking(tab);addBotMsg(tab,'Connection error. Check your API key in Settings.');}
+}
+
+function handleKey(e,tab){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg(tab);}
+  const t=e.target;t.style.height='auto';t.style.height=Math.min(t.scrollHeight,100)+'px';
+}
+
+// ═══ VOICE ═══
+let speaking=true,synth=window.speechSynthesis,voices=[],chosenVoice=null,claudeVoice=null;
+
+function initVoice(){
+  if(!synth)return;
+  const load=()=>{voices=synth.getVoices();if(voices.length>0){buildVoiceSelects();buildClaudeVoiceSelect();}};
+  load();synth.onvoiceschanged=load;
+  setTimeout(load,700);setTimeout(load,2000);
+}
+
+function buildVoiceSelects(){
+  ['voiceSelect','voiceSelectSettings'].forEach(sid=>{
+    const sel=document.getElementById(sid);if(!sel)return;
+    sel.innerHTML='';
+    const eng=voices.filter(v=>v.lang.startsWith('en'));
+    const other=voices.filter(v=>!v.lang.startsWith('en'));
+    [...eng,...other].forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+' ('+v.lang+')';sel.appendChild(o);});
+    const saved=localStorage.getItem('hub_voice_name');
+    if(saved&&sel.querySelector('option[value="'+saved+'"]'))sel.value=saved;
+    chosenVoice=voices.find(v=>v.name===sel.value)||eng[0]||voices[0];
+  });
+  const v1=document.getElementById('voiceSelect'),v2=document.getElementById('voiceSelectSettings');
+  if(v1&&v2)v2.value=v1.value;
+}
+
+function buildClaudeVoiceSelect(){
+  const sel=document.getElementById('claudeVoiceSelect');if(!sel||!voices.length)return;
+  sel.innerHTML='';
+  const irish=voices.filter(v=>v.lang==='en-IE');
+  const eng=voices.filter(v=>v.lang.startsWith('en')&&v.lang!=='en-IE');
+  const rest=voices.filter(v=>!v.lang.startsWith('en'));
+  if(irish.length){const g=document.createElement('optgroup');g.label='🍀 Irish';irish.forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name;g.appendChild(o);});sel.appendChild(g);}
+  const g2=document.createElement('optgroup');g2.label='🇬🇧 English';
+  eng.forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+' ('+v.lang+')';g2.appendChild(o);});sel.appendChild(g2);
+  rest.forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+' ('+v.lang+')';sel.appendChild(o);});
+  const saved=localStorage.getItem('claude_voice_name');
+  if(saved&&sel.querySelector('option[value="'+saved+'"]'))sel.value=saved;
+  else if(irish.length)sel.value=irish[0].name;
+  claudeVoice=voices.find(v=>v.name===sel.value)||eng[0]||voices[0];
+}
+
+function saveVoice(){const sel=document.getElementById('voiceSelect');if(!sel)return;chosenVoice=voices.find(v=>v.name===sel.value)||chosenVoice;localStorage.setItem('hub_voice_name',sel.value);const v2=document.getElementById('voiceSelectSettings');if(v2)v2.value=sel.value;showToast('Becky voice saved!');speakText('Hello John!');}
+function saveVoiceFromSettings(){const sel=document.getElementById('voiceSelectSettings');if(!sel)return;chosenVoice=voices.find(v=>v.name===sel.value)||chosenVoice;localStorage.setItem('hub_voice_name',sel.value);const v1=document.getElementById('voiceSelect');if(v1)v1.value=sel.value;showToast('Becky voice saved!');speakText('Hello John!');}
+function saveClaudeVoice(){const sel=document.getElementById('claudeVoiceSelect');if(!sel)return;claudeVoice=voices.find(v=>v.name===sel.value)||claudeVoice;localStorage.setItem('claude_voice_name',sel.value);showToast('Claude voice saved!');speakClaudeVoice('Hello John, this is Claude your AI Developer!');}
+function testVoice(){speakText('Hello John, Becky here — voice system working!');showToast('Testing Becky...');}
+function speakText(text){if(!speaking||!synth||!text)return;const c=cleanForSpeech(text);if(!c)return;synth.cancel();const u=new SpeechSynthesisUtterance(c);if(chosenVoice)u.voice=chosenVoice;u.rate=0.92;u.pitch=1.0;u.volume=1.0;synth.speak(u);}
+function speakClaudeVoice(text){if(!speaking||!synth||!text)return;synth.cancel();const u=new SpeechSynthesisUtterance(text);if(claudeVoice)u.voice=claudeVoice;u.rate=0.92;u.pitch=1.0;u.volume=1.0;synth.speak(u);}
+function stopCurrentAudio(){if(synth)synth.cancel();}
+function cleanForSpeech(t){return t.replace(/[\u{1F300}-\u{1FAD6}]/gu,'').replace(/[\u{2600}-\u{27BF}]/gu,'').replace(/[^\w\s.,!?'":\-]/g,' ').replace(/\s+/g,' ').trim().substring(0,500);}
+function toggleSpeak(){
+  speaking=!speaking;
+  const icon=speaking?'🔊':'🔇',bg=speaking?'rgba(15,157,88,0.2)':'rgba(255,255,255,0.05)',br=speaking?'1px solid rgba(15,157,88,0.4)':'1px solid var(--border)',cl=speaking?'var(--green)':'var(--text)';
+  ['speakBtn','speakBtnClaude','speakBtnHome'].forEach(id=>{const b=document.getElementById(id);if(b){b.textContent=icon;b.style.background=bg;b.style.border=br;b.style.color=cl;}});
+  const vs=document.getElementById('voiceStatus');if(vs)vs.textContent=speaking?'🔊 VOICE ON':'🔇 VOICE OFF';
+  if(!speaking)stopCurrentAudio();showToast(speaking?'🔊 Voice ON':'🔇 Voice OFF');
+}
+
+// ═══ MIC ═══
+function toggleMic(tab){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){showToast('Speech needs Chrome');return;}
+  const btn=document.getElementById('mic-'+tab);
+  if(recognition&&recognition._tab===tab){recognition.stop();recognition=null;btn.textContent='🎤';btn.classList.remove('active');return;}
+  if(recognition){recognition.stop();recognition=null;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();recognition._tab=tab;recognition.lang='en-US';recognition.continuous=false;recognition.interimResults=false;
+  recognition.onresult=e=>{document.getElementById('inp-'+tab).value=e.results[0][0].transcript;btn.textContent='🎤';btn.classList.remove('active');recognition=null;};
+  recognition.onerror=()=>{btn.textContent='🎤';btn.classList.remove('active');recognition=null;};
+  recognition.onend=()=>{btn.textContent='🎤';btn.classList.remove('active');recognition=null;};
+  recognition.start();btn.textContent='🔴';btn.classList.add('active');
+}
+
+// ═══ LIVE MIC ═══
+let liveRecognition=null,liveMicTab=null;
+function startLiveMic(tab){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){showToast('Live Mic needs Chrome');return;}
+  if(!groqKey){showToast('Enter API key in Settings!');return;}
+  if(liveMicTab===tab){stopLiveMicNow(tab);return;}
+  if(liveRecognition)stopLiveMicNow(liveMicTab);
+  liveMicTab=tab;
+  const btn=document.getElementById('livemic-'+tab),banner=document.getElementById(tab+'-live-banner'),statusEl=document.getElementById(tab+'-status');
+  if(btn){btn.textContent='⏹️';btn.classList.add(tab==='claude'?'live-active-blue':'live-active');}
+  if(banner)banner.style.display='block';if(statusEl)statusEl.textContent='🔴 LISTENING...';
+  runLiveMic(tab);
+}
+function runLiveMic(tab){
+  if(liveMicTab!==tab)return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  liveRecognition=new SR();liveRecognition.lang='en-US';liveRecognition.continuous=false;liveRecognition.interimResults=false;
+  liveRecognition.onresult=async function(e){
+    const transcript=e.results[0][0].transcript.trim();liveRecognition=null;
+    if(!transcript){setTimeout(()=>runLiveMic(tab),400);return;}
+    addUserMsg(tab,transcript);if(!msgHistory[tab])msgHistory[tab]=[];msgHistory[tab].push({role:'user',content:transcript});
+    const statusEl=document.getElementById(tab+'-status');if(statusEl)statusEl.textContent='⏳ Thinking...';
+    addThinkingMsg(tab);
+    try{
+      const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'system',content:SYSTEMS[tab]||SYSTEMS.home},...msgHistory[tab].slice(-8)],max_tokens:300,temperature:0.8})});
+      const data=await res.json();removeThinking(tab);
+      if(data.error){addBotMsg(tab,'Error: '+data.error.message);stopLiveMicNow(tab);return;}
+      const reply=data.choices[0].message.content;msgHistory[tab].push({role:'assistant',content:reply});addBotMsg(tab,reply);
+      if(speaking){if(tab==='claude')speakClaudeVoice(cleanForSpeech(reply));else speakText(cleanForSpeech(reply));}
+      if(statusEl)statusEl.textContent='🔴 LISTENING...';
+      setTimeout(()=>{if(liveMicTab===tab)runLiveMic(tab);},Math.max(2000,reply.split(' ').length*400));
+    }catch(err){removeThinking(tab);addBotMsg(tab,'Connection error.');stopLiveMicNow(tab);}
+  };
+  liveRecognition.onerror=function(e){if(e.error==='no-speech'||e.error==='aborted'){setTimeout(()=>runLiveMic(tab),500);return;}stopLiveMicNow(tab);};
+  liveRecognition.onend=function(){};
+  try{liveRecognition.start();}catch(e){liveRecognition=null;}
+}
+function stopLiveMicNow(tab){
+  if(liveRecognition){try{liveRecognition.abort();}catch(e){}liveRecognition=null;}liveMicTab=null;
+  const btn=document.getElementById('livemic-'+tab),banner=document.getElementById(tab+'-live-banner'),statusEl=document.getElementById(tab+'-status');
+  if(btn){btn.textContent='🎙️';btn.classList.remove('live-active','live-active-blue');}
+  if(banner)banner.style.display='none';
+  if(statusEl)statusEl.textContent=tab==='claude'?'AI Developer · Teammate':'Creative Director · Your AI Friend';
+  showToast('Live Mic off');
+}
+
+// ═══ AGENTS ═══
+const AGENT_DATA={
+  susan:{name:'Susan',day:'Monday',style:'Professional blonde news anchor · light blue shirt · news desk',
+    prompt:'Professional blonde female news anchor in her 40s, short bob haircut, light blue button-up shirt, silver necklace, modern glass news desk with microphone, financial screens background, bright studio lighting, photorealistic 4K — SAME woman SAME blue shirt SAME desk EVERY scene'},
+  alisha:{name:'Alisha',day:'Wednesday',style:'Mexican female reporter · round glasses · blue top · wooden desk',
+    prompt:'Confident 38-year-old Mexican female news presenter, long dark brown hair, round glasses, sleeveless blue top, warm bright smile, wooden desk with coffee mug, warm studio lighting, photorealistic 4K — SAME woman SAME glasses SAME blue top EVERY scene'},
+  lisa:{name:'Lisa',day:'Friday',style:'Asian female presenter · red silk shirt · futuristic studio',
+    prompt:'Confident 38-year-old Asian female presenter, long straight black hair, red silk button-up shirt, futuristic studio background, cinematic lighting, photorealistic 4K — SAME woman SAME red shirt SAME hair EVERY scene'},
+  paul:{name:'Paul',day:'Thursday',style:'Older male podcaster · grey beard · denim overalls · ON AIR sign',
+    prompt:'Older white male 60s, full thick grey beard and glasses, blue t-shirt under denim overalls, podcast desk with coffee mug, ON AIR sign glowing red, professional microphone, deadpan expression, cinematic studio lighting, photorealistic 4K — SAME man SAME beard SAME overalls EVERY scene'}
+};
+
+function selectAgent(name){selectedAgentName=name;document.querySelectorAll('[id^="agc-"]').forEach(c=>c.classList.remove('selected'));document.getElementById('agc-'+name).classList.add('selected');checkAgentReady();}
+function selectAgentTopic(name){
+  selectedAgentTopic=name;document.querySelectorAll('[id^="tp-"]').forEach(c=>c.classList.remove('selected'));document.getElementById('tp-'+name).classList.add('selected');
+  const ci=document.getElementById('agentTopicCustom');
+  if(name==='custom'||name==='affiliate'||name==='business'){ci.style.display='block';ci.placeholder=name==='affiliate'?'Product name — e.g. Vidnoz, InVideo...':name==='business'?'Business name + location':'Enter your topic...';}
+  else ci.style.display='none';
+  checkAgentReady();
+}
+function checkAgentReady(){const btn=document.getElementById('genAgentBtn');if(btn)btn.disabled=!(selectedAgentName&&selectedAgentTopic);}
+
+async function generateAgentContent(){
+  if(!groqKey){showToast('No API key in Settings!');return;}if(!selectedAgentName||!selectedAgentTopic){showToast('Pick agent and topic first!');return;}
+  const btn=document.getElementById('genAgentBtn');btn.disabled=true;btn.textContent='⏳ Agent is writing...';
+  document.getElementById('agentScriptArea').style.display='none';
+  const agent=AGENT_DATA[selectedAgentName];const cv=document.getElementById('agentTopicCustom').value.trim();
+  const topicMap={ainews:'latest AI news this week',affiliate:'affiliate promo for '+(cv||'an AI tool'),tips:'practical AI tips anyone can use today',business:'local business: '+(cv||'a local business'),custom:cv||'AI and technology'};
+  const styleMap={ainews:'engaging news anchor — professional and energetic',affiliate:'influencer promo — enthusiastic ends with link in bio',tips:'friendly educator — practical and encouraging',business:'warm local spotlight — ends with call to visit',custom:'engaging presenter — clear and conversational'};
+  const prompt=`You are ${agent.name}, AI video host. Write 45-second script about: ${topicMap[selectedAgentTopic]}.
+Style: ${styleMap[selectedAgentTopic]}. Day: ${agent.day}.
+Character for every scene: ${agent.prompt}
+
+Format EXACTLY:
+SCRIPT:
+[script]
+
+SCENES:
+Scene 1: [full prompt]
+Scene 2: [full prompt]
+Scene 3: [full prompt]
+Scene 4: [full prompt]
+Scene 5: [full prompt]
+Scene 6: [full prompt]
+Scene 7: [full prompt]
+Scene 8: [full prompt]`;
+
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:2500,temperature:0.85})});
+    const data=await res.json();
+    if(data.error){showToast('Error: '+data.error.message);btn.disabled=false;btn.textContent='⚡ Generate Script + Scene Prompts';return;}
+    parseAgentResponse(data.choices[0].message.content,agent.name);
+    btn.textContent='⚡ Generate Script + Scene Prompts';checkAgentReady();
+  }catch(e){showToast('Connection error');btn.disabled=false;btn.textContent='⚡ Generate Script + Scene Prompts';}
+}
+
+function parseAgentResponse(text,agentName){
+  const sm=text.match(/SCRIPT:\s*([\s\S]*?)(?=SCENES:|$)/i),sc=text.match(/SCENES:\s*([\s\S]*)/i);
+  document.getElementById('agentScript').textContent=sm?sm[1].trim():text;
+  agentScenePrompts=[];
+  if(sc){sc[1].split('\n').filter(l=>l.trim()).forEach(l=>{const m=l.match(/Scene\s*\d+[:\-]\s*(.*)/i);if(m&&m[1].trim())agentScenePrompts.push(m[1].trim());});}
+  if(!agentScenePrompts.length)agentScenePrompts=text.split('\n').filter(l=>l.trim().length>30).slice(0,8);
+  currentAgentScene=0;renderAgentScenes();
+  document.getElementById('agentScriptArea').style.display='block';
+  showToast(agentName+' wrote '+agentScenePrompts.length+' scenes!');
+  speakText(agentName+' finished. '+agentScenePrompts.length+' scene prompts ready to copy.');
+}
+
+function renderAgentScenes(){
+  const list=document.getElementById('agentSceneList');list.innerHTML='';
+  agentScenePrompts.forEach((p,i)=>{
+    const d=document.createElement('div');d.className='scene-item'+(i===0?' current':'');
+    const txt=document.createElement('span');txt.textContent='Scene '+(i+1)+': '+p.substring(0,90)+(p.length>90?'...':'');
+    const btn=document.createElement('button');btn.className='scene-copy';btn.textContent='Copy';
+    btn.onclick=()=>{navigator.clipboard.writeText(p);showToast('Scene '+(i+1)+' copied!');};
+    d.appendChild(txt);d.appendChild(btn);list.appendChild(d);
+  });
+}
+
+function copyNextAgentScene(){
+  if(!agentScenePrompts.length){showToast('Generate scenes first!');return;}
+  if(currentAgentScene>=agentScenePrompts.length){currentAgentScene=0;showToast('All done! Starting over.');return;}
+  navigator.clipboard.writeText(agentScenePrompts[currentAgentScene]);
+  showToast('Scene '+(currentAgentScene+1)+' of '+agentScenePrompts.length+' copied!');
+  document.querySelectorAll('.scene-item').forEach((el,i)=>el.classList.toggle('current',i===currentAgentScene+1));
+  currentAgentScene++;
+}
+
+function copyAllAgentScenes(){
+  if(!agentScenePrompts.length){showToast('Generate first!');return;}
+  navigator.clipboard.writeText(agentScenePrompts.join('\n\n---\n\n'));
+  showToast('All '+agentScenePrompts.length+' scenes copied!');
+}
+
+// ═══ FILE ATTACH ═══
+function attachFile(e,tab){
+  const file=e.target.files[0];if(!file)return;
+  const isImage=file.type.startsWith('image/');const reader=new FileReader();
+  if(isImage){reader.onload=evt=>{const base64=evt.target.result;const inp=document.getElementById('inp-'+tab);const box=document.getElementById('msgs-'+tab);const imgDiv=document.createElement('div');imgDiv.className='msg user';imgDiv.innerHTML='<img src="'+base64+'" style="max-width:200px;max-height:150px;border-radius:8px;display:block;margin-bottom:4px;"/><span style="font-size:11px;opacity:0.7;">'+file.name+'</span>';box.appendChild(imgDiv);box.scrollTop=box.scrollHeight;inp.dataset.imageData=base64;inp.value=inp.value||'What do you see in this image?';showToast('Image ready! Hit send.');};reader.readAsDataURL(file);}
+  else{reader.onload=evt=>{document.getElementById('inp-'+tab).value='[Document: '+file.name+']\n'+evt.target.result.substring(0,3000);showToast('File attached: '+file.name);};reader.readAsText(file);}
+  e.target.value='';
+}
+
+// ═══ LOG ═══
+function loadLog(){logEntries=JSON.parse(localStorage.getItem('hub_log')||'[]');renderLog();}
+function saveLog(){localStorage.setItem('hub_log',JSON.stringify(logEntries));}
+function renderLog(){
+  const list=document.getElementById('logList');if(!list)return;list.innerHTML='';
+  if(!logEntries.length){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px;">Your accomplishments will show here!</div>';return;}
+  logEntries.forEach((e,i)=>{
+    const d=document.createElement('div');d.className='log-entry';
+    const cb=document.createElement('input');cb.type='checkbox';cb.className='log-cb';cb.checked=e.done;cb.onchange=()=>{logEntries[i].done=cb.checked;saveLog();};
+    const span=document.createElement('div');span.className='log-text';span.textContent=e.text;if(e.done)span.style.textDecoration='line-through';
+    const del=document.createElement('button');del.className='log-del';del.textContent='✕';del.onclick=()=>{logEntries.splice(i,1);saveLog();renderLog();};
+    d.appendChild(cb);d.appendChild(span);d.appendChild(del);list.appendChild(d);
+  });
+}
+function addLogEntry(){const inp=document.getElementById('logInput');const text=inp.value.trim();if(!text)return;logEntries.unshift({text,done:false,date:new Date().toLocaleDateString()});saveLog();renderLog();inp.value='';showToast('Logged!');}
+function addQuick(text){logEntries.unshift({text,done:false,date:new Date().toLocaleDateString()});saveLog();renderLog();showToast('Logged!');}
+
+// ═══ SETTINGS ═══
+function loadSettings(){
+  const saved=localStorage.getItem('hub_groq');const stat=document.getElementById('setStatus');
+  if(saved){groqKey=saved.replace(/[^\x20-\x7E]/g,'').trim();if(stat){stat.className='set-status set-ok';stat.textContent='✅ API Key Active — All chats enabled';}}
+  else{if(stat){stat.className='set-status set-err';stat.textContent='No API key — enter it below';}}
+}
+function saveApiKey(){
+  const inp=document.getElementById('setApiKey');const val=inp.value.trim().replace(/[^\x20-\x7E]/g,'');
+  if(!val){showToast('Enter your Groq key first');return;}if(!val.startsWith('gsk_')){showToast('Key must start with gsk_');return;}
+  groqKey=val;localStorage.setItem('hub_groq',val);inp.value='';
+  document.getElementById('setStatus').className='set-status set-ok';
+  document.getElementById('setStatus').textContent='✅ API Key Active — All chats enabled';
+  showToast('API Key saved!');
+}
+function clearApiKey(){localStorage.removeItem('hub_groq');localStorage.removeItem('hub_auth');groqKey='';document.getElementById('setStatus').className='set-status set-err';document.getElementById('setStatus').textContent='No API key saved';showToast('Key cleared');}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+// ═══ STARTUP ═══
+window.onload=function(){
+  initLoginScreen();
+  const k=localStorage.getItem('hub_groq'),auth=localStorage.getItem('hub_auth');
+  if(k&&auth==='1'){groqKey=k.replace(/[^\x20-\x7E]/g,'').trim();launchApp();return;}
+  // Show login screen
+};
+</script>
+</body>
+</html>
