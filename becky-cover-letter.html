@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Becky Cover Letter Writer</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Exo+2:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--gold:#f5c518;--gold2:#e8a020;--dark:#07070f;--dark2:#0e0e1a;--dark3:#13131f;--border:rgba(245,197,24,0.18);--text:#eeeef5;--muted:rgba(238,238,245,0.45);--green:#0f9d58;--red:#ea4335;--blue:#4285f4;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;background:var(--dark);color:var(--text);font-family:'Exo 2',sans-serif;}
+body{padding:16px;padding-bottom:40px;}
+
+.header{text-align:center;padding:20px 0 24px;}
+.header-icon{font-size:44px;display:block;margin-bottom:10px;}
+.header-title{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--gold);letter-spacing:3px;}
+.header-sub{font-size:12px;color:var(--muted);letter-spacing:2px;margin-top:4px;}
+
+.card{background:var(--dark3);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
+.card-title{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+
+.field{margin-bottom:12px;}
+.field label{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;display:block;margin-bottom:6px;}
+.field input,.field textarea,.field select{width:100%;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:14px;outline:none;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold);}
+.field textarea{resize:none;min-height:80px;writing-mode:horizontal-tb !important;direction:ltr !important;text-align:left !important;line-height:1.5;}
+.field select option{background:var(--dark3);color:var(--text);}
+
+.btn{width:100%;padding:14px;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:'Rajdhani',sans-serif;letter-spacing:1px;margin-bottom:10px;transition:all .2s;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;}
+.btn-blue{background:rgba(66,133,244,0.12);border:1px solid rgba(66,133,244,0.3);color:var(--blue);}
+.btn-green{background:rgba(15,157,88,0.12);border:1px solid rgba(15,157,88,0.3);color:var(--green);}
+.btn-gray{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--muted);}
+.btn:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-row{display:flex;gap:10px;}
+.btn-row .btn{flex:1;margin-bottom:0;}
+
+/* STATUS */
+.status-box{padding:12px 14px;border-radius:10px;font-size:12px;margin-bottom:12px;display:none;}
+.status-thinking{background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.3);color:var(--blue);display:flex;align-items:center;gap:8px;}
+.status-ok{background:rgba(15,157,88,0.1);border:1px solid rgba(15,157,88,0.3);color:var(--green);}
+.status-err{background:rgba(234,67,53,0.1);border:1px solid rgba(234,67,53,0.3);color:var(--red);}
+
+/* LETTER OUTPUT */
+#letterWrap{display:none;}
+.letter-preview{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:18px;font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap;font-family:'Exo 2',sans-serif;margin-bottom:14px;min-height:200px;}
+
+/* SPINNER */
+.spinner{width:16px;height:16px;border:2px solid rgba(66,133,244,0.3);border-top:2px solid var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* API KEY BANNER */
+.api-banner{background:rgba(234,67,53,0.1);border:1px solid rgba(234,67,53,0.3);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--red);display:none;}
+.api-input-row{display:flex;gap:8px;margin-top:8px;}
+.api-input-row input{flex:1;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;}
+.api-input-row button{padding:10px 16px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:8px;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(15,157,88,0.92);color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:700;z-index:9998;pointer-events:none;opacity:0;transition:opacity .3s;}
+.toast.show{opacity:1;}
+
+/* PRINT / PDF STYLES */
+@media print{
+  body{background:#fff !important;color:#000 !important;padding:0;margin:0;}
+  .no-print{display:none !important;}
+  .print-letter{display:block !important;background:#fff;color:#000;font-family:Georgia,serif;font-size:12pt;line-height:1.8;padding:1in;white-space:pre-wrap;}
+  #letterWrap{display:block !important;}
+  .letter-preview{display:none !important;}
+}
+.print-letter{display:none;}
+</style>
+</head>
+<body>
+
+<div class="header no-print">
+  <span class="header-icon">🎙️</span>
+  <div class="header-title">BECKY COVER LETTER WRITER</div>
+  <div class="header-sub">AI-POWERED · PERSONALIZED · EXPORTS TO PDF</div>
+</div>
+
+<!-- API KEY BANNER -->
+<div class="api-banner" id="apiBanner">
+  ⚠️ Becky needs your Groq API key to write your letter.
+  <div class="api-input-row">
+    <input type="password" id="apiKeyInput" placeholder="gsk_..." autocomplete="off"/>
+    <button onclick="saveApiKey()">SAVE</button>
+  </div>
+</div>
+
+<!-- JOHN'S INFO — pre-filled -->
+<div class="card no-print">
+  <div class="card-title">👤 Your Information — Pre-Filled</div>
+  <div class="field">
+    <label>YOUR NAME</label>
+    <input type="text" id="yourName" value="John Lanter"/>
+  </div>
+  <div class="field">
+    <label>YOUR CITY & STATE</label>
+    <input type="text" id="yourCity" value="Orange, Texas"/>
+  </div>
+  <div class="field">
+    <label>YOUR PHONE</label>
+    <input type="tel" id="yourPhone" placeholder="Your phone number"/>
+  </div>
+  <div class="field">
+    <label>YOUR EMAIL</label>
+    <input type="email" id="yourEmail" placeholder="Your email address"/>
+  </div>
+</div>
+
+<!-- JOB DETAILS -->
+<div class="card no-print">
+  <div class="card-title">💼 Job Details — Fill This In</div>
+  <div class="field">
+    <label>JOB TITLE *</label>
+    <input type="text" id="jobTitle" placeholder="e.g. Lead Operator, Plant Supervisor, Warehouse Manager"/>
+  </div>
+  <div class="field">
+    <label>COMPANY NAME *</label>
+    <input type="text" id="companyName" placeholder="e.g. ExxonMobil, BASF, Huntsman"/>
+  </div>
+  <div class="field">
+    <label>COMPANY CITY</label>
+    <input type="text" id="companyCity" placeholder="e.g. Beaumont TX, Port Arthur TX"/>
+  </div>
+  <div class="field">
+    <label>WHERE DID YOU SEE THIS JOB?</label>
+    <select id="jobSource">
+      <option value="Indeed">Indeed</option>
+      <option value="LinkedIn">LinkedIn</option>
+      <option value="ZipRecruiter">ZipRecruiter</option>
+      <option value="Glassdoor">Glassdoor</option>
+      <option value="WorkInTexas.com">WorkInTexas.com</option>
+      <option value="Company Website">Company Website</option>
+      <option value="a referral">A referral / word of mouth</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>KEY REQUIREMENTS FROM JOB POSTING (optional)</label>
+    <textarea id="jobRequirements" placeholder="Paste key skills or requirements from the job posting here... e.g. 5+ years chemical plant experience, OSHA certified, team leadership..."></textarea>
+  </div>
+  <div class="field">
+    <label>LETTER STYLE</label>
+    <select id="letterStyle">
+      <option value="professional">Professional & Formal</option>
+      <option value="warm">Warm & Personal</option>
+      <option value="bold">Confident & Direct</option>
+    </select>
+  </div>
+</div>
+
+<!-- GENERATE BUTTON -->
+<button class="btn btn-gold no-print" id="genBtn" onclick="generateLetter()">⚡ BECKY — WRITE MY COVER LETTER</button>
+
+<!-- STATUS -->
+<div class="status-box" id="statusBox">
+  <div class="spinner"></div>
+  <span id="statusText">Becky is writing your cover letter...</span>
+</div>
+
+<!-- LETTER OUTPUT -->
+<div id="letterWrap">
+  <div class="card no-print">
+    <div class="card-title">✅ YOUR COVER LETTER — READY!</div>
+    <div class="letter-preview" id="letterPreview"></div>
+
+    <div class="btn-row no-print" style="margin-bottom:10px;">
+      <button class="btn btn-green" onclick="copyLetter()">📋 Copy Letter</button>
+      <button class="btn btn-blue" onclick="editLetter()">✏️ Edit</button>
+    </div>
+
+    <button class="btn btn-gold no-print" onclick="savePDF()">📄 SAVE AS PDF</button>
+    <button class="btn btn-gray no-print" onclick="regenerate()">🔄 Write a Different Version</button>
+
+    <div style="background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.2);border-radius:10px;padding:13px;margin-top:4px;" class="no-print">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:8px;">📱 HOW TO SEND THIS LETTER</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.9;">
+        <strong style="color:var(--text);">Option 1 — PDF:</strong> Tap Save as PDF → share the PDF file when applying<br/>
+        <strong style="color:var(--text);">Option 2 — Copy:</strong> Tap Copy Letter → paste into the job application form<br/>
+        <strong style="color:var(--text);">Option 3 — Email:</strong> Tap Copy Letter → paste into an email to the company<br/>
+        <strong style="color:var(--text);">Option 4 — Indeed/LinkedIn:</strong> Open the job posting → tap Apply → paste letter
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT VERSION -->
+<div class="print-letter" id="printLetter"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let groqKey = localStorage.getItem('hub_groq') || '';
+let currentLetter = '';
+let isEditing = false;
+
+// Check for API key on load
+window.onload = function() {
+  if (!groqKey) {
+    document.getElementById('apiBanner').style.display = 'block';
+  }
+};
+
+function saveApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val || !val.startsWith('gsk_')) {
+    showToast('Key must start with gsk_');
+    return;
+  }
+  groqKey = val;
+  localStorage.setItem('hub_groq', val);
+  document.getElementById('apiBanner').style.display = 'none';
+  showToast('API key saved! Ready to write!');
+}
+
+async function generateLetter() {
+  if (!groqKey) {
+    document.getElementById('apiBanner').style.display = 'block';
+    document.getElementById('apiBanner').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+
+  const jobTitle = document.getElementById('jobTitle').value.trim();
+  const companyName = document.getElementById('companyName').value.trim();
+
+  if (!jobTitle || !companyName) {
+    showToast('Please enter the job title and company name!');
+    return;
+  }
+
+  const yourName = document.getElementById('yourName').value.trim() || 'John Lanter';
+  const yourCity = document.getElementById('yourCity').value.trim() || 'Orange, Texas';
+  const yourPhone = document.getElementById('yourPhone').value.trim();
+  const yourEmail = document.getElementById('yourEmail').value.trim();
+  const companyCity = document.getElementById('companyCity').value.trim();
+  const jobSource = document.getElementById('jobSource').value;
+  const jobRequirements = document.getElementById('jobRequirements').value.trim();
+  const letterStyle = document.getElementById('letterStyle').value;
+
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const styleGuide = {
+    professional: 'formal and professional, maintaining a respectful and polished tone throughout',
+    warm: 'warm and personal while remaining professional, showing genuine enthusiasm and character',
+    bold: 'confident and direct, making a strong impression while staying respectful'
+  };
+
+  const prompt = `Write a professional cover letter for the following job application.
+
+APPLICANT:
+Name: ${yourName}
+Location: ${yourCity}
+${yourPhone ? 'Phone: ' + yourPhone : ''}
+${yourEmail ? 'Email: ' + yourEmail : ''}
+
+JOB BEING APPLIED FOR:
+Position: ${jobTitle}
+Company: ${companyName}
+${companyCity ? 'Location: ' + companyCity : ''}
+Found on: ${jobSource}
+${jobRequirements ? 'Key requirements from posting:\n' + jobRequirements : ''}
+
+APPLICANT BACKGROUND — USE THESE SPECIFIC DETAILS:
+- 22 years total experience in chemical plant and production warehouse operations
+- Lead Operator at Live Oak Warehouse (May 2004 – January 2012) — 8 years
+- Production Warehouse A Operator at Firestone Polymers Plant (January 2012 – August 2019) — 7 years
+- Production Warehouse A Operator at Lion Elastomers (August 2019 – December 2025) — 6 years, laid off due to permanent plant shutdown
+- Experienced in production operations, warehouse management, team leadership, safety protocols, quality control
+- Strong work ethic, reliable, dedicated employee with progressive experience
+
+LETTER STYLE: Write in a ${styleGuide[letterStyle]} tone.
+
+DATE: ${today}
+
+FORMAT THE LETTER EXACTLY LIKE THIS:
+${today}
+
+${yourName}
+${yourCity}
+${yourPhone || '[Phone Number]'}
+${yourEmail || '[Email Address]'}
+
+Hiring Manager
+${companyName}
+${companyCity || '[Company Location]'}
+
+Dear Hiring Manager,
+
+[Opening paragraph — reference the specific position and where you found it]
+
+[Second paragraph — highlight most relevant experience from the 22-year background that matches this role]
+
+[Third paragraph — specific achievements or qualities that make you the right fit]
+
+[Closing paragraph — express enthusiasm, request interview, thank them]
+
+Sincerely,
+${yourName}
+
+Write the full letter now. Make it genuine, specific, and compelling. Use the actual work history details. Do not use placeholder text — write the complete letter.`;
+
+  // Show loading
+  setStatus('thinking', 'Becky is writing your cover letter...');
+  document.getElementById('letterWrap').style.display = 'none';
+  document.getElementById('genBtn').disabled = true;
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + groqKey
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are Becky, an expert cover letter writer. You write compelling, personalized cover letters that get interviews. You use specific details and real experience. You never use filler text or brackets. Write the complete, finished letter.'
+          },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 1200,
+        temperature: 0.75
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      setStatus('error', 'Error: ' + data.error.message);
+      document.getElementById('genBtn').disabled = false;
+      return;
+    }
+
+    currentLetter = data.choices[0].message.content.trim();
+
+    // Show the letter
+    setStatus('ok', '✅ Cover letter ready! Review it below.');
+    document.getElementById('letterPreview').textContent = currentLetter;
+    document.getElementById('letterWrap').style.display = 'block';
+    document.getElementById('printLetter').textContent = currentLetter;
+    document.getElementById('genBtn').disabled = false;
+    document.getElementById('letterWrap').scrollIntoView({ behavior: 'smooth' });
+    showToast('Letter written! Review and save as PDF.');
+
+  } catch (e) {
+    setStatus('error', 'Connection error. Check your API key and try again.');
+    document.getElementById('genBtn').disabled = false;
+  }
+}
+
+function setStatus(type, msg) {
+  const box = document.getElementById('statusBox');
+  const txt = document.getElementById('statusText');
+  box.className = 'status-box';
+  box.style.display = 'flex';
+  txt.textContent = msg;
+
+  if (type === 'thinking') {
+    box.classList.add('status-thinking');
+    box.style.display = 'flex';
+  } else if (type === 'ok') {
+    box.style.background = 'rgba(15,157,88,0.1)';
+    box.style.border = '1px solid rgba(15,157,88,0.3)';
+    box.style.color = 'var(--green)';
+    box.style.display = 'block';
+    // Remove spinner
+    const spinner = box.querySelector('.spinner');
+    if (spinner) spinner.style.display = 'none';
+  } else if (type === 'error') {
+    box.style.background = 'rgba(234,67,53,0.1)';
+    box.style.border = '1px solid rgba(234,67,53,0.3)';
+    box.style.color = 'var(--red)';
+    box.style.display = 'block';
+    const spinner = box.querySelector('.spinner');
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
+function copyLetter() {
+  const letter = document.getElementById('letterPreview').textContent;
+  navigator.clipboard.writeText(letter);
+  showToast('Letter copied! Paste into job application.');
+}
+
+function editLetter() {
+  const preview = document.getElementById('letterPreview');
+  if (!isEditing) {
+    preview.contentEditable = 'true';
+    preview.style.border = '1px solid var(--gold)';
+    preview.style.outline = 'none';
+    preview.focus();
+    document.querySelector('[onclick="editLetter()"]').textContent = '✅ Done Editing';
+    isEditing = true;
+    showToast('Tap in the letter to edit it');
+  } else {
+    preview.contentEditable = 'false';
+    preview.style.border = '1px solid rgba(255,255,255,0.12)';
+    currentLetter = preview.textContent;
+    document.querySelector('[onclick="editLetter()"]').textContent = '✏️ Edit';
+    isEditing = false;
+    showToast('Changes saved!');
+  }
+}
+
+function savePDF() {
+  // Update print version with current content
+  document.getElementById('printLetter').textContent = 
+    document.getElementById('letterPreview').textContent;
+  
+  showToast('Opening PDF save... tap Share → Print → Save as PDF');
+  
+  setTimeout(() => {
+    window.print();
+  }, 500);
+}
+
+function regenerate() {
+  document.getElementById('letterWrap').style.display = 'none';
+  document.getElementById('statusBox').style.display = 'none';
+  generateLetter();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
