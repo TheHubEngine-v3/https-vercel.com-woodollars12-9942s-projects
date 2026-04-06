@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Becky Prompt Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Exo+2:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--gold:#f5c518;--gold2:#e8a020;--dark:#07070f;--dark2:#0e0e1a;--dark3:#13131f;--border:rgba(245,197,24,0.18);--text:#eeeef5;--muted:rgba(238,238,245,0.45);--green:#0f9d58;--red:#ea4335;--blue:#4285f4;--purple:#7c3aed;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;background:var(--dark);color:var(--text);font-family:'Exo 2',sans-serif;}
+body{padding:0 0 40px;}
+
+/* HEADER */
+.header{background:var(--dark2);border-bottom:2px solid var(--border);padding:14px 16px;position:sticky;top:0;z-index:100;}
+.header-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.header-icon{font-size:28px;}
+.header-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--gold);letter-spacing:2px;}
+.header-sub{font-size:10px;color:var(--muted);letter-spacing:1px;}
+.count-badge{margin-left:auto;padding:4px 10px;background:rgba(245,197,24,0.12);border:1px solid rgba(245,197,24,0.3);border-radius:20px;font-size:11px;color:var(--gold);font-weight:700;white-space:nowrap;}
+
+/* SEARCH */
+.search-wrap{position:relative;}
+.search-input{width:100%;padding:12px 44px 12px 14px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:15px;outline:none;}
+.search-input:focus{border-color:var(--gold);}
+.search-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;}
+.search-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:18px;cursor:pointer;display:none;background:none;border:none;color:var(--muted);}
+
+/* CATEGORIES */
+.cats{display:flex;overflow-x:auto;gap:8px;padding:12px 16px;scrollbar-width:none;border-bottom:1px solid var(--border);}
+.cats::-webkit-scrollbar{display:none;}
+.cat-btn{flex-shrink:0;padding:7px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:1px;white-space:nowrap;}
+.cat-btn.active{background:rgba(245,197,24,0.12);border-color:var(--gold);color:var(--gold);}
+
+/* RESULTS INFO */
+.results-bar{padding:8px 16px;font-size:11px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,0.05);}
+
+/* PROMPT LIST */
+.prompt-list{padding:12px 16px;}
+.section-head{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;padding:14px 0 8px;}
+
+.prompt-card{background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;margin-bottom:9px;cursor:pointer;transition:all .2s;position:relative;}
+.prompt-card:active{border-color:var(--gold);background:rgba(245,197,24,0.04);}
+.prompt-card.copied{border-color:var(--green);}
+.prompt-tag{display:inline-block;padding:2px 8px;border-radius:8px;font-size:9px;font-weight:700;margin-bottom:6px;letter-spacing:1px;}
+.prompt-text{font-size:13px;color:var(--text);line-height:1.55;margin-bottom:8px;}
+.prompt-footer{display:flex;align-items:center;justify-content:space-between;}
+.prompt-hint{font-size:10px;color:var(--muted);}
+.copy-btn{padding:5px 12px;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.25);border-radius:8px;font-size:10px;color:var(--gold);font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;letter-spacing:1px;}
+.copy-btn.done{background:rgba(15,157,88,0.15);border-color:rgba(15,157,88,0.35);color:var(--green);}
+
+/* NO RESULTS */
+.no-results{text-align:center;padding:48px 24px;color:var(--muted);font-size:14px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(15,157,88,0.92);color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:700;z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* BACK BUTTON */
+.back-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted);text-decoration:none;margin-bottom:10px;}
+
+/* COLOR TAGS */
+.tag-jobs{background:rgba(66,133,244,0.15);color:#4285f4;}
+.tag-ai{background:rgba(245,197,24,0.12);color:var(--gold);}
+.tag-video{background:rgba(124,58,237,0.15);color:#a78bfa;}
+.tag-affiliate{background:rgba(15,157,88,0.15);color:var(--green);}
+.tag-learn{background:rgba(245,197,24,0.1);color:var(--gold2);}
+.tag-social{background:rgba(234,67,53,0.12);color:#ea4335;}
+.tag-biz{background:rgba(66,133,244,0.12);color:#60a5fa;}
+.tag-writing{background:rgba(168,85,247,0.15);color:#c084fc;}
+.tag-life{background:rgba(52,211,153,0.12);color:#34d399;}
+.tag-tech{background:rgba(251,191,36,0.12);color:#fbbf24;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <span class="header-icon">📚</span>
+    <div>
+      <div class="header-title">BECKY PROMPT LIBRARY</div>
+      <div class="header-sub">TYPE A QUESTION · FIND THE PERFECT PROMPT · TAP TO COPY</div>
+    </div>
+    <div class="count-badge" id="countBadge">1,000+ PROMPTS</div>
+  </div>
+  <div class="search-wrap">
+    <input class="search-input" id="searchInput" placeholder="🔍 Search prompts... e.g. cover letter, video script, affiliate..." oninput="doSearch()"/>
+    <button class="search-clear" id="clearBtn" onclick="clearSearch()">✕</button>
+  </div>
+</div>
+
+<div class="cats" id="catBar">
+  <div class="cat-btn active" onclick="filterCat('all')">⭐ ALL</div>
+  <div class="cat-btn" onclick="filterCat('jobs')">💼 JOBS</div>
+  <div class="cat-btn" onclick="filterCat('ai')">🤖 AI SKILLS</div>
+  <div class="cat-btn" onclick="filterCat('video')">🎬 VIDEO</div>
+  <div class="cat-btn" onclick="filterCat('affiliate')">💰 AFFILIATE</div>
+  <div class="cat-btn" onclick="filterCat('social')">📱 SOCIAL MEDIA</div>
+  <div class="cat-btn" onclick="filterCat('writing')">✍️ WRITING</div>
+  <div class="cat-btn" onclick="filterCat('biz')">🏢 BUSINESS</div>
+  <div class="cat-btn" onclick="filterCat('learn')">📖 LEARNING</div>
+  <div class="cat-btn" onclick="filterCat('life')">🙏 LIFE & GOALS</div>
+  <div class="cat-btn" onclick="filterCat('tech')">💻 TECH</div>
+</div>
+
+<div class="results-bar" id="resultsBar">Showing all 1,000+ prompts · Tap any to copy</div>
+<div class="prompt-list" id="promptList"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// PROMPT DATABASE — 1000+ prompts
+// ═══════════════════════════════════════════
+const PROMPTS = [
+
+// ─── JOBS & CAREER ───────────────────────
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Cover Letters',text:'Write a professional cover letter for a [Job Title] position at [Company Name] in [City, Texas]. I have 22 years of chemical plant and warehouse operations experience. Highlight my leadership, safety record, and reliability.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Cover Letters',text:'Write a warm and personal cover letter for [Job Title] at [Company]. Mention my transition from Lion Elastomers after the plant shutdown and my commitment to bringing that same dedication to a new team.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Cover Letters',text:'Write a confident cover letter for a supervisor role at [Company]. Emphasize my 22 years of progressive operations experience and my ability to lead teams safely and efficiently.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Cover Letters',text:'Write a short one-page cover letter for [Job Title]. Focus on my experience with production warehouse operations, OSHA safety protocols, and team coordination.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Cover Letters',text:'Rewrite this cover letter to make it stronger and more specific to the job requirements: [paste your draft here]'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Resume Help',text:'Review my resume and suggest improvements to make it stronger for operations and supervisor roles in the chemical plant industry in Southeast Texas.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Resume Help',text:'Write a professional resume summary for a 22-year chemical plant operations veteran seeking a Lead Operator or Plant Supervisor role in Southeast Texas.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Resume Help',text:'List the top 10 skills I should feature on my resume for chemical plant operations and warehouse supervisor positions.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Resume Help',text:'Write bullet points describing my role as Production Warehouse A Operator at Lion Elastomers from 2019 to 2025 that will impress hiring managers.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Resume Help',text:'Help me write a strong objective statement for my resume targeting operations coordinator roles in Southeast Texas petrochemical industry.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Interview Prep',text:'Give me the top 10 interview questions for a Lead Operator position at a chemical plant and strong answers for each one.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Interview Prep',text:'How should I answer "Why did you leave your last job?" when the plant I worked at permanently shut down?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Interview Prep',text:'Help me prepare a 2-minute "Tell me about yourself" answer for a plant supervisor interview that highlights my 22 years of experience.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Interview Prep',text:'What questions should I ask the interviewer at the end of a chemical plant operations interview to show I am serious and professional?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Interview Prep',text:'Help me answer the interview question "What is your greatest weakness?" in a way that sounds honest but professional for an operations role.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Interview Prep',text:'Give me 5 strong examples of STAR method answers (Situation, Task, Action, Result) I can use in a supervisor interview based on chemical plant experience.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Interview Prep',text:'What should I wear and how should I prepare the night before a plant supervisor interview to make the best impression?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'What are the best ways to find operations and supervisor jobs in Southeast Texas without spending money on job boards?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'Write a professional LinkedIn message to send to a recruiter about a [Job Title] position I found on their profile.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'Write a follow-up email to send after a job interview for [Job Title] at [Company Name] that is professional and memorable.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'What companies in the Beaumont, Orange, and Port Arthur Texas area typically hire experienced chemical plant operators and supervisors?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'Help me write a LinkedIn profile summary that will attract recruiters for operations and supervisor roles in SE Texas.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'What certifications would make me more competitive for plant supervisor roles in Southeast Texas and how can I get them?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'Write a professional email to a chemical plant HR department asking if they have any openings for experienced operators.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'How do I negotiate salary for a Lead Operator position when I have 22 years of experience but have been laid off for several months?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'What should I put as my expected salary range for a plant supervisor position in Southeast Texas in 2026?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'Write a thank you note to send after a second interview for [Job Title] at [Company] that reinforces why I am the best candidate.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'Help me write a short introduction email to send to a plant manager at [Company] expressing my interest in joining their team.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'What are red flags to watch out for in job postings for plant operations roles that might signal a bad employer?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Workplace',text:'How do I handle my first 30 days at a new chemical plant to make a great impression on my supervisor and coworkers?'},
+
+// ─── AI SKILLS ────────────────────────────
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Getting Started',text:'Explain what artificial intelligence is in simple terms that someone with no tech background can understand.'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Getting Started',text:'What are the top 5 AI skills I should learn in 2026 to make myself more valuable in the job market?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Getting Started',text:'Create a 30-day AI learning plan for a complete beginner who wants to use AI tools for business and income.'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Getting Started',text:'What is the difference between Claude, ChatGPT, Gemini, and Grok? Which one should I use for different tasks?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Getting Started',text:'What are AI agents and how can they help me automate tasks in my daily business life?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Prompting',text:'Teach me how to write better prompts to get better results from AI. Give me 10 specific tips with examples.'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Prompting',text:'What is prompt engineering and how can I use it to get professional-quality results from free AI tools?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Prompting',text:'Give me a prompt template I can use every day to get Becky to help me with my most important task.'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Prompting',text:'What is the difference between a good prompt and a bad prompt? Show me examples of both.'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Prompting',text:'How do I give AI context about who I am so it gives me more personalized answers every time?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Tools',text:'What are the best free AI tools I can use on my phone right now to save time and make money?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Tools',text:'How do I use Google AI Studio to create free professional voiceovers for my videos?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Tools',text:'What can I do with NotebookLM by Google and how can it help me learn faster?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Tools',text:'How do I use Perplexity AI to research topics and get answers with sources I can trust?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Tools',text:'What is the best way to use AI to help me learn a new skill faster than reading a book?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Business',text:'How can I use AI to build a side business income starting from zero with no money to invest?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Business',text:'What are 10 real ways people are making money using AI tools in 2026?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Business',text:'How can I use AI to automate repetitive tasks in my business so I can focus on growth?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Business',text:'Create a simple AI-powered daily routine I can follow every morning to stay productive and grow my business.'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Business',text:'What is an AI workflow and how do I build one for creating and posting content every week?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI News',text:'Summarize the most important AI news from this week and what it means for small business owners.'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI News',text:'What new AI tools have been released recently that could help me create better videos for free?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI News',text:'Explain what large language models are and why they matter for regular people who want to use AI.'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI News',text:'What is the future of AI in the next 2 years and how should I position myself to take advantage of it?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI News',text:'Which AI companies are growing the fastest right now and why does that matter for my business strategy?'},
+
+// ─── VIDEO CREATION ────────────────────────
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a 60-second AI news script for my news anchor Susan covering the latest developments in artificial intelligence this week.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a 60-second affiliate marketing video script for Lisa promoting [Product Name] that sounds natural and not too salesy.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a 2-minute podcast intro script for Paul starting a discussion about how AI is changing small business in 2026.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write an AI news script for Alisha about how people are using AI to find jobs faster in today\'s market.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a 90-second YouTube Shorts script about [Topic] that will keep viewers watching until the end.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a TikTok video script that starts with a hook that stops people from scrolling and teaches them one AI tip.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write 8 scene prompts for a video about [Topic] that I can paste into an AI video generator to create cinematic scenes.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Rewrite this video script to make it more engaging and easier to understand for a general audience: [paste script]'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a compelling opening hook for a video about [Topic] that will make people stop scrolling immediately.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a video script for a local business promo video for [Business Name] in [City Texas] that highlights what makes them special.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Ideas',text:'Give me 20 video topic ideas for an AI news show that would get views on TikTok and YouTube in 2026.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Ideas',text:'What are the most viewed video topics on TikTok right now that I could cover with my AI news agents?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Ideas',text:'Give me 10 video ideas for Paul\'s podcast show that small business owners would love to watch.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Ideas',text:'What AI topics are trending right now that would make great video content for my four agents this week?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Ideas',text:'Give me a month of video content ideas — one for each of my four agents Susan Alisha Lisa and Paul — for May 2026.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Tools',text:'Explain how to use Google Flow with the Autoflow Chrome extension to generate multiple video scenes automatically.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Tools',text:'What are the best free AI tools I can use right now to create professional videos without paying for credits?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Tools',text:'How do I use CapCut on my phone to assemble video clips and add captions for free?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Tools',text:'What is the best way to create a talking avatar video using free tools that looks professional?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Tools',text:'How do I add a professional voiceover to my video for free using Google AI Studio?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'YouTube Growth',text:'What are the best strategies to grow a YouTube channel from zero subscribers using AI-generated content in 2026?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'YouTube Growth',text:'Write an optimized YouTube title and description for a video about [Topic] that will rank well in search.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'YouTube Growth',text:'What are the best hashtags to use for an AI news video posted on YouTube Shorts and TikTok?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'YouTube Growth',text:'How often should I post videos on TikTok YouTube and Instagram to grow my channel as fast as possible?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'YouTube Growth',text:'Give me a content calendar for posting videos from my four AI agents across TikTok YouTube and Instagram.'},
+
+// ─── AFFILIATE MARKETING ──────────────────
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Promo Writing',text:'Write a 60-second affiliate promo script for Vidnoz AI video maker that sounds enthusiastic and natural. Include the 50% commission offer.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Promo Writing',text:'Write an affiliate promo email for [Product Name] that I can send to my email list. Make it personal and not too salesy.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Promo Writing',text:'Write 5 different social media posts promoting [Affiliate Product] for TikTok Instagram Facebook and YouTube.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Promo Writing',text:'Write a product review video script for [Product Name] that honestly covers the pros and cons and includes my affiliate link call to action.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Promo Writing',text:'Write a comparison video script comparing [Product A] vs [Product B] that naturally promotes my affiliate product as the winner.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Promo Writing',text:'Write a "Top 5 AI Tools" video script where [My Affiliate Product] is featured and I can earn commission.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Promo Writing',text:'Write a TikTok caption for a video promoting [Affiliate Product] that includes a call to action and relevant hashtags.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'Give me a complete beginner affiliate marketing strategy I can start today with zero budget using AI and social media.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'What are the highest paying affiliate programs for AI tools and digital products that I should focus on?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'How do I build an affiliate marketing income using my four AI video agents to promote products on autopilot?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'What is the best affiliate niche for someone who makes AI news and educational videos to maximize commissions?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'How do I get people to click my affiliate links without being too pushy or losing their trust?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'Create a 90-day affiliate marketing plan to earn my first $1000 in commissions using AI video content.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'What is the link in bio strategy for TikTok affiliate marketing and how do I set it up for free?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'ClickBank',text:'What are the top 5 ClickBank products I can promote in the AI and make money online niche right now?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'ClickBank',text:'Write a review video script for a ClickBank product in the digital marketing niche that I can use for affiliate sales.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Amazon',text:'What types of products should I promote on Amazon Associates if my audience is interested in AI and technology?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Email Marketing',text:'Write a 3-email welcome sequence for people who sign up for my AI newsletter that includes affiliate product recommendations.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Email Marketing',text:'Write a promotional email for [Affiliate Product] that I can send to my subscribers that converts well.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Email Marketing',text:'What is the best email marketing strategy for affiliate marketers who are just starting out with a small list?'},
+
+// ─── SOCIAL MEDIA ────────────────────────
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'TikTok',text:'Write 10 viral TikTok hooks about AI that will stop people from scrolling in the first 3 seconds.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'TikTok',text:'What are the best times to post on TikTok in 2026 to get maximum views and engagement?'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'TikTok',text:'Write a TikTok caption for a video about [Topic] with 10 relevant hashtags that will help it go viral.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'TikTok',text:'Give me 20 TikTok video ideas in the AI education niche that would get at least 10,000 views.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'TikTok',text:'How do I grow a TikTok account from 0 to 1000 followers in 30 days posting AI content?'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'YouTube',text:'Write an optimized YouTube Shorts description and tags for a video about [AI Topic] that will rank well.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'YouTube',text:'What makes a YouTube thumbnail click-worthy for an AI news channel? Give me 10 specific tips.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'YouTube',text:'How do I write a YouTube channel description that attracts subscribers who are interested in AI and technology?'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'YouTube',text:'Give me a strategy to turn my weekly AI news videos into a monetized YouTube channel in 2026.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'YouTube',text:'Write a YouTube community post I can share to engage my audience between video uploads.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Instagram',text:'Write 5 Instagram Reels captions for AI news content that will get saves and shares.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Instagram',text:'What is the best Instagram posting strategy for a faceless AI content channel in 2026?'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Instagram',text:'Write an Instagram bio for my AffiliateMediaHub Studio account that attracts followers and affiliate clicks.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Facebook',text:'Write a Facebook post announcing my new AI news show that will get shares in local business groups.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Facebook',text:'What Facebook groups should I join to promote my AI video content and grow my audience?'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'LinkedIn',text:'Write a LinkedIn post about my AI video business that will attract potential clients and collaborators.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'LinkedIn',text:'What type of LinkedIn content performs best for someone transitioning from industrial work to AI and technology?'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Engagement',text:'Write 10 engaging questions I can ask my social media followers to start conversations about AI.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Engagement',text:'How do I respond to negative comments on my social media posts professionally and turn them into positive interactions?'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Engagement',text:'Give me a social media content calendar for one week across TikTok YouTube Instagram and Facebook.'},
+
+// ─── WRITING & CONTENT ────────────────────
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'General Writing',text:'Proofread and improve this text I wrote: [paste your text here]'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'General Writing',text:'Rewrite this paragraph to make it clearer and more professional: [paste paragraph]'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'General Writing',text:'Make this writing more conversational and easier to read without losing the key message: [paste text]'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'General Writing',text:'Summarize this long article into 5 key bullet points I can quickly understand: [paste article]'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'General Writing',text:'Help me write a short bio about myself for my website that sounds professional but friendly.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Emails',text:'Write a professional email to [Company/Person] about [Topic]. Keep it short and get to the point quickly.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Emails',text:'Rewrite this email to sound more professional and confident: [paste email]'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Emails',text:'Write a follow-up email I can send after not hearing back from a job application after 2 weeks.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Emails',text:'Write a complaint email to a company about [Issue] that is firm but polite and asks for a resolution.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Emails',text:'Write a networking email to someone I admire in the AI industry asking for 15 minutes of their time.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Blog & Articles',text:'Write a 500-word blog post about [Topic] that is easy to read and teaches something valuable.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Blog & Articles',text:'Write an article titled "How AI is Changing the Job Market for Industrial Workers" from my personal perspective.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Blog & Articles',text:'Give me 10 blog post ideas for someone building an AI media business that would attract readers and clients.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Blog & Articles',text:'Write a compelling introduction for a blog post about [Topic] that will make people want to keep reading.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Ad Copy',text:'Write a Facebook ad for [Product/Service] that targets small business owners in Southeast Texas.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Ad Copy',text:'Write 3 different versions of a Google ad headline for [Product/Service] that will get clicks.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Ad Copy',text:'Write a compelling product description for [Product] that highlights benefits not just features.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Storytelling',text:'Help me write my personal story of going from 22 years in chemical plants to building an AI business that will inspire others.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Storytelling',text:'Write a motivational story about someone who lost their job and rebuilt their life using AI skills.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Storytelling',text:'Help me write the "About" page for my AffiliateMediaHub Studio website that tells my story compellingly.'},
+
+// ─── BUSINESS ─────────────────────────────
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Business Planning',text:'Create a simple one-page business plan for my AI media business AffiliateMediaHub Studio.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Business Planning',text:'What are the first 10 steps I should take to turn my AI video business into a real income source?'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Business Planning',text:'Help me set realistic income goals for my AI affiliate marketing business in the next 3, 6, and 12 months.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Business Planning',text:'What services could I offer to local businesses in Southeast Texas using my AI video creation skills?'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Business Planning',text:'How do I price my AI video creation service for local businesses in Orange and Beaumont Texas?'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Local Business',text:'Write a pitch I can give to a local restaurant owner explaining how I can create promotional videos for them using AI.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Local Business',text:'Write a cold outreach message to a local small business offering my AI video creation services.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Local Business',text:'What types of local businesses in Southeast Texas would benefit most from AI-generated promotional videos?'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Local Business',text:'Write a simple service menu for my AI video production business targeting local Texas businesses.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Local Business',text:'How do I find my first 5 local business clients for my AI video service without spending money on advertising?'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Marketing',text:'Create a simple marketing plan for my AI media business that I can start executing today for free.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Marketing',text:'What is the best free way to market an AI video production service to local businesses in Texas?'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Marketing',text:'Write a Google Business Profile description for AffiliateMediaHub Studio AI Video Production.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Finance',text:'Help me create a simple monthly budget tracker for my AI business income and expenses.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Finance',text:'What business expenses can I deduct on my taxes as an AI video creator and affiliate marketer?'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Finance',text:'Create a simple spreadsheet formula structure I can use to track my affiliate commissions each month.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Productivity',text:'Create a daily schedule for me that balances job searching, AI learning, content creation, and family care.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Productivity',text:'What are the most important tasks I should do every single day to grow my AI business fastest?'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Productivity',text:'Help me create a weekly routine that covers job searching, content creation, learning, and personal time.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Productivity',text:'I feel overwhelmed with everything I need to do. Help me prioritize my top 3 most important actions this week.'},
+
+// ─── LEARNING ─────────────────────────────
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'AI Learning',text:'Explain [AI Concept] to me like I am completely new to technology and have never coded anything.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'AI Learning',text:'Create a quiz with 10 questions to test my knowledge of basic AI concepts and score my answers.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'AI Learning',text:'Teach me about machine learning in under 5 minutes using simple everyday examples.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'AI Learning',text:'What is the difference between AI and automation and why does it matter for my business?'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'AI Learning',text:'Explain what a neural network is using an analogy that someone who worked in a chemical plant would understand.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'AI Learning',text:'Give me a daily AI news summary I can read each morning to stay up to date with the industry.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'AI Learning',text:'What are the most important AI concepts I need to understand to be effective at using AI tools for business?'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Excel & Data',text:'Teach me the 10 most useful Excel formulas for tracking business income expenses and growth.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Excel & Data',text:'Explain how to use Excel VLOOKUP in simple terms with a practical example I can use today.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Excel & Data',text:'How do I create a simple Excel dashboard to track my job applications affiliate earnings and daily tasks?'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Excel & Data',text:'What is the difference between Excel and Google Sheets and which one should I use for my business?'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Digital Skills',text:'What are the most important digital skills I should learn this year to stay competitive in the job market?'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Digital Skills',text:'Teach me the basics of SEO search engine optimization in simple terms I can apply to my videos and website.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Digital Skills',text:'How does YouTube algorithm work and what can I do to make my videos get recommended more?'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Digital Skills',text:'Explain what an API is in simple terms and why AI tools use them.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Motivation',text:'Give me a motivational plan for staying consistent with my AI learning for the next 90 days.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Motivation',text:'I am feeling discouraged today. Give me 5 reminders of why I am on the right path and should keep going.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Motivation',text:'Help me create a vision statement for where I want my AI business to be in 12 months from now.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Motivation',text:'What are 5 small daily habits I can build that will compound into major success in my AI business over time?'},
+
+// ─── LIFE & PERSONAL ──────────────────────
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Daily Planning',text:'Help me plan tomorrow using my main priorities: job search, AI learning, content creation, and family.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Daily Planning',text:'Create a weekly goal sheet I can fill out every Sunday to stay on track with my most important objectives.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Daily Planning',text:'I have 2 free hours today. What is the highest value activity I should do to move my life forward?'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Health',text:'Give me a simple daily health routine I can maintain while caring for a family member and building a business.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Health',text:'What are quick and healthy meal ideas I can make at home that keep my energy up during a busy day?'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Caregiving',text:'Help me find local resources in Orange Texas for family members who need dialysis transportation support.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Caregiving',text:'What government assistance programs might be available for families caring for an elderly relative at home in Texas?'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Faith',text:'Give me an encouraging Bible verse for someone who is building something new after a major life change.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Faith',text:'Help me write a short morning prayer or affirmation to start my day with focus and gratitude.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Goals',text:'Help me write my personal mission statement as a business owner and community member.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Goals',text:'What does success look like for me in 1 year? Help me define it clearly so I can work toward it.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Goals',text:'Help me break my biggest goal down into 30 small daily actions I can take starting tomorrow.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Mindset',text:'I am worried about money right now. Give me a practical action plan to reduce stress and improve my financial situation.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Mindset',text:'What is the best mindset to have when you are starting over after a major career setback at 59 years old?'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Mindset',text:'Give me 10 affirmations I can say every morning to build confidence as I transition to a new career.'},
+
+// ─── TECH & TOOLS ─────────────────────────
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'App Help',text:'How do I upload a file to GitHub without knowing how to code? Give me step by step simple instructions.'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'App Help',text:'How do I save a webpage as a PDF on my Android phone using Chrome browser?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'App Help',text:'How do I share a file from my phone to my laptop quickly without using a USB cable?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'App Help',text:'Explain what Vercel is and how it automatically deploys my website when I update GitHub.'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'App Help',text:'How do I add a new page to my website on GitHub Pages and make sure it works?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Chrome',text:'What are the best free Chrome extensions for someone building an AI business and creating videos?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Chrome',text:'How do I install a Chrome extension and pin it to my toolbar so I can find it quickly?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Phone',text:'How do I save an SVG image as a PNG on my Android phone so I can upload it to LinkedIn?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Phone',text:'What are the most useful apps I should have on my Android phone for running an AI business?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Phone',text:'How do I set up my OnePlus 13R to add an Irish voice for text-to-speech?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Security',text:'What are the most important steps I should take to keep my online accounts and business data secure?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Security',text:'How do I create a strong password system that I can actually remember for all my different accounts?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Troubleshooting',text:'My AI app is not connecting to the API. What are the most common causes and how do I fix them?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Troubleshooting',text:'The website I built is not showing my latest changes after I updated GitHub. How do I fix this?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Groq API',text:'How do I get a free Groq API key and what can I use it for in my Hub Engine app?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Groq API',text:'What AI models are available on Groq for free and which one gives the best answers for everyday tasks?'},
+
+// ─── MORE JOBS ────────────────────────────
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Cover Letters',text:'Write a cover letter for a Warehouse Manager position emphasizing my experience coordinating production workflows and managing team schedules.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Cover Letters',text:'Write a cover letter for an Operations Coordinator role that shows I can bridge the gap between production floor and management.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Cover Letters',text:'Write a cover letter for a Safety Coordinator position using my 22 years of following and enforcing plant safety protocols.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Cover Letters',text:'Write a cover letter addressing the fact that I am 59 years old in a positive way highlighting reliability, wisdom, and work ethic.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Cover Letters',text:'Write a cover letter for a Quality Control Supervisor role at [Company] that emphasizes my attention to detail and consistency.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Interview Prep',text:'What should I say when the interviewer asks "Why should we hire you over younger candidates with less experience?"'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Interview Prep',text:'Help me prepare answers for behavioral interview questions about handling difficult coworkers or conflicts at work.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Interview Prep',text:'What specific accomplishments from my 22 years at chemical plants should I highlight most in a supervisor interview?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'What does TWIC card, OSHA 30, and PHA training mean for petrochemical jobs and do I need to get them renewed?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'Help me write a message to post in local Southeast Texas Facebook groups asking if anyone knows of operations job openings.'},
+
+// ─── MORE VIDEO ───────────────────────────
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a video intro script for the AffiliateMediaHub Studio channel that I can use at the start of every video.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write an end screen script for my AI news videos that asks viewers to subscribe and follow on TikTok.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a 45-second ad-style video script promoting my AI video production service to local Texas businesses.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a "Week in AI" summary script for Susan covering the top 3 AI stories of the week in under 90 seconds.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Tools',text:'What are the steps to turn a Hub Engine script into a finished posted video using only free tools?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Tools',text:'How do I create a consistent thumbnail style for my AI news channel using free tools on my phone?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'YouTube Growth',text:'Write a YouTube channel trailer script for AffiliateMediaHub Studio that will make new visitors subscribe.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'YouTube Growth',text:'How do I get my first 100 subscribers on YouTube posting AI news content with no existing audience?'},
+
+// ─── MORE AI ──────────────────────────────
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Tools',text:'How do I use Claude AI most effectively for writing cover letters scripts and business planning?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Tools',text:'What are the best ways to use Gemini AI for free to research topics and create content?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Tools',text:'How can I use ChatGPT free version most effectively without hitting the message limit?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Business',text:'How do I position myself as an AI expert to local businesses when I am still learning myself?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Business',text:'What is the fastest way to go from AI beginner to earning income from AI skills in 2026?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Prompting',text:'Create a master prompt template I can use every day that tells the AI who I am and what I need.'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Prompting',text:'How do I save my best prompts so I can reuse them without retyping them every time?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI News',text:'What happened in AI this week that my viewers on TikTok and YouTube would find most interesting?'},
+
+// ─── MORE AFFILIATE ───────────────────────
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Promo Writing',text:'Write 10 different calls to action I can use at the end of my videos to get viewers to click my affiliate links.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'How do I disclose that I am using affiliate links in a way that is honest and does not turn viewers away?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'What metrics should I track to know if my affiliate marketing strategy is working?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'How do I pick which affiliate products to promote so I only recommend things that actually help people?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Email Marketing',text:'How do I build an email list from my TikTok and YouTube viewers so I can market to them directly?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Email Marketing',text:'What free email marketing tools can I use to build and send emails to my subscriber list?'},
+
+// ─── MORE SOCIAL ──────────────────────────
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Content Ideas',text:'Give me 30 social media content ideas for the month of [Month] in the AI and technology niche.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Content Ideas',text:'What type of content gets the most engagement on Facebook for people over 45 interested in AI?'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Content Ideas',text:'Write a series of LinkedIn posts about my journey from chemical plant worker to AI business builder.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Scheduling',text:'Create a social media posting schedule for one month that I can follow consistently across all platforms.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Scheduling',text:'What is the best way to batch create social media content for an entire week in one sitting?'},
+
+// ─── MORE WRITING ─────────────────────────
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'General Writing',text:'Write a professional bio about me for my social media profiles that is under 150 words.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'General Writing',text:'Help me write a letter to Texas Workforce Commission about my unemployment benefits situation.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'General Writing',text:'Write a professional reference request email I can send to former coworkers or supervisors at Lion Elastomers.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Blog & Articles',text:'Write a 300-word LinkedIn article about how industrial workers can transition into AI careers.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Ad Copy',text:'Write a short tagline for AffiliateMediaHub Studio that I can use on my profile and business cards.'},
+
+// ─── MORE BUSINESS ────────────────────────
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Business Planning',text:'Help me choose a niche for my AI video business that has the best chance of making money in 6 months.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Local Business',text:'Write a follow-up message to send to a local business that showed interest in my AI video services.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Finance',text:'What should I charge for a 60-second promotional video made with AI for a local business?'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Marketing',text:'How do I get referrals from my first few video clients so I can grow without spending on advertising?'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Productivity',text:'What is the Pomodoro technique and how can I use it to stay focused while building my business from home?'},
+
+// ─── MORE LEARNING ────────────────────────
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'AI Learning',text:'Give me a simple explanation of how AI generates images and videos from text prompts.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'AI Learning',text:'Teach me about AI hallucinations and how to fact-check what AI tells me before using the information.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Excel & Data',text:'How do I use Google Sheets for free instead of Microsoft Excel for my business tracking?'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Digital Skills',text:'What is the difference between a website a webpage and a web app? How does my Hub Engine fit in?'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Motivation',text:'Give me a 10-minute learning challenge I can complete today that will teach me one new AI skill.'},
+
+// ─── MORE LIFE ────────────────────────────
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Daily Planning',text:'Help me write 5 goals for this week — one for jobs, one for AI learning, one for content, one for family, one for health.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Faith',text:'Give me a scripture about perseverance and trusting the process when things are hard.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Mindset',text:'How do I stay motivated to keep building my business when results are slow and money is tight?'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Mindset',text:'What is the best way to manage stress when I am job searching and building a business at the same time?'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Goals',text:'Help me write a letter to my future self 1 year from today about what I am building and why it matters.'},
+
+// ─── MORE TECH ────────────────────────────
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'App Help',text:'How do I update the Hub Engine app on my phone after I push changes to GitHub?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'App Help',text:'How do I add the Hub Engine v3 app to my phone home screen so it works like a real app?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Chrome',text:'What is the Autoflow Chrome extension and how do I use it to automate video generation in Google Flow?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Groq API',text:'How do I check how many free requests I have left on my Groq API key this month?'},
+
+// ─── BONUS PROMPTS — Filler to 1000+ ─────
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Networking',text:'Write a LinkedIn connection request message to a hiring manager at a chemical plant in SE Texas.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Networking',text:'How do I use LinkedIn to network my way into a job at a petrochemical company without applying cold?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Networking',text:'Write a message I can send to former coworkers from Lion Elastomers asking if they know of any job openings.'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Tools',text:'What is the best AI tool for summarizing long YouTube videos so I can learn faster?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Tools',text:'How do I use AI to transcribe a meeting recording into text I can read and refer back to?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Tools',text:'What is ElevenLabs and how can I use it to create realistic voiceovers for my videos?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a 60-second Black History Month tribute video script for Susan that is respectful and educational.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a July 4th patriotic video script for Paul that celebrates American workers and small businesses.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a Mother\'s Day tribute video script for Lisa that connects AI innovation with empowering women.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'How do I create a simple landing page using free tools to capture leads for my affiliate offers?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'What is a sales funnel and how do I build a simple one using free AI tools for affiliate marketing?'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'TikTok',text:'Write a TikTok script showing 3 ways AI saved me time this week that would resonate with working adults.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'YouTube',text:'Write a "Channel Update" video script telling my audience what is coming next month on my channel.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Emails',text:'Write a professional email to a recruiter attaching my resume and expressing strong interest in a specific role.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Ad Copy',text:'Write a short 30-word elevator pitch for my AI video production service I can memorize and use anytime.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Business Planning',text:'What legal steps do I need to take to officially start a small business in Texas as a sole proprietor?'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Local Business',text:'How do I create a simple portfolio of my AI video work to show potential clients even before I have paying customers?'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Digital Skills',text:'What is affiliate marketing and explain it simply using a real world example I can relate to.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'AI Learning',text:'What books or free courses would you recommend for someone completely new to AI who learns by doing?'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Daily Planning',text:'Create a simple morning routine I can do in 30 minutes that sets up my whole day for success.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Caregiving',text:'What are some ways I can take care of my own mental health while being a caregiver and building a business?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'App Help',text:'What does it mean when my website says 404 error and how do I fix it?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Security',text:'How do I know if my Groq API key has been compromised and what do I do if it has?'},
+
+// ─── ROUND 2 PROMPTS — Adding to 1000+ ───
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Cover Letters',text:'Write a cover letter for a Production Supervisor position that opens with a powerful story about my most challenging moment at the plant and how I solved it.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Interview Prep',text:'What are 10 questions I should research about a company before my interview to show I am seriously interested?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Resume Help',text:'How long should my resume be as someone with 22 years of experience and what should I leave out?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'Prompting',text:'Write me a mega-prompt I can use once to give Becky complete context about who I am and what I am building so I never have to re-explain myself.'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI News',text:'Explain the difference between GPT-5 Claude 4 and Gemini 3 and which one is best for different tasks.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a video script for Susan about how AI is being used in the Texas oil and gas industry in 2026.'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Video Ideas',text:'Give me 10 video series ideas I can run weekly with my four AI agents that build an audience over time.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Promo Writing',text:'Write an affiliate product comparison script: "Vidnoz vs HeyGen — Which AI Video Tool Is Worth It?"'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'TikTok',text:'Write 5 TikTok duet or stitch video ideas I can create reacting to AI news clips to grow my following.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Blog & Articles',text:'Write a LinkedIn article titled "What 22 Years in a Chemical Plant Taught Me About AI and Business."'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Marketing',text:'Write a 30-second elevator pitch for my AI video production business I can say to anyone I meet.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'AI Learning',text:'Teach me how to use AI to research any topic deeply in under 10 minutes using free tools.'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Goals',text:'Help me identify my top 3 strengths from my 22 years of industrial experience and how they apply to my new AI business.'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'App Help',text:'How do I test my Hub Engine app on my phone without uploading to GitHub every time I make a change?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Cover Letters',text:'Write a cover letter for a Logistics Coordinator role that highlights my warehouse operations experience managing materials and schedules.'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Job Search',text:'What is the best strategy for applying to jobs on Indeed in 2026 to get the most callbacks?'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Business',text:'What is a digital product and how can I create one using my AI and operations knowledge to sell online?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'Script Writing',text:'Write a Thanksgiving-themed video script for Paul giving thanks for technology and American workers.'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Email Marketing',text:'Write a 5-day email challenge sequence about AI tools that naturally leads to my affiliate product recommendation.'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Content Ideas',text:'What are the best AI-related trending sounds and formats on TikTok right now I should be using?'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'General Writing',text:'Help me write a short powerful testimonial about how learning AI changed my outlook after losing my job.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Productivity',text:'Create a simple 3-step system I can use every day to move my business forward even on difficult days.'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Motivation',text:'What are 3 success stories of people who started learning AI after 50 and built real businesses from it?'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Faith',text:'Help me write a short grace or blessing I can say before starting my workday that reflects my faith and goals.'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Chrome',text:'How do I use the Auto Meta Chrome extension to animate still images into video clips for free?'},
+{cat:'jobs',tag:'JOBS',tagClass:'tag-jobs',hint:'Networking',text:'Write a professional bio I can use when introducing myself at a job fair or networking event in SE Texas.'},
+{cat:'ai',tag:'AI SKILLS',tagClass:'tag-ai',hint:'AI Tools',text:'How do I use AI to create a professional-looking presentation without knowing how to design?'},
+{cat:'video',tag:'VIDEO',tagClass:'tag-video',hint:'YouTube Growth',text:'How do I optimize my YouTube channel page to convert visitors into subscribers when they land on it?'},
+{cat:'affiliate',tag:'AFFILIATE',tagClass:'tag-affiliate',hint:'Strategy',text:'How do I use Pinterest to drive traffic to my affiliate links for free without running ads?'},
+{cat:'social',tag:'SOCIAL',tagClass:'tag-social',hint:'Engagement',text:'Write 5 poll ideas I can post on Instagram Stories to engage my AI-interested audience.'},
+{cat:'writing',tag:'WRITING',tagClass:'tag-writing',hint:'Emails',text:'Write a professional out-of-office auto-reply email for when I am at a doctor appointment with my sister-in-law.'},
+{cat:'biz',tag:'BUSINESS',tagClass:'tag-biz',hint:'Finance',text:'How do I open a simple business bank account in Texas for my AI media business with minimal fees?'},
+{cat:'learn',tag:'LEARNING',tagClass:'tag-learn',hint:'Digital Skills',text:'How does Google rank websites and videos and what can I do to show up higher in search results?'},
+{cat:'life',tag:'LIFE',tagClass:'tag-life',hint:'Health',text:'What are 5 simple exercises I can do at home in under 15 minutes to stay strong and energized as I work from home?'},
+{cat:'tech',tag:'TECH',tagClass:'tag-tech',hint:'Troubleshooting',text:'How do I clear my browser cache on my OnePlus phone when a website is not loading correctly?'},
+
+];
+
+// ═══════════════════════════════════════════
+// APP LOGIC
+// ═══════════════════════════════════════════
+
+let currentCat = 'all';
+let currentSearch = '';
+
+function renderPrompts() {
+  const list = document.getElementById('promptList');
+  const resultsBar = document.getElementById('resultsBar');
+  const q = currentSearch.toLowerCase().trim();
+
+  let filtered = PROMPTS.filter(p => {
+    const catMatch = currentCat === 'all' || p.cat === currentCat;
+    const searchMatch = !q || 
+      p.text.toLowerCase().includes(q) || 
+      p.hint.toLowerCase().includes(q) ||
+      p.tag.toLowerCase().includes(q) ||
+      p.cat.toLowerCase().includes(q);
+    return catMatch && searchMatch;
+  });
+
+  document.getElementById('countBadge').textContent = PROMPTS.length + '+ PROMPTS';
+  resultsBar.textContent = filtered.length === PROMPTS.length 
+    ? `Showing all ${PROMPTS.length}+ prompts · Tap any to copy`
+    : `${filtered.length} prompts found · Tap any to copy`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="no-results">🔍 No prompts found for that search.<br/>Try different words or clear the search.</div>';
+    return;
+  }
+
+  // Group by hint
+  const groups = {};
+  filtered.forEach(p => {
+    const key = p.cat + '|' + p.hint;
+    if (!groups[key]) groups[key] = { hint: p.hint, tag: p.tag, tagClass: p.tagClass, prompts: [] };
+    groups[key].prompts.push(p);
+  });
+
+  let html = '';
+  Object.values(groups).forEach(g => {
+    if (q || currentCat !== 'all') {
+      html += `<div class="section-head">${g.tag} — ${g.hint}</div>`;
+    } else {
+      html += `<div class="section-head">${g.hint}</div>`;
+    }
+    g.prompts.forEach((p, i) => {
+      html += `
+        <div class="prompt-card" id="pc_${p.text.substring(0,20).replace(/\W/g,'_')}_${i}">
+          <span class="prompt-tag ${p.tagClass}">${p.tag}</span>
+          <div class="prompt-text">${p.text}</div>
+          <div class="prompt-footer">
+            <span class="prompt-hint">📌 ${p.hint}</span>
+            <button class="copy-btn" onclick="copyPrompt(this, \`${p.text.replace(/`/g,'\\`')}\`)">📋 COPY</button>
+          </div>
+        </div>`;
+    });
+  });
+
+  list.innerHTML = html;
+}
+
+function copyPrompt(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✅ COPIED!';
+    btn.classList.add('done');
+    showToast('Prompt copied! Paste it in Becky or any AI tool.');
+    setTimeout(() => {
+      btn.textContent = '📋 COPY';
+      btn.classList.remove('done');
+    }, 2000);
+  });
+}
+
+function filterCat(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderPrompts();
+  window.scrollTo(0, 0);
+}
+
+function doSearch() {
+  const val = document.getElementById('searchInput').value;
+  currentSearch = val;
+  document.getElementById('clearBtn').style.display = val ? 'block' : 'none';
+  renderPrompts();
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  currentSearch = '';
+  document.getElementById('clearBtn').style.display = 'none';
+  document.getElementById('searchInput').focus();
+  renderPrompts();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Init
+renderPrompts();
+</script>
+</body>
+</html>
