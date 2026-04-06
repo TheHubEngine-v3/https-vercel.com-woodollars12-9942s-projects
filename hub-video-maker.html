@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Hub Engine Video Maker</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Exo+2:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--gold:#f5c518;--gold2:#e8a020;--dark:#07070f;--dark2:#0e0e1a;--dark3:#13131f;--border:rgba(245,197,24,0.18);--text:#eeeef5;--muted:rgba(238,238,245,0.45);--green:#0f9d58;--red:#ea4335;--blue:#4285f4;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;background:var(--dark);color:var(--text);font-family:'Exo 2',sans-serif;}
+body{padding:14px;padding-bottom:40px;}
+
+.header{text-align:center;padding:18px 0 22px;}
+.header-icon{font-size:40px;display:block;margin-bottom:8px;}
+.header-title{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:var(--gold);letter-spacing:3px;}
+.header-sub{font-size:11px;color:var(--muted);letter-spacing:2px;margin-top:4px;}
+.free-badge{display:inline-block;padding:4px 14px;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.35);border-radius:20px;font-size:11px;color:var(--green);font-weight:700;margin-top:8px;letter-spacing:1px;}
+
+.card{background:var(--dark3);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
+.card-title{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+
+.field{margin-bottom:12px;}
+.field label{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;display:block;margin-bottom:6px;}
+.field input,.field textarea,.field select{width:100%;padding:11px 13px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:14px;outline:none;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold);}
+.field textarea{resize:none;min-height:90px;writing-mode:horizontal-tb !important;direction:ltr !important;text-align:left !important;line-height:1.55;}
+.field select option{background:var(--dark3);}
+
+/* COLOR PICKER ROW */
+.color-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+.color-swatch{width:36px;height:36px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .2s;flex-shrink:0;}
+.color-swatch.selected{border-color:var(--gold);transform:scale(1.12);}
+
+/* SCENE BUILDER */
+.scene-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;margin-bottom:8px;position:relative;}
+.scene-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.scene-num{width:24px;height:24px;border-radius:50%;background:var(--gold);color:#000;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Rajdhani',sans-serif;}
+.scene-label{font-size:12px;font-weight:600;color:var(--gold);flex:1;}
+.scene-del{background:rgba(234,67,53,0.1);border:1px solid rgba(234,67,53,0.3);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--red);cursor:pointer;}
+
+/* PREVIEW CANVAS */
+.preview-wrap{background:#000;border-radius:12px;overflow:hidden;margin-bottom:14px;position:relative;border:2px solid var(--border);}
+#previewCanvas{width:100%;height:auto;display:block;}
+.preview-controls{display:flex;gap:8px;padding:10px;background:rgba(0,0,0,0.5);position:absolute;bottom:0;left:0;right:0;}
+
+/* BUTTONS */
+.btn{width:100%;padding:14px;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:'Rajdhani',sans-serif;letter-spacing:1px;margin-bottom:10px;transition:all .2s;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;}
+.btn-blue{background:rgba(66,133,244,0.12);border:1px solid rgba(66,133,244,0.3);color:var(--blue);}
+.btn-green{background:rgba(15,157,88,0.12);border:1px solid rgba(15,157,88,0.3);color:var(--green);}
+.btn-red{background:rgba(234,67,53,0.12);border:1px solid rgba(234,67,53,0.3);color:var(--red);}
+.btn-gray{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--muted);}
+.btn-row{display:flex;gap:10px;}
+.btn-row .btn{flex:1;margin-bottom:0;}
+.btn:disabled{opacity:0.35;cursor:not-allowed;}
+
+/* PROGRESS */
+.progress-wrap{display:none;margin-bottom:14px;}
+.progress-bar{height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));width:0%;transition:width .3s;border-radius:4px;}
+.progress-label{font-size:12px;color:var(--muted);margin-top:6px;text-align:center;}
+
+/* STATUS */
+.status{padding:12px 14px;border-radius:10px;font-size:12px;margin-bottom:12px;display:none;}
+.status-ok{background:rgba(15,157,88,0.1);border:1px solid rgba(15,157,88,0.3);color:var(--green);}
+.status-err{background:rgba(234,67,53,0.1);border:1px solid rgba(234,67,53,0.3);color:var(--red);}
+.status-info{background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.3);color:var(--blue);}
+
+/* VIDEO OUTPUT */
+#videoOutput{display:none;width:100%;border-radius:12px;border:1px solid var(--border);margin-bottom:12px;}
+
+.tip-box{background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.15);border-radius:10px;padding:12px;font-size:11px;color:var(--muted);line-height:1.9;margin-bottom:14px;}
+.tip-box strong{color:var(--gold);}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(15,157,88,0.92);color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:700;z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* AGENT CHIPS */
+.agent-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.agent-chip{padding:8px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;font-weight:600;}
+.agent-chip.active{background:rgba(245,197,24,0.12);border-color:var(--gold);color:var(--gold);}
+
+/* TEMPLATE CHIPS */
+.template-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.tmpl-chip{padding:7px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .2s;}
+.tmpl-chip:active{background:rgba(245,197,24,0.08);border-color:var(--gold);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-icon">🎬</span>
+  <div class="header-title">HUB ENGINE VIDEO MAKER</div>
+  <div class="header-sub">100% FREE · UNLIMITED · NO CREDITS · RUNS IN YOUR BROWSER</div>
+  <span class="free-badge">✅ ZERO COST FOREVER</span>
+</div>
+
+<!-- AGENT SELECT -->
+<div class="card">
+  <div class="card-title">🎭 Step 1 — Pick Your Agent</div>
+  <div class="agent-row">
+    <div class="agent-chip" onclick="pickAgent(this,'Susan','AI News Anchor','#1a1a2e','#4fc3f7')">🩵 SUSAN</div>
+    <div class="agent-chip" onclick="pickAgent(this,'Alisha','AI News Reporter','#0a1628','#60a5fa')">🔵 ALISHA</div>
+    <div class="agent-chip" onclick="pickAgent(this,'Lisa','AI News + Affiliate','#1a0a0a','#f87171')">🔴 LISA</div>
+    <div class="agent-chip" onclick="pickAgent(this,'Paul','Podcast Host','#0f0f0f','#a78bfa')">🎙️ PAUL</div>
+    <div class="agent-chip" onclick="pickAgent(this,'Custom','Custom Video','#07070f','#f5c518')">✨ CUSTOM</div>
+  </div>
+</div>
+
+<!-- VIDEO SETTINGS -->
+<div class="card">
+  <div class="card-title">⚙️ Step 2 — Video Settings</div>
+  <div class="field">
+    <label>VIDEO TITLE</label>
+    <input type="text" id="vidTitle" placeholder="e.g. Top 5 AI Tools for 2026 — Affiliate Promo"/>
+  </div>
+  <div class="field">
+    <label>VIDEO FORMAT</label>
+    <select id="vidFormat">
+      <option value="landscape">📺 Landscape 16:9 — YouTube / Facebook</option>
+      <option value="portrait">📱 Portrait 9:16 — TikTok / Instagram Reels / Shorts</option>
+      <option value="square">⬛ Square 1:1 — Instagram / Facebook Feed</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>BACKGROUND STYLE</label>
+    <select id="bgStyle" onchange="updatePreview()">
+      <option value="dark-gold">⚡ Dark + Gold (Hub Engine Brand)</option>
+      <option value="dark-blue">🔵 Dark + Blue (News Style)</option>
+      <option value="dark-red">🔴 Dark + Red (Breaking News)</option>
+      <option value="dark-purple">🎬 Dark + Purple (Cinematic)</option>
+      <option value="black-white">⬛ Black + White (Professional)</option>
+      <option value="dark-green">💰 Dark + Green (Money/Affiliate)</option>
+      <option value="navy-gold">🏆 Navy + Gold (Premium)</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>SECONDS PER SCENE</label>
+    <select id="sceneSeconds">
+      <option value="3">3 seconds (Fast/TikTok)</option>
+      <option value="4" selected>4 seconds (Standard)</option>
+      <option value="5">5 seconds (Slower/YouTube)</option>
+      <option value="6">6 seconds (Detailed)</option>
+      <option value="8">8 seconds (Long form)</option>
+    </select>
+  </div>
+</div>
+
+<!-- QUICK TEMPLATES -->
+<div class="card">
+  <div class="card-title">⚡ Quick Templates — Tap to Fill Scenes</div>
+  <div class="template-row">
+    <div class="tmpl-chip" onclick="loadTemplate('affiliate')">💰 Affiliate Promo</div>
+    <div class="tmpl-chip" onclick="loadTemplate('ainews')">📰 AI News Show</div>
+    <div class="tmpl-chip" onclick="loadTemplate('tips')">💡 AI Tips</div>
+    <div class="tmpl-chip" onclick="loadTemplate('business')">🏢 Local Business</div>
+    <div class="tmpl-chip" onclick="loadTemplate('podcast')">🎙️ Podcast Promo</div>
+    <div class="tmpl-chip" onclick="loadTemplate('personal')">👤 Personal Brand</div>
+  </div>
+</div>
+
+<!-- SCENE BUILDER -->
+<div class="card">
+  <div class="card-title">📝 Step 3 — Build Your Scenes</div>
+  <div id="sceneList"></div>
+  <button class="btn btn-blue" onclick="addScene()">+ ADD SCENE</button>
+</div>
+
+<!-- VOICEOVER -->
+<div class="card">
+  <div class="card-title">🎤 Step 4 — Voiceover (Free Browser Voice)</div>
+  <div class="field">
+    <label>FULL SCRIPT — Becky will speak this over your video</label>
+    <textarea id="voiceScript" placeholder="Type or paste your full video script here. Becky will read it out loud as your voiceover while the video plays...
+
+Example: Welcome back! Today I am sharing the top 5 AI tools that are completely changing how we make money online. Number one is Vidnoz — my personal favorite for making professional videos in minutes. Click the link below to try it free!"></textarea>
+  </div>
+  <div class="field">
+    <label>VOICE</label>
+    <select id="voiceSelect"><option>Loading voices...</option></select>
+  </div>
+  <div class="field">
+    <label>SPEAKING SPEED</label>
+    <select id="voiceRate">
+      <option value="0.8">Slow — Clear and deliberate</option>
+      <option value="0.9" selected>Normal — Professional news pace</option>
+      <option value="1.0">Fast — Energetic</option>
+      <option value="1.1">Very Fast — TikTok style</option>
+    </select>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-blue" onclick="testVoice()">🔈 Test Voice</button>
+    <button class="btn btn-gray" onclick="stopVoice()">⏹️ Stop</button>
+  </div>
+</div>
+
+<!-- PREVIEW + RECORD -->
+<div class="card">
+  <div class="card-title">▶️ Step 5 — Preview & Record Your Video</div>
+
+  <div class="tip-box">
+    <strong>How it works:</strong><br/>
+    1. Tap <strong>Preview</strong> to see your video play through all scenes<br/>
+    2. When it looks right, tap <strong>Record Video</strong><br/>
+    3. The app records your video with all text and animations<br/>
+    4. Tap <strong>Download MP4</strong> to save it to your phone<br/>
+    5. Open TikTok Instagram or YouTube and upload it!
+  </div>
+
+  <div class="preview-wrap">
+    <canvas id="previewCanvas" width="640" height="360"></canvas>
+  </div>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">Preparing...</div>
+  </div>
+
+  <div class="status" id="statusBox"></div>
+
+  <div class="btn-row" style="margin-bottom:10px;">
+    <button class="btn btn-blue" onclick="previewVideo()">▶️ PREVIEW</button>
+    <button class="btn btn-gray" onclick="stopPreview()">⏹️ STOP</button>
+  </div>
+
+  <button class="btn btn-gold" id="recordBtn" onclick="recordVideo()">🔴 RECORD VIDEO — DOWNLOAD MP4</button>
+
+  <video id="videoOutput" controls></video>
+  <button class="btn btn-green" id="downloadBtn" onclick="downloadVideo()" style="display:none;">⬇️ DOWNLOAD MP4 TO PHONE</button>
+</div>
+
+<!-- NEXT STEPS -->
+<div class="card">
+  <div class="card-title">📱 Step 6 — Post Your Video</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <a href="https://tiktok.com" target="_blank" style="padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;text-align:center;text-decoration:none;color:var(--text);">
+      <div style="font-size:22px;">🎵</div><div style="font-size:11px;font-weight:600;margin-top:4px;">TikTok</div>
+    </a>
+    <a href="https://youtube.com/upload" target="_blank" style="padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;text-align:center;text-decoration:none;color:var(--text);">
+      <div style="font-size:22px;">▶️</div><div style="font-size:11px;font-weight:600;margin-top:4px;">YouTube</div>
+    </a>
+    <a href="https://instagram.com" target="_blank" style="padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;text-align:center;text-decoration:none;color:var(--text);">
+      <div style="font-size:22px;">📸</div><div style="font-size:11px;font-weight:600;margin-top:4px;">Instagram</div>
+    </a>
+    <a href="https://facebook.com" target="_blank" style="padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;text-align:center;text-decoration:none;color:var(--text);">
+      <div style="font-size:22px;">👥</div><div style="font-size:11px;font-weight:600;margin-top:4px;">Facebook</div>
+    </a>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let scenes = [];
+let previewInterval = null;
+let currentScene = 0;
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+let selectedAgent = 'Custom';
+let bgColors = {
+  'dark-gold': {bg:'#07070f', accent:'#f5c518', text:'#eeeef5', sub:'rgba(245,197,24,0.6)'},
+  'dark-blue': {bg:'#050a14', accent:'#4285f4', text:'#eeeef5', sub:'rgba(66,133,244,0.7)'},
+  'dark-red':  {bg:'#0f0505', accent:'#ea4335', text:'#eeeef5', sub:'rgba(234,67,53,0.7)'},
+  'dark-purple':{bg:'#080512',accent:'#a78bfa', text:'#eeeef5', sub:'rgba(167,139,250,0.7)'},
+  'black-white':{bg:'#111111',accent:'#ffffff', text:'#ffffff', sub:'rgba(255,255,255,0.5)'},
+  'dark-green': {bg:'#041008', accent:'#0f9d58', text:'#eeeef5', sub:'rgba(15,157,88,0.7)'},
+  'navy-gold':  {bg:'#0a0f1e', accent:'#f5c518', text:'#eeeef5', sub:'rgba(245,197,24,0.6)'}
+};
+
+// ═══════════════════════════════════════
+// CANVAS SETUP
+// ═══════════════════════════════════════
+const canvas = document.getElementById('previewCanvas');
+const ctx = canvas.getContext('2d');
+
+function getCanvasSize() {
+  const fmt = document.getElementById('vidFormat').value;
+  if (fmt === 'portrait') return {w:720, h:1280};
+  if (fmt === 'square') return {w:720, h:720};
+  return {w:1280, h:720};
+}
+
+function resizeCanvas() {
+  const sz = getCanvasSize();
+  canvas.width = sz.w;
+  canvas.height = sz.h;
+  updatePreview();
+}
+
+document.getElementById('vidFormat').addEventListener('change', resizeCanvas);
+
+// ═══════════════════════════════════════
+// TEMPLATES
+// ═══════════════════════════════════════
+const TEMPLATES = {
+  affiliate: [
+    {headline:'🔥 This AI Tool Changed Everything', body:'I\'ve been using it for 30 days and my results are incredible', sub:'Watch until the end'},
+    {headline:'The Problem We All Have', body:'Creating professional videos takes hours and costs a fortune', sub:'Not anymore...'},
+    {headline:'Meet [PRODUCT NAME]', body:'The AI video tool that does it all in minutes', sub:'No experience needed'},
+    {headline:'Here\'s What It Does', body:'✅ Professional videos in 5 minutes\n✅ No editing skills needed\n✅ Works on any device', sub:''},
+    {headline:'Real Results Real People', body:'Creators are making $500-$2000/month\nusing this exact tool', sub:'You can too'},
+    {headline:'Special Offer — Limited Time', body:'Click the link below to get started FREE\n14-day trial — no credit card', sub:'Link in bio / description'},
+    {headline:'Don\'t Miss This', body:'Join thousands of creators already\nearning with AI video', sub:'Start free today!'},
+    {headline:'AffiliateMediaHub Studio', body:'Follow for more AI tools\nthat make you money', sub:'John Lanter · Orange Texas'}
+  ],
+  ainews: [
+    {headline:'⚡ AI NEWS WEEKLY', body:'Your Monday AI Update\nwith Susan', sub:'AffiliateMediaHub Studio'},
+    {headline:'TOP STORY THIS WEEK', body:'[Headline goes here — paste your AI news story]', sub:'Source: Major AI Publication'},
+    {headline:'WHY THIS MATTERS', body:'This development changes how we\ncreate content and earn online', sub:''},
+    {headline:'WHAT THE EXPERTS SAY', body:'"AI is advancing faster than\nany technology in history"', sub:'— Industry Leaders'},
+    {headline:'HOW IT AFFECTS YOU', body:'Small creators can now compete\nwith big production studios', sub:'Using tools like these 👇'},
+    {headline:'THE OPPORTUNITY', body:'Early adopters are seeing\n10x growth in their channels', sub:'Be one of them'},
+    {headline:'THIS WEEK\'S AI TOOL PICK', body:'[Your affiliate product here]\nLink below — free trial available', sub:'Sponsored by: You!'},
+    {headline:'TUNE IN NEXT WEEK', body:'More AI news every Monday\nFollow + Subscribe now', sub:'Susan · AI News Anchor'}
+  ],
+  tips: [
+    {headline:'💡 5 AI TIPS', body:'That will save you\n10 hours this week', sub:'You\'re going to want these'},
+    {headline:'TIP #1', body:'Use AI to write ALL your\ncaptions in 30 seconds', sub:'Works on TikTok Instagram YouTube'},
+    {headline:'TIP #2', body:'Create a week of content\nin one afternoon with AI', sub:'I\'ll show you exactly how'},
+    {headline:'TIP #3', body:'Let AI answer your\ncustomer questions automatically', sub:'24/7 — while you sleep'},
+    {headline:'TIP #4', body:'Use AI to find your\nbest product ideas fast', sub:'No guessing required'},
+    {headline:'TIP #5', body:'AI video tools can make\nprofessional promos for FREE', sub:'Like this one right now!'},
+    {headline:'WHICH TIP WILL YOU TRY?', body:'Comment below\nI read every response', sub:''},
+    {headline:'WANT MORE AI TIPS?', body:'Follow for weekly content\nthat grows your income', sub:'AffiliateMediaHub Studio'}
+  ],
+  business: [
+    {headline:'🏢 ATTENTION LOCAL BUSINESS', body:'Are you reaching enough\ncustomers online?', sub:'Most businesses are not'},
+    {headline:'THE PROBLEM', body:'Your competitors are using AI\nto market themselves better\nAnd winning your customers', sub:''},
+    {headline:'THE SOLUTION', body:'AI-powered video promotion\nthat looks professional\nand costs almost nothing', sub:''},
+    {headline:'WHAT WE BUILD FOR YOU', body:'✅ Product promo videos\n✅ Social media content\n✅ Brand awareness campaigns', sub:''},
+    {headline:'HOW IT WORKS', body:'You tell us about your business\nWe create the content\nYou post and get customers', sub:'Simple as that'},
+    {headline:'OUR RESULTS', body:'Local businesses see more\ncalls clicks and customers\nwithin 30 days', sub:''},
+    {headline:'GET STARTED TODAY', body:'Contact AffiliateMediaHub Studio\nFirst video consultation FREE', sub:'Orange Texas · SE Texas Area'},
+    {headline:'AffiliateMediaHub Studio', body:'AI Video Production\nfor Southeast Texas Businesses', sub:'John Lanter · CEO'}
+  ],
+  podcast: [
+    {headline:'🎙️ NEW PODCAST EPISODE', body:'With Paul — Your AI Business Guide', sub:'AffiliateMediaHub Studio'},
+    {headline:'THIS WEEK\'S TOPIC', body:'[Your topic here]\nEverything you need to know', sub:''},
+    {headline:'IN THIS EPISODE', body:'✅ Key insight #1\n✅ Key insight #2\n✅ Key insight #3', sub:''},
+    {headline:'WHO IS THIS FOR?', body:'Anyone building an online business\nusing AI tools and automation', sub:'That\'s you watching right now'},
+    {headline:'TOP QUOTE', body:'"The best time to start\nwas yesterday. The second best\ntime is right now."', sub:'— This Week\'s Episode'},
+    {headline:'WHERE TO LISTEN', body:'TikTok · YouTube · Instagram\nFacebook · Podcast Apps', sub:'Search: AffiliateMediaHub'},
+    {headline:'SUBSCRIBE NOW', body:'New episode every Thursday\nDon\'t miss one', sub:''},
+    {headline:'PAUL\'S PODCAST', body:'Building the future\none episode at a time', sub:'AffiliateMediaHub Studio'}
+  ],
+  personal: [
+    {headline:'My Story', body:'22 years in chemical plants\nThen the plant shut down\nI had to start over at 59', sub:''},
+    {headline:'What I Did', body:'Instead of giving up\nI decided to learn AI\nand build something new', sub:''},
+    {headline:'What I Built', body:'AffiliateMediaHub Studio\nAI video production\nAffiliate marketing business', sub:'From Orange Texas'},
+    {headline:'What I Learned', body:'AI gives everyone a chance\nto build real income\nregardless of age or background', sub:''},
+    {headline:'You Can Do It Too', body:'If I can learn AI at 59\nafter 22 years in a plant\nYou absolutely can too', sub:''},
+    {headline:'What I Offer', body:'AI-powered videos\nAffiliate marketing help\nContent creation services', sub:''},
+    {headline:'Let\'s Connect', body:'Follow me on TikTok YouTube\nInstagram and LinkedIn', sub:'AffiliateMediaHub Studio'},
+    {headline:'John Lanter', body:'CEO · AffiliateMediaHub Studio\nOrange Texas', sub:'Three Minds · One Mission · Zero Cost'}
+  ]
+};
+
+function loadTemplate(key) {
+  scenes = TEMPLATES[key].map((s,i) => ({
+    id: Date.now()+i,
+    headline: s.headline,
+    body: s.body,
+    sub: s.sub,
+    duration: parseInt(document.getElementById('sceneSeconds').value) || 4
+  }));
+  renderScenes();
+  updatePreview();
+  showToast('Template loaded! Edit any scene text.');
+}
+
+// ═══════════════════════════════════════
+// SCENE MANAGEMENT
+// ═══════════════════════════════════════
+function addScene(headline='', body='', sub='') {
+  scenes.push({
+    id: Date.now(),
+    headline: headline || 'Your Headline Here',
+    body: body || 'Your main message goes here.\nMake it clear and compelling.',
+    sub: sub || '',
+    duration: parseInt(document.getElementById('sceneSeconds').value) || 4
+  });
+  renderScenes();
+  updatePreview();
+}
+
+function deleteScene(id) {
+  scenes = scenes.filter(s => s.id !== id);
+  renderScenes();
+  updatePreview();
+}
+
+function renderScenes() {
+  const list = document.getElementById('sceneList');
+  if (!scenes.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">No scenes yet. Tap a template above or tap Add Scene.</div>';
+    return;
+  }
+  list.innerHTML = scenes.map((s, i) => `
+    <div class="scene-item" id="scene_${s.id}">
+      <div class="scene-header">
+        <div class="scene-num">${i+1}</div>
+        <div class="scene-label">Scene ${i+1} of ${scenes.length}</div>
+        <button class="scene-del" onclick="deleteScene(${s.id})">✕ Remove</button>
+      </div>
+      <div class="field">
+        <label>HEADLINE</label>
+        <input type="text" value="${escHtml(s.headline)}" oninput="scenes[${i}].headline=this.value;updatePreviewDebounced()" placeholder="Big bold headline..."/>
+      </div>
+      <div class="field">
+        <label>BODY TEXT</label>
+        <textarea rows="3" oninput="scenes[${i}].body=this.value;updatePreviewDebounced()" placeholder="Supporting text...">${escHtml(s.body)}</textarea>
+      </div>
+      <div class="field">
+        <label>SUBTITLE / CALL TO ACTION (optional)</label>
+        <input type="text" value="${escHtml(s.sub)}" oninput="scenes[${i}].sub=this.value;updatePreviewDebounced()" placeholder="Link in bio · Subscribe · Call to action..."/>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escHtml(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════
+// CANVAS DRAWING
+// ═══════════════════════════════════════
+let previewDebounceTimer = null;
+function updatePreviewDebounced() {
+  clearTimeout(previewDebounceTimer);
+  previewDebounceTimer = setTimeout(updatePreview, 300);
+}
+
+function updatePreview() {
+  const idx = Math.min(currentScene, scenes.length - 1);
+  if (idx >= 0 && scenes[idx]) drawScene(scenes[idx], 1.0);
+  else drawBlankCanvas();
+}
+
+function drawBlankCanvas() {
+  const colors = getColors();
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = colors.bg;
+  ctx.fillRect(0, 0, W, H);
+  drawBrandLines(colors, W, H);
+  ctx.fillStyle = colors.sub;
+  ctx.font = `bold ${Math.floor(H*0.04)}px 'Rajdhani', sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Add scenes to preview your video', W/2, H/2);
+}
+
+function getColors() {
+  const style = document.getElementById('bgStyle').value;
+  return bgColors[style] || bgColors['dark-gold'];
+}
+
+function drawScene(scene, alpha) {
+  const colors = getColors();
+  const W = canvas.width, H = canvas.height;
+  const isPortrait = H > W;
+  const isSquare = W === H;
+
+  // Background
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = colors.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Gradient overlay
+  const grad = ctx.createRadialGradient(W*0.3, H*0.3, 0, W*0.5, H*0.5, W*0.8);
+  grad.addColorStop(0, colors.accent + '18');
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  drawBrandLines(colors, W, H);
+
+  // Agent name top left
+  const agentName = selectedAgent !== 'Custom' ? selectedAgent.toUpperCase() : '';
+  if (agentName) {
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = colors.accent;
+    ctx.font = `bold ${Math.floor(H*0.025)}px 'Rajdhani', sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText('▶ ' + agentName + ' · AFFILIATEMEDIAHUB STUDIO', W*0.04, H*0.07);
+  }
+
+  ctx.globalAlpha = alpha;
+
+  // HEADLINE
+  const headlineSize = isPortrait ? H*0.058 : H*0.072;
+  ctx.fillStyle = colors.accent;
+  ctx.font = `bold ${Math.floor(headlineSize)}px 'Rajdhani', sans-serif`;
+  ctx.textAlign = 'center';
+  const headline = scene.headline || '';
+  wrapText(ctx, headline, W/2, isPortrait ? H*0.32 : H*0.3, W*0.88, headlineSize*1.25);
+
+  // BODY
+  const bodySize = isPortrait ? H*0.038 : H*0.042;
+  ctx.fillStyle = colors.text;
+  ctx.font = `${Math.floor(bodySize)}px 'Exo 2', sans-serif`;
+  const body = scene.body || '';
+  const bodyLines = body.split('\n');
+  let bodyY = isPortrait ? H*0.52 : H*0.56;
+  bodyLines.forEach(line => {
+    wrapText(ctx, line.trim(), W/2, bodyY, W*0.84, bodySize*1.4);
+    bodyY += bodySize * 1.5 * Math.ceil(line.length / 40 + 1);
+  });
+
+  // SUBTITLE
+  if (scene.sub) {
+    const subSize = isPortrait ? H*0.030 : H*0.033;
+    ctx.fillStyle = colors.sub;
+    ctx.font = `bold ${Math.floor(subSize)}px 'Exo 2', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(scene.sub, W/2, H*0.88);
+  }
+
+  // Bottom branding
+  ctx.globalAlpha = 0.4;
+  ctx.fillStyle = colors.accent;
+  ctx.font = `bold ${Math.floor(H*0.022)}px 'Rajdhani', sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('AFFILIATEMEDIAHUB STUDIO · JOHN LANTER · ORANGE TEXAS', W/2, H*0.96);
+
+  ctx.globalAlpha = 1;
+}
+
+function drawBrandLines(colors, W, H) {
+  // Top accent bar
+  const grad = ctx.createLinearGradient(0, 0, W, 0);
+  grad.addColorStop(0, 'transparent');
+  grad.addColorStop(0.3, colors.accent);
+  grad.addColorStop(0.7, colors.accent);
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H*0.008);
+  // Bottom accent bar
+  ctx.fillRect(0, H-H*0.008, W, H*0.008);
+  // Corner accents
+  ctx.strokeStyle = colors.accent + '60';
+  ctx.lineWidth = 2;
+  const m = W*0.03;
+  const s = W*0.06;
+  ctx.beginPath();
+  ctx.moveTo(m, m+s); ctx.lineTo(m, m); ctx.lineTo(m+s, m);
+  ctx.moveTo(W-m-s, m); ctx.lineTo(W-m, m); ctx.lineTo(W-m, m+s);
+  ctx.moveTo(m, H-m-s); ctx.lineTo(m, H-m); ctx.lineTo(m+s, H-m);
+  ctx.moveTo(W-m-s, H-m); ctx.lineTo(W-m, H-m); ctx.lineTo(W-m, H-m-s);
+  ctx.stroke();
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  if (!text) return;
+  const words = text.split(' ');
+  let line = '';
+  let curY = y;
+  words.forEach(word => {
+    const test = line ? line + ' ' + word : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      ctx.fillText(line, x, curY);
+      line = word;
+      curY += lineHeight;
+    } else {
+      line = test;
+    }
+  });
+  if (line) ctx.fillText(line, x, curY);
+}
+
+// ═══════════════════════════════════════
+// PREVIEW
+// ═══════════════════════════════════════
+function previewVideo() {
+  if (!scenes.length) { showToast('Add some scenes first!'); return; }
+  stopPreview();
+  currentScene = 0;
+  const secPerScene = parseInt(document.getElementById('sceneSeconds').value) || 4;
+  drawScene(scenes[0], 1.0);
+  setStatus('info', `▶ Playing scene 1 of ${scenes.length}...`);
+
+  previewInterval = setInterval(() => {
+    currentScene++;
+    if (currentScene >= scenes.length) {
+      stopPreview();
+      setStatus('ok', '✅ Preview complete! Tap Record Video to save it.');
+      return;
+    }
+    drawScene(scenes[currentScene], 1.0);
+    setStatus('info', `▶ Playing scene ${currentScene+1} of ${scenes.length}...`);
+  }, secPerScene * 1000);
+}
+
+function stopPreview() {
+  if (previewInterval) { clearInterval(previewInterval); previewInterval = null; }
+  currentScene = 0;
+  if (scenes.length) drawScene(scenes[0], 1.0);
+  else drawBlankCanvas();
+}
+
+// ═══════════════════════════════════════
+// RECORD VIDEO
+// ═══════════════════════════════════════
+async function recordVideo() {
+  if (!scenes.length) { showToast('Add some scenes first!'); return; }
+
+  const btn = document.getElementById('recordBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Recording...';
+  document.getElementById('videoOutput').style.display = 'none';
+  document.getElementById('downloadBtn').style.display = 'none';
+  recordedChunks = [];
+
+  // Check if MediaRecorder is supported
+  if (!window.MediaRecorder) {
+    setStatus('err', '⚠️ Your browser does not support video recording. Please use Chrome on laptop for best results.');
+    btn.disabled = false;
+    btn.textContent = '🔴 RECORD VIDEO — DOWNLOAD MP4';
+    return;
+  }
+
+  const secPerScene = parseInt(document.getElementById('sceneSeconds').value) || 4;
+  const totalSec = scenes.length * secPerScene;
+  const fps = 30;
+  const script = document.getElementById('voiceScript').value.trim();
+
+  showProgress(0, 'Starting recording...');
+
+  try {
+    // Get canvas stream
+    const stream = canvas.captureStream(fps);
+
+    // Try to add audio from speech synthesis
+    let audioStream = null;
+    try {
+      if (script && window.speechSynthesis) {
+        // We'll sync voice separately - record canvas only
+      }
+    } catch(e) {}
+
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+      ? 'video/webm;codecs=vp9'
+      : MediaRecorder.isTypeSupported('video/webm')
+      ? 'video/webm'
+      : 'video/mp4';
+
+    mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2500000 });
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const videoEl = document.getElementById('videoOutput');
+      videoEl.src = url;
+      videoEl.style.display = 'block';
+      document.getElementById('downloadBtn').style.display = 'block';
+      document.getElementById('downloadBtn').dataset.url = url;
+      hideProgress();
+      setStatus('ok', '✅ Video recorded! Tap Download to save to your phone.');
+      btn.disabled = false;
+      btn.textContent = '🔴 RECORD VIDEO — DOWNLOAD MP4';
+      showToast('Video ready! Tap Download MP4.');
+    };
+
+    mediaRecorder.start(100);
+
+    // Start voice if script exists
+    if (script) {
+      setTimeout(() => speakScript(script), 500);
+    }
+
+    // Animate through scenes
+    currentScene = 0;
+    drawScene(scenes[0], 1.0);
+    showProgress(0, `Recording scene 1 of ${scenes.length}...`);
+
+    for (let i = 0; i < scenes.length; i++) {
+      await new Promise(resolve => {
+        currentScene = i;
+        drawScene(scenes[i], 1.0);
+        const pct = Math.round((i / scenes.length) * 100);
+        showProgress(pct, `Recording scene ${i+1} of ${scenes.length}...`);
+        setTimeout(resolve, secPerScene * 1000);
+      });
+    }
+
+    showProgress(100, 'Finishing...');
+    stopVoice();
+    setTimeout(() => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        stream.getTracks().forEach(t => t.stop());
+      }
+    }, 500);
+
+  } catch(err) {
+    setStatus('err', 'Recording error: ' + err.message + '. Try using Chrome on your laptop.');
+    btn.disabled = false;
+    btn.textContent = '🔴 RECORD VIDEO — DOWNLOAD MP4';
+    hideProgress();
+  }
+}
+
+function downloadVideo() {
+  const url = document.getElementById('downloadBtn').dataset.url;
+  const title = document.getElementById('vidTitle').value.trim() || 'HubEngine-Video';
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = title.replace(/\s+/g,'-') + '-' + Date.now() + '.webm';
+  a.click();
+  showToast('Downloading! Check your Downloads folder.');
+}
+
+// ═══════════════════════════════════════
+// VOICE
+// ═══════════════════════════════════════
+let synth = window.speechSynthesis;
+let voices = [];
+
+function initVoices() {
+  voices = synth.getVoices();
+  if (!voices.length) { setTimeout(initVoices, 500); return; }
+  const sel = document.getElementById('voiceSelect');
+  sel.innerHTML = '';
+  const eng = voices.filter(v => v.lang.startsWith('en'));
+  const others = voices.filter(v => !v.lang.startsWith('en'));
+  [...eng, ...others].forEach(v => {
+    const o = document.createElement('option');
+    o.value = v.name;
+    o.textContent = v.name + ' (' + v.lang + ')';
+    sel.appendChild(o);
+  });
+}
+
+if (synth) {
+  initVoices();
+  synth.onvoiceschanged = initVoices;
+  setTimeout(initVoices, 800);
+}
+
+function testVoice() {
+  const script = document.getElementById('voiceScript').value.trim();
+  const sample = script || 'Welcome to AffiliateMediaHub Studio. John Lanter here from Orange Texas, bringing you the best AI tools and affiliate marketing strategies.';
+  stopVoice();
+  speakScript(sample.substring(0, 200));
+}
+
+function speakScript(text) {
+  if (!synth || !text) return;
+  stopVoice();
+  const u = new SpeechSynthesisUtterance(text);
+  const selName = document.getElementById('voiceSelect').value;
+  const v = voices.find(v => v.name === selName);
+  if (v) u.voice = v;
+  u.rate = parseFloat(document.getElementById('voiceRate').value) || 0.9;
+  u.pitch = 1.0;
+  u.volume = 1.0;
+  synth.speak(u);
+}
+
+function stopVoice() {
+  if (synth) synth.cancel();
+}
+
+// ═══════════════════════════════════════
+// AGENT SELECTION
+// ═══════════════════════════════════════
+function pickAgent(el, name, role, bgColor, accentColor) {
+  selectedAgent = name;
+  document.querySelectorAll('.agent-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  updatePreview();
+}
+
+// ═══════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════
+function setStatus(type, msg) {
+  const box = document.getElementById('statusBox');
+  box.className = 'status status-' + type;
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+
+function showProgress(pct, label) {
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = label;
+}
+
+function hideProgress() {
+  document.getElementById('progressWrap').style.display = 'none';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+window.onload = function() {
+  resizeCanvas();
+  drawBlankCanvas();
+  // Load affiliate template by default
+  loadTemplate('affiliate');
+};
+</script>
+</body>
+</html>
