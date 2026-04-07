@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Hub Engine v3 — AI Video Generator Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --gold:#f5c518;--gold2:#e8a020;--dark:#07070f;--dark2:#0e0e1a;--dark3:#13131f;
+  --border:rgba(245,197,24,0.18);--text:#eeeef5;--muted:rgba(238,238,245,0.45);
+  --green:#0f9d58;--red:#ea4335;--blue:#4285f4;--purple:#7c3aed;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{padding-bottom:60px;background:var(--dark);color:var(--text);font-family:'Exo 2',sans-serif;min-height:100%;}
+body{padding-bottom:60px;padding:0 0 60px;}
+
+/* ── HEADER ── */
+.hdr{background:var(--dark2);border-bottom:2px solid var(--border);padding:12px 16px;position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:10px;}
+.hdr-logo{font-size:24px;}
+.hdr-info{flex:1;}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--gold);letter-spacing:2px;}
+.hdr-sub{font-size:10px;color:var(--green);letter-spacing:1px;}
+.free-pill{padding:4px 10px;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.4);border-radius:20px;font-size:10px;color:var(--green);font-weight:700;white-space:nowrap;}
+
+/* ── STEPS NAV ── */
+.steps-nav{display:flex;background:var(--dark3);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.steps-nav::-webkit-scrollbar{display:none;}
+.step-tab{flex-shrink:0;padding:10px 14px;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
+.step-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.step-tab.done{color:var(--green);}
+
+/* ── PANELS ── */
+.panel{display:none;padding:16px;}
+.panel.active{display:block;}
+
+/* ── CARDS ── */
+.card{background:var(--dark3);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
+.card-title{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+
+/* ── FIELDS ── */
+.field{margin-bottom:12px;}
+.field label{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;display:block;margin-bottom:5px;}
+.field input,.field textarea,.field select{
+  width:100%;padding:11px 13px;background:rgba(255,255,255,0.05);
+  border:1px solid var(--border);border-radius:10px;color:var(--text);
+  font-family:'Exo 2',sans-serif;font-size:14px;outline:none;}
+.field textarea{resize:none;min-height:110px;writing-mode:horizontal-tb!important;direction:ltr!important;text-align:left!important;line-height:1.6;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold);}
+.field select option{background:var(--dark3);}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:14px;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;border:none;
+  font-family:'Rajdhani',sans-serif;letter-spacing:1px;margin-bottom:10px;transition:all .2s;text-align:center;display:block;text-decoration:none;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;}
+.btn-green{background:rgba(15,157,88,0.12);border:1px solid rgba(15,157,88,0.35);color:var(--green);}
+.btn-blue{background:rgba(66,133,244,0.12);border:1px solid rgba(66,133,244,0.3);color:var(--blue);}
+.btn-gray{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--muted);}
+.btn-red{background:rgba(234,67,53,0.12);border:1px solid rgba(234,67,53,0.3);color:var(--red);}
+.btn-row{display:flex;gap:8px;}
+.btn-row .btn{flex:1;margin-bottom:0;}
+.btn:disabled{opacity:0.3;cursor:not-allowed;}
+
+/* ── ACTOR GRID ── */
+.actor-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.actor-card{padding:14px 10px;background:var(--dark3);border:2px solid rgba(255,255,255,0.06);border-radius:12px;cursor:pointer;text-align:center;transition:all .2s;}
+.actor-card.selected{border-color:var(--gold);background:rgba(245,197,24,0.06);}
+.actor-avatar{width:70px;height:70px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:32px;border:2px solid rgba(255,255,255,0.1);}
+.actor-name{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);}
+.actor-role{font-size:10px;color:var(--muted);margin-top:2px;}
+.actor-day{font-size:9px;color:rgba(245,197,24,0.5);margin-top:3px;letter-spacing:1px;}
+
+/* ── TEMPLATE CHIPS ── */
+.tmpl-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.tmpl{padding:8px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;}
+.tmpl:active,.tmpl.active{background:rgba(245,197,24,0.1);border-color:var(--gold);color:var(--gold);}
+
+/* ── SCENE LIST ── */
+.scene-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.scene-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;}
+.scene-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.scene-num{width:24px;height:24px;border-radius:50%;background:var(--gold);color:#000;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Rajdhani',sans-serif;}
+.scene-lbl{font-size:12px;color:var(--gold);font-weight:600;flex:1;}
+.scene-del{padding:3px 9px;background:rgba(234,67,53,0.1);border:1px solid rgba(234,67,53,0.3);border-radius:6px;font-size:10px;color:var(--red);cursor:pointer;}
+
+/* ── CANVAS STUDIO ── */
+.studio-wrap{position:relative;background:#000;border-radius:14px;overflow:hidden;border:2px solid var(--border);margin-bottom:14px;}
+#studioCanvas{width:100%;height:auto;display:block;}
+.studio-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);display:none;}
+.studio-overlay.show{display:flex;}
+.studio-overlay-text{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--gold);letter-spacing:3px;text-align:center;}
+
+/* ── PROGRESS ── */
+.prog-wrap{display:none;margin-bottom:14px;}
+.prog-bar{height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));width:0%;transition:width .4s;border-radius:4px;}
+.prog-lbl{font-size:12px;color:var(--muted);margin-top:6px;text-align:center;}
+
+/* ── STATUS ── */
+.status{padding:11px 14px;border-radius:10px;font-size:12px;margin-bottom:12px;line-height:1.6;display:none;}
+.st-ok{background:rgba(15,157,88,0.1);border:1px solid rgba(15,157,88,0.3);color:var(--green);display:block;}
+.st-err{background:rgba(234,67,53,0.1);border:1px solid rgba(234,67,53,0.3);color:var(--red);display:block;}
+.st-info{background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.3);color:var(--blue);display:block;}
+
+/* ── POST GRID ── */
+.post-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.post-link{padding:13px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;text-align:center;text-decoration:none;color:var(--text);display:block;}
+.post-link:active{border-color:var(--gold);}
+.post-icon{font-size:26px;display:block;margin-bottom:4px;}
+.post-name{font-size:11px;font-weight:600;}
+.post-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* ── API BANNER ── */
+.api-banner{background:rgba(234,67,53,0.08);border:1px solid rgba(234,67,53,0.3);border-radius:10px;padding:13px;margin-bottom:14px;font-size:12px;color:var(--red);line-height:1.7;}
+.api-row{display:flex;gap:8px;margin-top:8px;}
+.api-row input{flex:1;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:'Exo 2',sans-serif;}
+.api-row button{padding:9px 16px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:8px;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+
+/* ── INFO BOX ── */
+.info{background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.15);border-radius:10px;padding:13px;font-size:12px;color:var(--muted);line-height:1.9;margin-bottom:12px;}
+.info strong{color:var(--gold);}
+
+/* ── VIDEO OUTPUT ── */
+#videoOut{display:none;width:100%;border-radius:12px;border:1px solid var(--border);margin-bottom:10px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(15,157,88,0.92);color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:700;z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* D-ID section */
+.did-card{background:rgba(66,133,244,0.06);border:1px solid rgba(66,133,244,0.3);border-radius:14px;padding:16px;margin-bottom:14px;}
+.did-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:8px;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-logo">🎬</div>
+  <div class="hdr-info">
+    <div class="hdr-title">AI VIDEO GENERATOR STUDIO</div>
+    <div class="hdr-sub">HUB ENGINE v3 · AFFILIATEMEDIAHUB STUDIO</div>
+  </div>
+  <div class="free-pill">FREE</div>
+</div>
+
+<!-- STEPS NAV -->
+<div class="steps-nav">
+  <div class="step-tab active" id="tab1" onclick="goStep(1)">1️⃣ SCRIPT</div>
+  <div class="step-tab" id="tab2" onclick="goStep(2)">2️⃣ ACTOR</div>
+  <div class="step-tab" id="tab3" onclick="goStep(3)">3️⃣ SCENES</div>
+  <div class="step-tab" id="tab4" onclick="goStep(4)">4️⃣ STUDIO</div>
+  <div class="step-tab" id="tab5" onclick="goStep(5)">5️⃣ PUBLISH</div>
+</div>
+
+<!-- ════════════════════════════════
+     STEP 1 — SCRIPT WRITER
+════════════════════════════════ -->
+<div class="panel active" id="panel1">
+
+  <div id="apiBanner" class="api-banner" style="display:none;">
+    ⚠️ Becky needs your Groq API key to write scripts automatically.
+    <div class="api-row">
+      <input type="password" id="apiKeyInput" placeholder="gsk_..."/>
+      <button onclick="saveGroqKey()">SAVE</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📝 AI SCRIPT WRITER</div>
+
+    <div class="field">
+      <label>VIDEO TYPE</label>
+      <select id="vidType" onchange="updateDayHint()">
+        <option value="ainews_monday">📰 AI News Show — Monday (Susan)</option>
+        <option value="ainews_wednesday">📰 AI News Show — Wednesday (Alisha)</option>
+        <option value="podcast_thursday">🎙️ Podcast — Thursday (Paul)</option>
+        <option value="ainews_friday">📰 AI News Show — Friday (Lisa)</option>
+        <option value="affiliate_saturday">💰 Affiliate Promo — Saturday</option>
+        <option value="business_promo">🏢 Business Promo Video</option>
+        <option value="custom">✨ Custom Video</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>VIDEO LENGTH</label>
+      <select id="vidLength">
+        <option value="30">30 seconds</option>
+        <option value="60" selected>60 seconds</option>
+        <option value="90">90 seconds</option>
+        <option value="120">2 minutes</option>
+        <option value="180">3 minutes</option>
+        <option value="300">5 minutes</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>TOPIC / PRODUCT / BUSINESS NAME</label>
+      <input type="text" id="vidTopic" placeholder="e.g. Top 5 AI Tools 2026, Vidnoz affiliate promo, ABC Restaurant Orange TX..."/>
+    </div>
+
+    <div class="field">
+      <label>AFFILIATE LINK (optional — will be added to script)</label>
+      <input type="text" id="affLink" placeholder="e.g. https://vidnoz.com?ref=yourid"/>
+    </div>
+
+    <button class="btn btn-gold" id="writeBtn" onclick="writeScript()">⚡ BECKY — WRITE MY SCRIPT NOW</button>
+
+    <div class="field" style="margin-top:10px;">
+      <label>YOUR SCRIPT <span style="color:var(--muted);font-size:9px;">(auto-filled or type your own)</span></label>
+      <textarea id="scriptBox" placeholder="Your script will appear here after Becky writes it. Or type your own script directly here..."></textarea>
+    </div>
+
+    <div id="scriptStatus" class="status"></div>
+    <button class="btn btn-green" onclick="goStep(2)">NEXT → PICK YOUR ACTOR ➤</button>
+  </div>
+
+  <!-- SCRIPT TEMPLATES -->
+  <div class="card">
+    <div class="card-title">⚡ QUICK SCRIPT TEMPLATES</div>
+    <div class="tmpl-row">
+      <div class="tmpl" onclick="loadScriptTemplate('ainews')">📰 AI News Intro</div>
+      <div class="tmpl" onclick="loadScriptTemplate('affiliate')">💰 Affiliate Promo</div>
+      <div class="tmpl" onclick="loadScriptTemplate('podcast')">🎙️ Podcast Open</div>
+      <div class="tmpl" onclick="loadScriptTemplate('business')">🏢 Business Promo</div>
+      <div class="tmpl" onclick="loadScriptTemplate('tips')">💡 AI Tips</div>
+      <div class="tmpl" onclick="loadScriptTemplate('personal')">👤 Personal Brand</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════
+     STEP 2 — ACTOR PICKER
+════════════════════════════════ -->
+<div class="panel" id="panel2">
+
+  <div class="info">
+    <strong>Pick your AI Avatar Actor</strong><br/>
+    Each actor is auto-suggested by day of week. You can choose any actor for any video.
+  </div>
+
+  <div class="actor-grid">
+    <div class="actor-card" id="actor-susan" onclick="selectActor('susan')">
+      <div class="actor-avatar" style="background:linear-gradient(135deg,#1a3a5c,#2d6a9f);">👩‍💼</div>
+      <div class="actor-name">SUSAN</div>
+      <div class="actor-role">AI News Anchor</div>
+      <div class="actor-day">MONDAYS</div>
+    </div>
+    <div class="actor-card" id="actor-alisha" onclick="selectActor('alisha')">
+      <div class="actor-avatar" style="background:linear-gradient(135deg,#1a2e1a,#2d6b3a);">👩</div>
+      <div class="actor-name">ALISHA</div>
+      <div class="actor-role">AI News Speaker</div>
+      <div class="actor-day">WEDNESDAYS</div>
+    </div>
+    <div class="actor-card" id="actor-paul" onclick="selectActor('paul')">
+      <div class="actor-avatar" style="background:linear-gradient(135deg,#2e1a0e,#6b3a1a);">👴</div>
+      <div class="actor-name">PAUL</div>
+      <div class="actor-role">Podcast Host</div>
+      <div class="actor-day">THURSDAYS</div>
+    </div>
+    <div class="actor-card" id="actor-lisa" onclick="selectActor('lisa')">
+      <div class="actor-avatar" style="background:linear-gradient(135deg,#1a1a3a,#3a2d6b);">👩‍💼</div>
+      <div class="actor-name">LISA</div>
+      <div class="actor-role">AI News Anchor</div>
+      <div class="actor-day">FRIDAYS</div>
+    </div>
+  </div>
+
+  <!-- ACTOR DETAIL CARD -->
+  <div class="card" id="actorDetailCard" style="display:none;">
+    <div class="card-title" id="actorDetailName">SUSAN — SELECTED</div>
+    <div id="actorDetailDesc" style="font-size:12px;color:var(--muted);line-height:1.8;"></div>
+  </div>
+
+  <!-- D-ID INTEGRATION -->
+  <div class="did-card">
+    <div class="did-title">🎥 MAKE REAL TALKING AVATAR VIDEOS</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.9;margin-bottom:12px;">
+      To make your actors <strong style="color:var(--text);">actually speak on video</strong> with lip sync, use one of these free tools with your actor image:<br/><br/>
+      <strong style="color:var(--blue);">Option 1 — D-ID Studio (FREE trial — 20 videos)</strong><br/>
+      Go to studio.d-id.com → Upload your actor image → Paste script → Download talking video<br/><br/>
+      <strong style="color:var(--green);">Option 2 — Vidnoz (FREE daily + 50% affiliate commission)</strong><br/>
+      Go to vidnoz.com → Pick avatar → Paste script → Download video → Earn commission<br/><br/>
+      <strong style="color:var(--gold);">Option 3 — HeyGen (FREE tier — 1 min/month)</strong><br/>
+      Go to heygen.com → Pick avatar → Paste script → Download video
+    </div>
+    <div class="btn-row">
+      <a href="https://studio.d-id.com" target="_blank" class="btn btn-blue" style="margin:0;">🎥 D-ID FREE</a>
+      <a href="https://vidnoz.com" target="_blank" class="btn btn-green" style="margin:0;">💰 VIDNOZ</a>
+    </div>
+  </div>
+
+  <button class="btn btn-gold" onclick="goStep(3)">NEXT → BUILD SCENES ➤</button>
+</div>
+
+<!-- ════════════════════════════════
+     STEP 3 — SCENE BUILDER
+════════════════════════════════ -->
+<div class="panel" id="panel3">
+
+  <div class="card">
+    <div class="card-title">🎬 BUILD YOUR SCENES</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.8;">
+      Each scene = one visual slide in your video. The scenes play while Becky reads your script as voiceover. Add as many as you need for your video length.
+    </div>
+
+    <!-- QUICK LOAD -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:8px;">QUICK LOAD SCENES FROM SCRIPT</div>
+      <button class="btn btn-gold" onclick="autoSplitScript()" style="margin-bottom:0;">⚡ AUTO-BUILD SCENES FROM MY SCRIPT</button>
+    </div>
+
+    <div id="sceneWrap" class="scene-wrap"></div>
+    <button class="btn btn-blue" onclick="addScene()">+ ADD SCENE</button>
+  </div>
+
+  <button class="btn btn-green" onclick="goStep(4)">NEXT → STUDIO PREVIEW ➤</button>
+</div>
+
+<!-- ════════════════════════════════
+     STEP 4 — STUDIO + RECORD
+════════════════════════════════ -->
+<div class="panel" id="panel4">
+
+  <div class="card">
+    <div class="card-title">🎙️ VOICE SETTINGS</div>
+    <div class="field">
+      <label>VOICE</label>
+      <select id="voiceSel"><option>Loading voices...</option></select>
+    </div>
+    <div class="field">
+      <label>SPEED</label>
+      <select id="voiceRate">
+        <option value="0.8">Slow — Clear & deliberate</option>
+        <option value="0.9" selected>Normal — Professional news</option>
+        <option value="1.0">Fast — Energetic</option>
+        <option value="1.1">Very Fast — TikTok style</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-blue" onclick="testVoice()" style="margin:0;">🔈 Test Voice</button>
+      <button class="btn btn-gray" onclick="stopVoice()" style="margin:0;">⏹️ Stop</button>
+    </div>
+  </div>
+
+  <!-- STUDIO CANVAS -->
+  <div class="card">
+    <div class="card-title">📺 VIDEO STUDIO PREVIEW</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">This shows exactly what your video will look like. Tap Preview to play through all scenes with voiceover.</div>
+    <div class="studio-wrap">
+      <canvas id="studioCanvas" width="1280" height="720"></canvas>
+      <div class="studio-overlay" id="studioOverlay">
+        <div class="studio-overlay-text">🎬 RECORDING...</div>
+      </div>
+    </div>
+    <div class="prog-wrap" id="progWrap">
+      <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+      <div class="prog-lbl" id="progLbl">Preparing...</div>
+    </div>
+    <div id="studioStatus" class="status"></div>
+    <div class="btn-row" style="margin-bottom:10px;">
+      <button class="btn btn-blue" onclick="previewStudio()" style="margin:0;">▶️ PREVIEW</button>
+      <button class="btn btn-gray" onclick="stopStudio()" style="margin:0;">⏹️ STOP</button>
+    </div>
+    <button class="btn btn-red" id="recBtn" onclick="recordStudio()">🔴 RECORD VIDEO → DOWNLOAD MP4</button>
+    <video id="videoOut" controls></video>
+    <button class="btn btn-gold" id="dlBtn" onclick="downloadVideo()" style="display:none;">⬇️ DOWNLOAD MP4 TO PHONE</button>
+  </div>
+
+  <!-- D-ID QUICK LINK -->
+  <div class="did-card">
+    <div class="did-title">🎥 WANT REAL TALKING ACTORS ON VIDEO?</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:10px;">
+      Copy your script above then paste it into one of these tools with your actor image to get a real talking head video:
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-gray" onclick="copyScript()" style="margin:0;">📋 Copy Script</button>
+      <a href="https://studio.d-id.com" target="_blank" class="btn btn-blue" style="margin:0;">🎥 D-ID Free</a>
+      <a href="https://vidnoz.com" target="_blank" class="btn btn-green" style="margin:0;">💰 Vidnoz</a>
+    </div>
+  </div>
+
+  <button class="btn btn-green" onclick="goStep(5)">NEXT → PUBLISH ➤</button>
+</div>
+
+<!-- ════════════════════════════════
+     STEP 5 — PUBLISH
+════════════════════════════════ -->
+<div class="panel" id="panel5">
+
+  <div class="info" id="publishInfo">
+    <strong>Your video is ready to post!</strong><br/>
+    Download your MP4 first, then tap the platform where you want to post it.
+  </div>
+
+  <!-- POSTING GUIDE -->
+  <div class="card">
+    <div class="card-title">📱 POST YOUR VIDEO</div>
+    <div class="post-grid">
+      <a href="https://www.tiktok.com/upload" target="_blank" class="post-link">
+        <span class="post-icon">🎵</span>
+        <span class="post-name">TikTok</span>
+        <span class="post-sub">Best for reach</span>
+      </a>
+      <a href="https://studio.youtube.com" target="_blank" class="post-link">
+        <span class="post-icon">▶️</span>
+        <span class="post-name">YouTube</span>
+        <span class="post-sub">Shorts + long</span>
+      </a>
+      <a href="https://instagram.com" target="_blank" class="post-link">
+        <span class="post-icon">📸</span>
+        <span class="post-name">Instagram</span>
+        <span class="post-sub">Reels</span>
+      </a>
+      <a href="https://facebook.com" target="_blank" class="post-link">
+        <span class="post-icon">👥</span>
+        <span class="post-name">Facebook</span>
+        <span class="post-sub">Feed + Reels</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- CAPTION GENERATOR -->
+  <div class="card">
+    <div class="card-title">✍️ CAPTION + HASHTAGS GENERATOR</div>
+    <div class="field">
+      <label>PLATFORM</label>
+      <select id="captionPlatform">
+        <option value="tiktok">TikTok</option>
+        <option value="youtube">YouTube Shorts</option>
+        <option value="instagram">Instagram Reels</option>
+        <option value="facebook">Facebook</option>
+      </select>
+    </div>
+    <button class="btn btn-gold" onclick="generateCaption()">✍️ BECKY — WRITE MY CAPTION + HASHTAGS</button>
+    <div class="field" style="margin-top:8px;">
+      <textarea id="captionBox" placeholder="Your caption will appear here..." rows="5"></textarea>
+    </div>
+    <button class="btn btn-gray" onclick="copyCaption()">📋 Copy Caption</button>
+  </div>
+
+  <!-- CONTENT SCHEDULE -->
+  <div class="card">
+    <div class="card-title">📅 YOUR WEEKLY CONTENT SCHEDULE</div>
+    <div style="font-size:13px;line-height:2.4;">
+      <span style="color:var(--gold);font-weight:700;">Monday</span> — Susan · AI News Show<br/>
+      <span style="color:var(--gold);font-weight:700;">Wednesday</span> — Alisha · AI News Show<br/>
+      <span style="color:var(--gold);font-weight:700;">Thursday</span> — Paul · Podcast Video<br/>
+      <span style="color:var(--gold);font-weight:700;">Friday</span> — Lisa · AI News Show<br/>
+      <span style="color:var(--gold);font-weight:700;">Saturday</span> — Affiliate Promo (Lisa/Alisha/Susan)<br/>
+      <span style="color:var(--gold);font-weight:700;">Weekly</span> — Business Promo (Susan/Alisha/Lisa)
+    </div>
+  </div>
+
+  <button class="btn btn-gold" onclick="goStep(1)">🔄 MAKE ANOTHER VIDEO</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+// ─── STATE ───────────────────────────────
+let groqKey = localStorage.getItem('hub_groq') || '';
+let selectedActor = '';
+let scenes = [];
+let previewInterval = null;
+let currentScene = 0;
+let recordedChunks = [];
+let mediaRecorder = null;
+let synth = window.speechSynthesis;
+let voices = [];
+let chosenVoice = null;
+
+// ─── ACTOR DATA ───────────────────────────
+const ACTORS = {
+  susan: {
+    name: 'SUSAN',
+    role: 'AI News Anchor · Blonde · Light Blue Shirt · High-Tech Studio',
+    day: 'MONDAYS',
+    bg: ['#0a1628','#1a3a5c'],
+    accent: '#60a5fa',
+    emoji: '👩‍💼',
+    desc: 'Short styled blonde hair, light blue button-down shirt, high-tech AI News Show studio with digital cityscapes. Professional, warm, authoritative anchor.'
+  },
+  alisha: {
+    name: 'ALISHA',
+    role: 'AI News Speaker · Blue Silk Shirt · Studio Desk',
+    day: 'WEDNESDAYS',
+    bg: ['#0a1a0a','#1a3a2a'],
+    accent: '#34d399',
+    emoji: '👩',
+    desc: 'Long straight dark hair, glasses, blue silk shirt, boom mic, coffee cup on desk. Mexican female speaker, warm inviting smile, bright eyes.'
+  },
+  paul: {
+    name: 'PAUL',
+    role: 'Podcast Host · Brown Coveralls · Office Desk',
+    day: 'THURSDAYS',
+    bg: ['#1a0e08','#3a2010'],
+    accent: '#f59e0b',
+    emoji: '👴',
+    desc: 'White male in 60s, blue glasses, grey short hair, full grey beard, brown coveralls over blue shirt. Sits at desk with coffee cup doing podcast videos.'
+  },
+  lisa: {
+    name: 'LISA',
+    role: 'AI News Anchor · Asian · Professional News Desk',
+    day: 'FRIDAYS',
+    bg: ['#0a0818','#1a1040'],
+    accent: '#a78bfa',
+    emoji: '👩‍💼',
+    desc: '38-year-old Asian female, shoulder-length black hair, console news outfit, modern news desk. Golden brown skin, bright brown eyes, high cheekbones, radiant confidence.'
+  }
+};
+
+// ─── SCRIPT TEMPLATES ────────────────────
+const SCRIPT_TEMPLATES = {
+  ainews: `Welcome to AI News Weekly! I'm your host, and today we're covering the biggest stories in artificial intelligence. From breakthrough models to tools that are changing how we work and earn online — you're watching the show that keeps you ahead of the curve. Let's get into it.
+
+Story one: AI tools are now helping small business owners create professional videos in minutes. What used to take a full production team can now be done by one person with a phone.
+
+Story two: New AI models released this week are outperforming previous benchmarks across writing, coding, and creative tasks.
+
+That's your AI news update for today. Subscribe and follow for your weekly update. I'm your anchor, and I'll see you next week.`,
+
+  affiliate: `Hey everyone! Today I want to share something that has genuinely changed how I create content — and it could do the same for you.
+
+[PRODUCT NAME] is an AI video tool that lets anyone — regardless of experience — create professional-quality videos in minutes. No cameras, no editing skills, no expensive software.
+
+Here's what I love about it: First, it's incredibly easy to use. Second, the quality looks like something a professional studio produced. Third, you can create unlimited videos for your business, your social media, or your affiliate marketing.
+
+If you're serious about building an online income with video content, this is the tool you need. Click the link below to try it free. You will not regret it.
+
+Link is in the bio and the description. See you in the next video!`,
+
+  podcast: `Welcome back to the show! I'm Paul, and today we're diving into something that every entrepreneur and content creator needs to understand right now.
+
+We're talking about how artificial intelligence is leveling the playing field for the little guy. You don't need a production studio. You don't need a big team. You don't need a lot of money. What you need is the right tools and the right strategy.
+
+Today I'm going to walk you through exactly how I use AI every single day to run my business, create content, and grow my audience — all from my home office.
+
+Stay with me because this is one you don't want to miss. Let's get into it.`,
+
+  business: `Hello! I want to introduce you to [BUSINESS NAME] — a [type of business] located right here in [City, Texas].
+
+[BUSINESS NAME] has been serving the [local area] community with [describe what they do]. Whether you need [service 1], [service 2], or [service 3] — they have you covered.
+
+What sets them apart is their commitment to quality, their knowledge of the local area, and their dedication to every customer they serve.
+
+If you're in [City] and you need [what they offer], give them a call today. Their number is in the description below.
+
+This is [Actor Name] for AffiliateMediaHub Studio — your local AI video production service. If you're a local business and you want a video like this one, reach out to us today.`,
+
+  tips: `Welcome back! Today I've got five AI tips that will save you serious time and help you grow your business faster.
+
+Tip one: Use AI to write all your social media captions in under 30 seconds. Just describe your video and let AI do the rest.
+
+Tip two: Use AI to generate a full week of content ideas in one sitting. Never run out of things to post again.
+
+Tip three: AI can write your email sequences, your product descriptions, and your ad copy — all for free.
+
+Tip four: Use AI video tools to create professional promos for your business or your affiliate products without any editing skills.
+
+Tip five: Build a daily habit of using AI for 30 minutes a day. Compound that over 90 days and you will be shocked at what you build.
+
+That's five tips for today. Follow for more and I'll see you in the next one.`,
+
+  personal: `My name is [Your Name], and I want to tell you something real.
+
+A few years ago I was working in [your field] — putting in long hours, giving everything I had. Then circumstances changed, and I had to start over.
+
+Instead of giving up, I decided to invest in learning AI. Not because I was a tech person. I'm not. But because I saw that AI was giving regular people the ability to compete with companies that have entire marketing departments.
+
+Today I run AffiliateMediaHub Studio — an AI video production and affiliate marketing business. I create content, I promote products I believe in, and I help local businesses get their message out.
+
+If you're in a similar situation — starting over, trying something new, building something from nothing — I want you to know it is possible. Follow this channel and let's build together.`
+};
+
+// ─── INIT ─────────────────────────────────
+window.onload = function() {
+  if (!groqKey) {
+    document.getElementById('apiBanner').style.display = 'block';
+  }
+  initVoices();
+  autoSelectByDay();
+  renderScenes();
+  drawBlankCanvas();
+};
+
+function saveGroqKey() {
+  const v = document.getElementById('apiKeyInput').value.trim();
+  if (!v.startsWith('gsk_')) { showToast('Key must start with gsk_'); return; }
+  groqKey = v;
+  localStorage.setItem('hub_groq', v);
+  document.getElementById('apiBanner').style.display = 'none';
+  showToast('API key saved! Becky is ready.');
+}
+
+function autoSelectByDay() {
+  const day = new Date().getDay();
+  // 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+  const map = {1:'susan',3:'alisha',4:'paul',5:'lisa',6:'lisa'};
+  const actor = map[day] || 'susan';
+  selectActor(actor);
+  // also update vidType select
+  const typeMap = {1:'ainews_monday',3:'ainews_wednesday',4:'podcast_thursday',5:'ainews_friday',6:'affiliate_saturday'};
+  if (typeMap[day]) document.getElementById('vidType').value = typeMap[day];
+}
+
+// ─── STEP NAV ─────────────────────────────
+function goStep(n) {
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById('panel'+i).classList.toggle('active', i===n);
+    const t = document.getElementById('tab'+i);
+    t.classList.remove('active','done');
+    if (i===n) t.classList.add('active');
+    else if (i<n) t.classList.add('done');
+  }
+  if (n===4) { renderStudio(); }
+  window.scrollTo(0,0);
+}
+
+// ─── SCRIPT WRITER ────────────────────────
+async function writeScript() {
+  const topic = document.getElementById('vidTopic').value.trim();
+  const type = document.getElementById('vidType').value;
+  const len = document.getElementById('vidLength').value;
+  const affLink = document.getElementById('affLink').value.trim();
+
+  if (!topic) { showToast('Enter a topic first!'); return; }
+  if (!groqKey) {
+    document.getElementById('apiBanner').style.display = 'block';
+    showToast('Enter your Groq API key first!');
+    return;
+  }
+
+  const btn = document.getElementById('writeBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Becky is writing...';
+  setScriptStatus('info', 'Becky is writing your script...');
+
+  const typeLabels = {
+    ainews_monday:'AI News Show with Susan',
+    ainews_wednesday:'AI News Show with Alisha',
+    podcast_thursday:'Podcast video with Paul',
+    ainews_friday:'AI News Show with Lisa',
+    affiliate_saturday:'Affiliate Marketing Promo video',
+    business_promo:'Local Business Promo video',
+    custom:'Custom video'
+  };
+
+  const actorContext = selectedActor ? `The presenter is ${ACTORS[selectedActor]?.name} — ${ACTORS[selectedActor]?.desc}` : '';
+
+  const prompt = `Write a professional ${len}-second video script for a ${typeLabels[type] || 'video'}.
+
+Topic: ${topic}
+${affLink ? 'Affiliate link to mention: ' + affLink : ''}
+${actorContext}
+
+Requirements:
+- Conversational, natural, easy to speak aloud
+- ${len} seconds of content (roughly ${Math.round(parseInt(len)*2.5)} words)
+- Strong opening hook to grab attention in first 3 seconds
+- Clear message in the middle
+- Strong call to action at the end
+- If affiliate: mention link is in bio/description
+- If AI news: sound like a professional news anchor
+- If business promo: highlight what makes the business special and end with a call to action
+- Write the complete script only — no stage directions, no notes, just the words to speak
+
+Write the full script now:`;
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {role:'system', content:'You are Becky, an expert video script writer for AffiliateMediaHub Studio. You write scripts for AI news shows, affiliate promos, podcast videos, and business promos. Write complete, professional, natural-sounding scripts that convert.'},
+          {role:'user', content: prompt}
+        ],
+        max_tokens: 1200,
+        temperature: 0.8
+      })
+    });
+    const data = await res.json();
+    if (data.error) { setScriptStatus('err','Error: '+data.error.message); btn.disabled=false; btn.textContent='⚡ BECKY — WRITE MY SCRIPT NOW'; return; }
+    const script = data.choices[0].message.content.trim();
+    document.getElementById('scriptBox').value = script;
+    setScriptStatus('ok', '✅ Script written! Review it, edit if needed, then pick your actor.');
+    btn.textContent = '⚡ BECKY — WRITE MY SCRIPT NOW';
+    btn.disabled = false;
+    showToast('Script ready! Review and continue.');
+  } catch(e) {
+    setScriptStatus('err','Connection error. Check your API key.');
+    btn.disabled = false;
+    btn.textContent = '⚡ BECKY — WRITE MY SCRIPT NOW';
+  }
+}
+
+function loadScriptTemplate(key) {
+  document.getElementById('scriptBox').value = SCRIPT_TEMPLATES[key] || '';
+  showToast('Template loaded! Edit to match your topic.');
+}
+
+function setScriptStatus(type, msg) {
+  const s = document.getElementById('scriptStatus');
+  s.className = 'status st-'+type;
+  s.textContent = msg;
+}
+
+// ─── ACTOR PICKER ─────────────────────────
+function selectActor(name) {
+  selectedActor = name;
+  document.querySelectorAll('.actor-card').forEach(c => c.classList.remove('selected'));
+  const el = document.getElementById('actor-'+name);
+  if (el) el.classList.add('selected');
+  const a = ACTORS[name];
+  if (a) {
+    const dc = document.getElementById('actorDetailCard');
+    dc.style.display = 'block';
+    document.getElementById('actorDetailName').textContent = a.name + ' — SELECTED';
+    document.getElementById('actorDetailDesc').innerHTML = `<strong style="color:var(--text);">${a.role}</strong><br/><span style="color:var(--muted);">${a.desc}</span><br/><br/><strong style="color:var(--gold);">Scheduled day:</strong> <span style="color:var(--muted);">${a.day}</span>`;
+  }
+}
+
+// ─── SCENE BUILDER ────────────────────────
+function addScene(headline='', body='', sub='') {
+  scenes.push({
+    id: Date.now() + Math.random(),
+    headline: headline || 'Scene Headline',
+    body: body || 'Your message for this scene goes here.',
+    sub: sub || '',
+    dur: 4
+  });
+  renderScenes();
+}
+
+function deleteScene(id) {
+  scenes = scenes.filter(s => s.id !== id);
+  renderScenes();
+}
+
+function autoSplitScript() {
+  const script = document.getElementById('scriptBox').value.trim();
+  if (!script) { showToast('Write a script first in Step 1!'); return; }
+  const paragraphs = script.split(/\n\n+/).filter(p => p.trim().length > 10);
+  if (!paragraphs.length) { showToast('Script needs paragraph breaks'); return; }
+  scenes = [];
+  const a = ACTORS[selectedActor];
+  const actorName = a ? a.name : 'AFFILIATEMEDIAHUB STUDIO';
+  paragraphs.forEach((p, i) => {
+    const lines = p.trim().split('\n');
+    const headline = i === 0 ? (actorName + ' — ' + (document.getElementById('vidTopic').value || 'AI VIDEO')) : 'Scene ' + (i+1);
+    const body = lines.join(' ').substring(0, 200);
+    scenes.push({ id: Date.now()+i, headline, body, sub: i === paragraphs.length-1 ? 'Follow · Subscribe · Link in Bio' : '', dur: 4 });
+  });
+  renderScenes();
+  showToast(scenes.length + ' scenes built from your script!');
+}
+
+function renderScenes() {
+  const wrap = document.getElementById('sceneWrap');
+  if (!scenes.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">No scenes yet. Tap a quick template in Step 1 or tap Auto-Build above.</div>';
+    return;
+  }
+  wrap.innerHTML = scenes.map((s,i) => `
+    <div class="scene-card">
+      <div class="scene-hdr">
+        <div class="scene-num">${i+1}</div>
+        <div class="scene-lbl">Scene ${i+1} of ${scenes.length}</div>
+        <button class="scene-del" onclick="deleteScene(${s.id})">✕</button>
+      </div>
+      <div class="field" style="margin-bottom:8px;">
+        <label>HEADLINE</label>
+        <input type="text" value="${esc(s.headline)}" oninput="scenes[${i}].headline=this.value"/>
+      </div>
+      <div class="field" style="margin-bottom:8px;">
+        <label>BODY TEXT</label>
+        <textarea rows="2" style="min-height:60px;" oninput="scenes[${i}].body=this.value">${esc(s.body)}</textarea>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>CALL TO ACTION / SUBTITLE</label>
+        <input type="text" value="${esc(s.sub)}" oninput="scenes[${i}].sub=this.value" placeholder="Follow · Subscribe · Link in Bio"/>
+      </div>
+    </div>
+  `).join('');
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ─── CANVAS DRAWING ──────────────────────
+const canvas = document.getElementById('studioCanvas');
+const ctx = canvas.getContext('2d');
+
+function drawBlankCanvas() {
+  ctx.fillStyle = '#07070f';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  drawBorders('#f5c518');
+  ctx.fillStyle = 'rgba(245,197,24,0.3)';
+  ctx.font = 'bold 36px Rajdhani, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('HUB ENGINE v3 — AI VIDEO STUDIO', canvas.width/2, canvas.height/2 - 20);
+  ctx.font = '22px Exo 2, sans-serif';
+  ctx.fillStyle = 'rgba(238,238,245,0.3)';
+  ctx.fillText('Build your scenes then tap Preview', canvas.width/2, canvas.height/2 + 30);
+}
+
+function renderStudio() {
+  if (!scenes.length) { drawBlankCanvas(); return; }
+  drawScene(scenes[0]);
+}
+
+function drawScene(scene) {
+  if (!scene) return;
+  const W = canvas.width, H = canvas.height;
+  const a = ACTORS[selectedActor] || ACTORS.susan;
+
+  // Background gradient
+  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+  bgGrad.addColorStop(0, a.bg[0]);
+  bgGrad.addColorStop(1, a.bg[1]);
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Ambient glow
+  const glow = ctx.createRadialGradient(W*0.25, H*0.4, 0, W*0.5, H*0.5, W*0.6);
+  glow.addColorStop(0, a.accent + '22');
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Draw stylized actor silhouette on left
+  drawActorSilhouette(a, W, H);
+
+  // Right side content panel
+  const panelX = W * 0.42;
+  const panelW = W * 0.54;
+
+  // Semi-transparent panel
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  roundRect(ctx, panelX, H*0.08, panelW, H*0.84, 20);
+  ctx.fill();
+
+  // Actor name tag
+  ctx.fillStyle = a.accent;
+  ctx.font = `bold ${Math.floor(H*0.038)}px Rajdhani, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.fillText(a.name, panelX + 20, H*0.18);
+
+  ctx.fillStyle = 'rgba(238,238,245,0.5)';
+  ctx.font = `${Math.floor(H*0.022)}px Exo 2, sans-serif`;
+  ctx.fillText(a.role.split('·')[0].trim(), panelX + 20, H*0.225);
+
+  // Headline
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${Math.floor(H*0.055)}px Rajdhani, sans-serif`;
+  const hl = scene.headline || '';
+  wrapText(ctx, hl, panelX + 20, H*0.32, panelW - 40, H*0.065);
+
+  // Divider
+  ctx.fillStyle = a.accent;
+  ctx.fillRect(panelX + 20, H*0.46, panelW * 0.7, 2);
+
+  // Body
+  ctx.fillStyle = 'rgba(238,238,245,0.8)';
+  ctx.font = `${Math.floor(H*0.032)}px Exo 2, sans-serif`;
+  const body = (scene.body || '').split('\n');
+  let by = H * 0.52;
+  body.forEach(line => {
+    wrapText(ctx, line.trim(), panelX + 20, by, panelW - 40, H*0.038);
+    by += H * 0.04 * (Math.ceil(line.length / 35) + 1);
+  });
+
+  // CTA / Sub
+  if (scene.sub) {
+    ctx.fillStyle = a.accent;
+    ctx.font = `bold ${Math.floor(H*0.028)}px Rajdhani, sans-serif`;
+    ctx.fillText(scene.sub, panelX + 20, H*0.88);
+  }
+
+  // Borders and branding
+  drawBorders(a.accent);
+
+  // Bottom bar
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(0, H*0.92, W, H*0.08);
+  ctx.fillStyle = a.accent;
+  ctx.font = `bold ${Math.floor(H*0.025)}px Rajdhani, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('AFFILIATEMEDIAHUB STUDIO · JOHN LANTER · ORANGE TEXAS', W/2, H*0.965);
+}
+
+function drawActorSilhouette(actor, W, H) {
+  const cx = W * 0.19;
+  const cy = H * 0.45;
+
+  // Glow behind actor
+  const ag = ctx.createRadialGradient(cx, cy, 0, cx, cy, H*0.38);
+  ag.addColorStop(0, actor.accent + '30');
+  ag.addColorStop(1, 'transparent');
+  ctx.fillStyle = ag;
+  ctx.fillRect(0, 0, W*0.4, H);
+
+  // Actor name badge at bottom left
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(W*0.02, H*0.82, W*0.34, H*0.1);
+  ctx.fillStyle = actor.accent;
+  ctx.font = `bold ${Math.floor(H*0.032)}px Rajdhani, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(actor.name + ' · ' + actor.role.split('·')[0].trim(), W*0.19, H*0.885);
+
+  // Large actor emoji as placeholder
+  ctx.font = `${Math.floor(H*0.28)}px serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(actor.emoji, cx, cy + H*0.08);
+
+  // "LIVE" indicator for news
+  if (actor.name !== 'PAUL') {
+    ctx.fillStyle = '#ea4335';
+    ctx.beginPath();
+    ctx.arc(W*0.06, H*0.12, H*0.018, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.floor(H*0.022)}px Rajdhani, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText('LIVE', W*0.085, H*0.128);
+  } else {
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.arc(W*0.06, H*0.12, H*0.018, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.font = `bold ${Math.floor(H*0.018)}px Rajdhani, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText('POD', W*0.085, H*0.128);
+  }
+}
+
+function drawBorders(accent) {
+  const W = canvas.width, H = canvas.height;
+  // Top bar
+  const topGrad = ctx.createLinearGradient(0,0,W,0);
+  topGrad.addColorStop(0,'transparent');
+  topGrad.addColorStop(0.3, accent);
+  topGrad.addColorStop(0.7, accent);
+  topGrad.addColorStop(1,'transparent');
+  ctx.fillStyle = topGrad;
+  ctx.fillRect(0, 0, W, H*0.007);
+  // Corner marks
+  ctx.strokeStyle = accent + '80';
+  ctx.lineWidth = 3;
+  const m = W*0.025, s = W*0.05;
+  ctx.beginPath();
+  ctx.moveTo(m,m+s); ctx.lineTo(m,m); ctx.lineTo(m+s,m);
+  ctx.moveTo(W-m-s,m); ctx.lineTo(W-m,m); ctx.lineTo(W-m,m+s);
+  ctx.moveTo(m,H-m-s); ctx.lineTo(m,H-m); ctx.lineTo(m+s,H-m);
+  ctx.moveTo(W-m-s,H-m); ctx.lineTo(W-m,H-m); ctx.lineTo(W-m,H-m-s);
+  ctx.stroke();
+}
+
+function wrapText(ctx, text, x, y, maxW, lineH) {
+  if (!text) return;
+  const words = text.split(' ');
+  let line = '';
+  let cy = y;
+  words.forEach(w => {
+    const test = line ? line+' '+w : w;
+    if (ctx.measureText(test).width > maxW && line) {
+      ctx.fillText(line, x, cy);
+      line = w; cy += lineH;
+    } else line = test;
+  });
+  if (line) ctx.fillText(line, x, cy);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+// ─── PREVIEW ─────────────────────────────
+function previewStudio() {
+  if (!scenes.length) { showToast('Build your scenes in Step 3 first!'); return; }
+  stopStudio();
+  currentScene = 0;
+  drawScene(scenes[0]);
+  const script = document.getElementById('scriptBox').value.trim();
+  if (script) speakScript(script);
+  setStudioStatus('info', `▶ Playing — scene 1 of ${scenes.length}`);
+  const dur = (parseInt(document.getElementById('vidLength').value) || 60) * 1000 / scenes.length;
+  previewInterval = setInterval(() => {
+    currentScene++;
+    if (currentScene >= scenes.length) { stopStudio(); setStudioStatus('ok','✅ Preview complete! Tap Record to save.'); return; }
+    drawScene(scenes[currentScene]);
+    setStudioStatus('info', `▶ Scene ${currentScene+1} of ${scenes.length}`);
+  }, dur);
+}
+
+function stopStudio() {
+  if (previewInterval) { clearInterval(previewInterval); previewInterval=null; }
+  stopVoice();
+  currentScene = 0;
+  if (scenes.length) drawScene(scenes[0]);
+  else drawBlankCanvas();
+}
+
+// ─── RECORD ──────────────────────────────
+async function recordStudio() {
+  if (!scenes.length) { showToast('Build scenes first!'); return; }
+  if (!window.MediaRecorder) {
+    setStudioStatus('err','⚠️ Recording needs Chrome on your laptop. On phone: tap Preview, then screen-record using your phone\'s built-in screen recorder.');
+    return;
+  }
+  const btn = document.getElementById('recBtn');
+  btn.disabled = true; btn.textContent = '⏳ Recording...';
+  document.getElementById('videoOut').style.display = 'none';
+  document.getElementById('dlBtn').style.display = 'none';
+  recordedChunks = [];
+
+  const totalSec = parseInt(document.getElementById('vidLength').value) || 60;
+  const secPerScene = totalSec / scenes.length;
+  const stream = canvas.captureStream(30);
+
+  const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+  mediaRecorder = new MediaRecorder(stream, {mimeType:mime, videoBitsPerSecond:3000000});
+  mediaRecorder.ondataavailable = e => { if(e.data.size>0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    const blob = new Blob(recordedChunks, {type:'video/webm'});
+    const url = URL.createObjectURL(blob);
+    const v = document.getElementById('videoOut');
+    v.src = url; v.style.display = 'block';
+    document.getElementById('dlBtn').style.display = 'block';
+    document.getElementById('dlBtn').dataset.url = url;
+    document.getElementById('progWrap').style.display = 'none';
+    document.getElementById('studioOverlay').classList.remove('show');
+    setStudioStatus('ok','✅ Video recorded! Download it then post to TikTok, YouTube, Instagram or Facebook.');
+    btn.disabled=false; btn.textContent='🔴 RECORD VIDEO → DOWNLOAD MP4';
+    showToast('Video ready! Tap Download.');
+    goStep(5);
+  };
+
+  document.getElementById('studioOverlay').classList.add('show');
+  document.getElementById('progWrap').style.display = 'block';
+  mediaRecorder.start(100);
+
+  const script = document.getElementById('scriptBox').value.trim();
+  if (script) setTimeout(() => speakScript(script), 300);
+
+  for (let i = 0; i < scenes.length; i++) {
+    await new Promise(r => {
+      currentScene = i;
+      drawScene(scenes[i]);
+      const pct = Math.round((i/scenes.length)*100);
+      document.getElementById('progFill').style.width = pct + '%';
+      document.getElementById('progLbl').textContent = `Recording scene ${i+1} of ${scenes.length}... ${pct}%`;
+      setTimeout(r, secPerScene * 1000);
+    });
+  }
+
+  document.getElementById('progFill').style.width = '100%';
+  document.getElementById('progLbl').textContent = 'Finishing...';
+  stopVoice();
+  setTimeout(() => { mediaRecorder.stop(); stream.getTracks().forEach(t=>t.stop()); }, 600);
+  btn.disabled=false; btn.textContent='🔴 RECORD VIDEO → DOWNLOAD MP4';
+}
+
+function downloadVideo() {
+  const url = document.getElementById('dlBtn').dataset.url;
+  const title = (document.getElementById('vidTopic').value || 'HubEngine-Video').replace(/\s+/g,'-');
+  const a = document.createElement('a');
+  a.href = url; a.download = title+'-'+Date.now()+'.webm'; a.click();
+  showToast('Downloading! Check your Downloads folder.');
+}
+
+function copyScript() {
+  const s = document.getElementById('scriptBox').value;
+  if (s) { navigator.clipboard.writeText(s); showToast('Script copied! Paste into D-ID or Vidnoz.'); }
+  else showToast('No script yet — write one in Step 1');
+}
+
+function setStudioStatus(type, msg) {
+  const s = document.getElementById('studioStatus');
+  s.className = 'status st-'+type;
+  s.textContent = msg;
+}
+
+// ─── CAPTION GENERATOR ───────────────────
+async function generateCaption() {
+  const platform = document.getElementById('captionPlatform').value;
+  const topic = document.getElementById('vidTopic').value.trim() || 'AI video content';
+  const actor = selectedActor ? ACTORS[selectedActor].name : 'AffiliateMediaHub Studio';
+  const affLink = document.getElementById('affLink').value.trim();
+
+  if (!groqKey) { showToast('Enter your Groq API key in Step 1!'); return; }
+
+  const platformGuide = {
+    tiktok: 'TikTok caption: punchy, 150 chars max, 3-5 trending hashtags, strong hook, call to action',
+    youtube: 'YouTube Shorts description: 150 words, include keywords, 5-8 hashtags, subscribe CTA',
+    instagram: 'Instagram Reels caption: engaging, 125 chars before "more", 20-30 hashtags, emoji-rich',
+    facebook: 'Facebook post: conversational, 2-3 sentences, 3-5 hashtags, ask a question to boost engagement'
+  };
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body: JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        messages:[
+          {role:'system',content:'You write viral social media captions for AffiliateMediaHub Studio. Be punchy, authentic, and platform-appropriate.'},
+          {role:'user',content:`Write a ${platformGuide[platform]} for a video about: ${topic}. Presenter: ${actor}. ${affLink?'Affiliate link: '+affLink:''} Include all hashtags in the caption.`}
+        ],
+        max_tokens:400,
+        temperature:0.85
+      })
+    });
+    const data = await res.json();
+    if (data.error) { showToast('Error: '+data.error.message); return; }
+    document.getElementById('captionBox').value = data.choices[0].message.content.trim();
+    showToast('Caption ready! Copy and paste when posting.');
+  } catch(e) { showToast('Connection error'); }
+}
+
+function copyCaption() {
+  const c = document.getElementById('captionBox').value;
+  if (c) { navigator.clipboard.writeText(c); showToast('Caption copied!'); }
+}
+
+// ─── VOICE ───────────────────────────────
+function initVoices() {
+  voices = synth.getVoices();
+  if (!voices.length) { setTimeout(initVoices, 500); return; }
+  const sel = document.getElementById('voiceSel');
+  sel.innerHTML = '';
+  const eng = voices.filter(v => v.lang.startsWith('en'));
+  const rest = voices.filter(v => !v.lang.startsWith('en'));
+  [...eng,...rest].forEach(v => {
+    const o = document.createElement('option');
+    o.value = v.name;
+    o.textContent = v.name+' ('+v.lang+')';
+    sel.appendChild(o);
+  });
+  const saved = localStorage.getItem('hub_voice_name');
+  if (saved && sel.querySelector(`option[value="${saved}"]`)) sel.value = saved;
+  chosenVoice = voices.find(v=>v.name===sel.value)||eng[0]||voices[0];
+}
+
+if (synth) { initVoices(); synth.onvoiceschanged = initVoices; setTimeout(initVoices,800); }
+
+function testVoice() {
+  speakScript('Hello! Welcome to AffiliateMediaHub Studio. I am your AI video host, bringing you the best content every week.');
+}
+
+function speakScript(text) {
+  if (!synth||!text) return;
+  stopVoice();
+  const clean = text.replace(/[^\w\s.,!?'":\-\n]/g,' ').substring(0,2000);
+  const u = new SpeechSynthesisUtterance(clean);
+  const selName = document.getElementById('voiceSel').value;
+  const v = voices.find(v=>v.name===selName);
+  if (v) u.voice = v;
+  u.rate = parseFloat(document.getElementById('voiceRate').value)||0.9;
+  u.pitch = 1.0;
+  u.volume = 1.0;
+  synth.speak(u);
+}
+
+function stopVoice() { if(synth) synth.cancel(); }
+
+// ─── UTILS ───────────────────────────────
+function updateDayHint() {}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+<div style="height:60px;"></div>
+</body>
+</html>
