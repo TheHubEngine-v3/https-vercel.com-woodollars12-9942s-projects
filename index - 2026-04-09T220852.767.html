@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>The Hub Engine v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+<style>
+:root{--gold:#f5c518;--gold2:#e8a020;--dark:#07070f;--dark2:#0e0e1a;--dark3:#13131f;--border:rgba(245,197,24,0.18);--text:#eeeef5;--muted:rgba(238,238,245,0.45);--green:#0f9d58;--red:#ea4335;--blue:#4285f4;--purple:#7c3aed;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--dark);color:var(--text);font-family:'Exo 2',sans-serif;}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;padding:24px;}
+.login-glow{width:86px;height:86px;border-radius:50%;background:radial-gradient(circle,rgba(245,197,24,0.25),transparent 70%);display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:18px;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,197,24,0.3);}50%{box-shadow:0 0 0 18px rgba(245,197,24,0);}}
+.login-title{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--gold);letter-spacing:3px;text-align:center;}
+.login-sub{font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:22px;}
+.login-step{width:100%;max-width:340px;margin-bottom:12px;}
+.login-label{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:6px;}
+.login-input{width:100%;padding:13px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:15px;outline:none;}
+.login-input:focus{border-color:var(--gold);}
+.login-btn{width:100%;max-width:340px;padding:15px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;border:none;border-radius:10px;cursor:pointer;margin-top:8px;}
+.login-err{font-size:12px;color:var(--red);text-align:center;margin-top:8px;min-height:18px;}
+
+/* APP */
+#app{display:flex;flex-direction:column;height:100%;height:100dvh;overflow:hidden;}
+.status-bar{background:rgba(15,157,88,0.12);border-bottom:1px solid rgba(15,157,88,0.25);padding:6px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.status-text{font-size:10px;color:var(--green);letter-spacing:2px;font-weight:700;font-family:'Rajdhani',sans-serif;}
+.status-right{margin-left:auto;font-size:10px;color:var(--muted);cursor:pointer;}
+
+/* TAB BAR */
+.tab-bar{display:flex;overflow-x:auto;flex-shrink:0;background:var(--dark2);border-top:2px solid var(--border);scrollbar-width:none;min-height:60px;padding-bottom:env(safe-area-inset-bottom);}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 12px;gap:3px;flex-shrink:0;cursor:pointer;border-top:2px solid transparent;transition:all .2s;min-width:58px;font-family:'Rajdhani',sans-serif;}
+.tab-btn span:first-child{font-size:18px;}
+.tab-btn span:last-child{font-size:8px;letter-spacing:1px;color:var(--muted);font-weight:700;}
+.tab-btn.active{border-top-color:var(--gold);}
+.tab-btn.active span:last-child{color:var(--gold);}
+
+/* PAGES */
+.pages{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column;}
+.page{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
+.page.active{display:flex;}
+.page-inner{flex:1;overflow-y:auto;padding:14px;padding-bottom:78px;}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;flex:1;min-height:0;}
+.chat-header{padding:11px 16px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px;}
+.chat-header-icon{font-size:24px;}
+.chat-header-title{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--gold);letter-spacing:1px;}
+.chat-header-sub{font-size:11px;color:var(--muted);}
+.voice-select{padding:4px 7px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:10px;font-family:'Exo 2',sans-serif;outline:none;cursor:pointer;max-width:120px;}
+.messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.msg{max-width:84%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.6;}
+.msg.bot{background:rgba(255,255,255,0.06);border:1px solid var(--border);align-self:flex-start;border-radius:4px 14px 14px 14px;}
+.msg.user{background:rgba(245,197,24,0.12);border:1px solid rgba(245,197,24,0.2);align-self:flex-end;border-radius:14px 4px 14px 14px;color:var(--gold);}
+.msg.thinking{opacity:0.55;font-style:italic;}
+
+/* INPUT BAR — bigger textarea, no live mic */
+.chat-input-bar{display:flex;align-items:flex-end;gap:8px;padding:10px 12px;background:var(--dark2);border-top:1px solid var(--border);flex-shrink:0;padding-bottom:10px;}
+.chat-input-bar textarea{flex:1;padding:11px 14px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:15px;outline:none;resize:none;min-height:48px;max-height:130px;writing-mode:horizontal-tb !important;direction:ltr !important;text-align:left !important;overflow-y:auto;line-height:1.5;}
+.chat-input-bar textarea:focus{border-color:var(--gold);}
+.icon-btn{width:42px;height:42px;border-radius:11px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.icon-btn.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;width:46px;height:46px;font-size:21px;border-radius:12px;}
+.icon-btn.mic-active{border-color:var(--red);color:var(--red);}
+
+/* CARDS & LINKS */
+.card{background:var(--dark3);border:1px solid var(--border);border-radius:14px;padding:15px;margin-bottom:12px;}
+.card-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:11px;}
+.link-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.link-btn{padding:12px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:var(--text);font-size:12px;text-align:center;text-decoration:none;display:block;transition:all .2s;}
+.link-btn:active{background:rgba(245,197,24,0.08);}
+.link-btn .lb-icon{font-size:22px;display:block;margin-bottom:4px;}
+.link-btn .lb-name{font-size:11px;font-weight:600;display:block;}
+.link-btn .lb-sub{font-size:10px;color:var(--muted);margin-top:2px;display:block;}
+
+/* ACTION BUTTONS */
+.action-btn{width:100%;padding:14px;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'Rajdhani',sans-serif;letter-spacing:1px;margin-bottom:8px;text-decoration:none;display:block;text-align:center;line-height:1.4;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;}
+.btn-blue{background:rgba(66,133,244,0.12);border:1px solid rgba(66,133,244,0.3);color:var(--blue);}
+.btn-green{background:rgba(15,157,88,0.12);border:1px solid rgba(15,157,88,0.3);color:var(--green);}
+.btn-gray{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--muted);font-size:12px;}
+.btn-purple{background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.4);color:#a78bfa;}
+
+/* JOB LINKS */
+.job-link{display:flex;align-items:center;gap:12px;padding:13px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:11px;margin-bottom:9px;text-decoration:none;color:var(--text);}
+.job-link:active{background:rgba(245,197,24,0.06);}
+.job-link-icon{font-size:26px;flex-shrink:0;}
+.job-link-info{flex:1;}
+.job-link-name{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--gold);}
+.job-link-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* LEARN CARDS */
+.learn-card{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--dark3);border:1px solid var(--border);border-radius:12px;margin-bottom:9px;text-decoration:none;color:var(--text);}
+.learn-card:active{border-color:var(--gold);}
+.learn-icon{font-size:26px;flex-shrink:0;width:38px;text-align:center;}
+.learn-info{flex:1;}
+.learn-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);margin-bottom:2px;}
+.learn-sub{font-size:11px;color:var(--muted);line-height:1.4;}
+.lbadge{display:inline-block;padding:2px 8px;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.3);border-radius:10px;font-size:9px;color:var(--green);font-weight:700;margin-top:3px;}
+
+/* LOG */
+.log-entry{display:flex;align-items:center;gap:10px;padding:11px 13px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:7px;}
+.log-cb{width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;}
+.log-text{flex:1;font-size:13px;}
+.log-del{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;}
+.log-add-row{display:flex;gap:8px;margin-bottom:10px;}
+.log-add-row input{flex:1;padding:11px 13px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;}
+.log-add-row input:focus{border-color:var(--gold);}
+.quick-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.qchip{padding:7px 12px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.2);border-radius:16px;font-size:11px;color:var(--gold);cursor:pointer;}
+
+/* SETTINGS */
+.set-row{margin-bottom:14px;}
+.set-label{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:6px;}
+.set-input{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;}
+.set-status{padding:10px 14px;border-radius:10px;font-size:12px;margin-bottom:10px;}
+.set-ok{background:rgba(15,157,88,0.1);border:1px solid rgba(15,157,88,0.3);color:var(--green);}
+.set-err{background:rgba(234,67,53,0.1);border:1px solid rgba(234,67,53,0.3);color:var(--red);}
+.profile-field{margin-bottom:12px;}
+.profile-label{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:5px;}
+.profile-val{font-size:13px;color:var(--text);padding:9px 13px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;line-height:1.7;}
+
+.section-title{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px;}
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:rgba(15,157,88,0.92);color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:700;z-index:9998;pointer-events:none;opacity:0;transition:opacity .3s;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-glow">⚡</div>
+  <div class="login-title">THE HUB ENGINE v3</div>
+  <div class="login-sub">AFFILIATEMEDIAHUB STUDIO</div>
+  <div class="login-step" id="loginApiStep">
+    <div class="login-label">GROQ API KEY</div>
+    <input id="apiInput" class="login-input" type="password" placeholder="gsk_... (only needed once)" autocomplete="off"/>
+  </div>
+  <div class="login-step">
+    <div class="login-label">ACCESS PASSWORD</div>
+    <input id="pwInput" class="login-input" type="password" placeholder="Enter password..." autocomplete="off"/>
+  </div>
+  <button class="login-btn" onclick="doLogin()">🚀 ENTER THE HUB</button>
+  <div class="login-err" id="loginErr"></div>
+  <div style="font-size:10px;color:rgba(238,238,245,0.15);margin-top:18px;text-align:center;letter-spacing:1px;">JOHN LANTER · CEO · ORANGE TEXAS<br/>FOUR MINDS · ONE MISSION · ZERO COST</div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    <div class="status-text">ALL SYSTEMS LIVE</div>
+    <div class="status-right" id="voiceStatus" onclick="toggleSpeak()">🔊 VOICE ON</div>
+  </div>
+
+  <div class="pages">
+
+    <!-- BECKY (Claude AI renamed) — MAIN CHAT -->
+    <div class="page active" id="page-becky">
+      <div class="chat-wrap">
+        <div class="chat-header">
+          <div class="chat-header-icon">🎙️</div>
+          <div style="flex:1;">
+            <div class="chat-header-title">BECKY</div>
+            <div class="chat-header-sub">Your AI Friend · Podcast Writer · Affiliate Coach</div>
+          </div>
+          <a href="becky-prompts.html" target="_blank" style="flex-shrink:0;padding:5px 9px;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);border-radius:8px;font-size:10px;color:var(--gold);font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:1px;text-decoration:none;white-space:nowrap;margin-right:4px;">📚 PROMPTS</a>
+          <select class="voice-select" id="voiceSelect" onchange="saveVoice()"><option>Loading...</option></select>
+          <button class="icon-btn" onclick="testVoice()" style="width:34px;height:34px;font-size:14px;margin-left:4px;">🔈</button>
+        </div>
+        <div id="memoryBar" style="padding:4px 14px;background:rgba(245,197,24,0.04);border-bottom:1px solid rgba(245,197,24,0.08);font-size:9px;color:rgba(245,197,24,0.4);font-family:'Rajdhani',sans-serif;letter-spacing:1px;flex-shrink:0;">🧠 MEMORY LOADING...</div>
+        <div class="messages" id="msgs-becky"></div>
+        <div class="chat-input-bar">
+          <label class="icon-btn" for="beckyFile" style="cursor:pointer;font-size:17px;">➕</label>
+          <input type="file" id="beckyFile" style="display:none" accept="image/*,.pdf,.txt" onchange="attachFile(event,'becky')"/>
+          <textarea id="inp-becky" placeholder="Talk to Becky — ask anything, get help with jobs, AI skills, videos, affiliate marketing..." rows="1" onkeydown="handleKey(event,'becky')"></textarea>
+          <button class="icon-btn" onclick="toggleMic('becky')" id="mic-becky" title="Tap to speak">🎤</button>
+          <button class="icon-btn gold" onclick="sendMsg('becky')">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOBS -->
+    <div class="page" id="page-jobs">
+      <div class="page-inner">
+        <div style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.25);border-radius:12px;padding:13px 15px;margin-bottom:14px;">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--blue);letter-spacing:2px;margin-bottom:4px;">💼 JOB SEARCH — SE TEXAS OPERATIONS</div>
+          <div style="font-size:12px;color:var(--muted);">Pre-filtered for Chemical Plant · Operations · Supervisor · Lead Operator</div>
+        </div>
+        <div class="section-title">🔍 TAP TO SEARCH NOW</div>
+        <a href="https://www.indeed.com/jobs?q=operations+supervisor+chemical+plant&l=Beaumont%2C+TX" target="_blank" class="job-link"><div class="job-link-icon">🔵</div><div class="job-link-info"><div class="job-link-name">Indeed — Operations / Chemical Plant</div><div class="job-link-sub">Beaumont & SE Texas</div></div></a>
+        <a href="https://www.indeed.com/jobs?q=lead+operator+plant+supervisor&l=Orange%2C+TX&radius=50" target="_blank" class="job-link"><div class="job-link-icon">🔵</div><div class="job-link-info"><div class="job-link-name">Indeed — Lead Operator / Supervisor</div><div class="job-link-sub">Orange TX · 50 mile radius</div></div></a>
+        <a href="https://www.linkedin.com/jobs/search/?keywords=operations%20supervisor%20chemical&location=Beaumont%2C%20Texas" target="_blank" class="job-link"><div class="job-link-icon">💼</div><div class="job-link-info"><div class="job-link-name">LinkedIn — Operations / Chemical</div><div class="job-link-sub">Beaumont Texas area</div></div></a>
+        <a href="https://www.ziprecruiter.com/Jobs/Operations-Supervisor/--in-Beaumont,TX" target="_blank" class="job-link"><div class="job-link-icon">🟡</div><div class="job-link-info"><div class="job-link-name">ZipRecruiter — Operations Supervisor</div><div class="job-link-sub">Beaumont TX area</div></div></a>
+        <a href="https://www.workintexas.com" target="_blank" class="job-link"><div class="job-link-icon">⭐</div><div class="job-link-info"><div class="job-link-name">WorkInTexas.com</div><div class="job-link-sub">Texas Workforce Commission — Official</div></div></a>
+        <a href="https://www.glassdoor.com/Job/beaumont-tx-operations-jobs-SRCH_IL.0,11_IC1140141_KO12,22.htm" target="_blank" class="job-link"><div class="job-link-icon">🟢</div><div class="job-link-info"><div class="job-link-name">Glassdoor — Operations Jobs</div><div class="job-link-sub">Beaumont TX · includes salary + reviews</div></div></a>
+        <a href="https://www.simplyhired.com/search?q=chemical+plant+operator&l=beaumont%2C+tx" target="_blank" class="job-link"><div class="job-link-icon">🟠</div><div class="job-link-info"><div class="job-link-name">SimplyHired — Plant Operator</div><div class="job-link-sub">Beaumont TX area</div></div></a>
+
+        <div class="section-title">✉️ COVER LETTER WRITER</div>
+
+        <!-- COVER LETTER BIG BUTTON -->
+        <a href="becky-cover-letter.html" target="_blank" style="display:flex;align-items:center;gap:14px;padding:16px;background:linear-gradient(135deg,rgba(245,197,24,0.1),rgba(232,160,32,0.06));border:2px solid rgba(245,197,24,0.35);border-radius:14px;margin-bottom:14px;text-decoration:none;color:var(--text);">
+          <span style="font-size:36px;">📄</span>
+          <div style="flex:1;">
+            <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--gold);letter-spacing:1px;margin-bottom:4px;">BECKY COVER LETTER WRITER</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6;">Becky writes a personalized cover letter for any job · Saves as PDF · Ready to send</div>
+            <div style="display:inline-block;margin-top:6px;padding:3px 10px;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.3);border-radius:10px;font-size:10px;color:var(--green);font-weight:700;">TAP TO OPEN → FILL IN JOB → GET LETTER IN SECONDS</div>
+          </div>
+        </a>
+
+        <div class="section-title">💰 AFFILIATE PROMO MODE</div>
+        <div style="background:rgba(15,157,88,0.06);border:1px solid rgba(15,157,88,0.25);border-radius:12px;padding:13px;margin-bottom:14px;">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:8px;">🎙️ ASK BECKY TO WRITE YOUR PROMO</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.9;">
+            • "Write a podcast intro for Paul promoting ClickBank products"<br/>
+            • "Give me 5 affiliate hooks for Lisa's Friday video"<br/>
+            • "Write an Instagram caption with affiliate link for Alisha"
+          </div>
+        </div>
+
+        <div class="section-title">🤖 AI CAREER COACH — ASK BECKY</div>
+        <div style="background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.15);border-radius:10px;padding:12px;margin-bottom:10px;font-size:12px;color:var(--muted);line-height:1.8;">
+          💡 Go to the <strong style="color:var(--gold);">BECKY tab</strong> and ask her to:<br/>
+          • Help you prepare for an interview<br/>
+          • Review your resume and suggest improvements<br/>
+          • Find more job leads in SE Texas<br/>
+          • Research a company before you apply
+        </div>
+      </div>
+    </div>
+
+    <!-- VIDEO STUDIO -->
+    <div class="page" id="page-video">
+      <div class="page-inner">
+
+        <!-- FREE VIDEO MAKER — MAIN BUTTON -->
+        <div style="background:linear-gradient(135deg,rgba(15,157,88,0.12),rgba(245,197,24,0.06));border:2px solid rgba(15,157,88,0.4);border-radius:14px;padding:18px;margin-bottom:14px;text-align:center;">
+          <div style="font-size:40px;margin-bottom:8px;">🎬</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--green);letter-spacing:2px;margin-bottom:6px;">HUB ENGINE AI VIDEO GENERATOR STUDIO</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.9;margin-bottom:14px;">
+            ✅ 100% Free · ✅ Unlimited videos · ✅ No credits ever<br/>
+            ✅ Script writer built in · ✅ Affiliate promo templates<br/>
+            ✅ Runs in your browser · ✅ Download MP4
+          </div>
+          <a href="hub-video-generator-studio.html" target="_blank" class="action-btn btn-green" style="margin-bottom:8px;font-size:16px;">🎬 OPEN AI VIDEO GENERATOR STUDIO</a>
+          <a href="hub-video-training.html" target="_blank" class="action-btn btn-gold" style="margin-bottom:0;font-size:14px;">📖 VIDEO MAKER TRAINING GUIDE</a>
+        </div>
+
+        <!-- AGENTS -->
+        <div class="card">
+          <div class="card-title">🎭 YOUR 4 AI AGENTS</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 13px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
+              <span style="font-size:24px;">🩵</span>
+              <div><div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);">SUSAN</div><div style="font-size:11px;color:var(--muted);">Monday · Podcast Host · Affiliate Promo</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 13px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
+              <span style="font-size:24px;">🔵</span>
+              <div><div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);">ALISHA</div><div style="font-size:11px;color:var(--muted);">Wednesday · Podcast Co-Host · Business Promo</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 13px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
+              <span style="font-size:24px;">🔴</span>
+              <div><div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);">LISA</div><div style="font-size:11px;color:var(--muted);">Friday · Podcast + Affiliate Marketing</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 13px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
+              <span style="font-size:24px;">🎙️</span>
+              <div><div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);">PAUL</div><div style="font-size:11px;color:var(--muted);">Thursday · Podcast Host · Tips & Education</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- POST VIDEOS -->
+        <div class="card">
+          <div class="card-title">📱 POST YOUR VIDEOS</div>
+          <div class="link-grid">
+            <a href="https://tiktok.com" target="_blank" class="link-btn"><span class="lb-icon">🎵</span><span class="lb-name">TikTok</span><span class="lb-sub">Best for views</span></a>
+            <a href="https://youtube.com/upload" target="_blank" class="link-btn"><span class="lb-icon">▶️</span><span class="lb-name">YouTube</span><span class="lb-sub">Shorts + long</span></a>
+            <a href="https://instagram.com" target="_blank" class="link-btn"><span class="lb-icon">📸</span><span class="lb-name">Instagram</span><span class="lb-sub">Reels</span></a>
+            <a href="https://facebook.com" target="_blank" class="link-btn"><span class="lb-icon">👥</span><span class="lb-name">Facebook</span><span class="lb-sub">Feed + Reels</span></a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LEARN -->
+    <div class="page" id="page-learn">
+      <div class="page-inner">
+
+        <div class="section-title">📚 PROMPT LIBRARY</div>
+        <a href="becky-prompts.html" target="_blank" style="display:flex;align-items:center;gap:14px;padding:16px;background:linear-gradient(135deg,rgba(245,197,24,0.1),rgba(232,160,32,0.05));border:2px solid rgba(245,197,24,0.3);border-radius:14px;margin-bottom:14px;text-decoration:none;color:var(--text);">
+          <span style="font-size:36px;">📚</span>
+          <div style="flex:1;">
+            <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--gold);letter-spacing:1px;margin-bottom:4px;">BECKY PROMPT LIBRARY — 1,000+ PROMPTS</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6;">Search by topic · Jobs · AI Skills · Video · Affiliate · Social · Writing · Business · Life</div>
+            <div style="display:inline-block;margin-top:6px;padding:3px 10px;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.3);border-radius:10px;font-size:10px;color:var(--green);font-weight:700;">TAP TO SEARCH → FIND PROMPT → COPY → PASTE INTO BECKY</div>
+          </div>
+        </a>
+
+        <div class="section-title">🤖 AI SKILLS — FREE YOUTUBE</div>
+        <a href="https://www.youtube.com/results?search_query=learn+AI+skills+beginners+free+2025" target="_blank" class="learn-card"><div class="learn-icon">🤖</div><div class="learn-info"><div class="learn-title">Learn AI Skills — Beginners</div><div class="learn-sub">Complete beginner AI training · Free on YouTube</div><span class="lbadge">FREE</span></div></a>
+        <a href="https://www.youtube.com/results?search_query=AI+tools+for+beginners+tutorial+2025" target="_blank" class="learn-card"><div class="learn-icon">🧠</div><div class="learn-info"><div class="learn-title">AI Tools for Beginners</div><div class="learn-sub">Learn Claude, Gemini, ChatGPT step by step</div><span class="lbadge">FREE</span></div></a>
+        <a href="https://www.youtube.com/results?search_query=prompt+engineering+beginners+free+2025" target="_blank" class="learn-card"><div class="learn-icon">✏️</div><div class="learn-info"><div class="learn-title">Prompt Engineering</div><div class="learn-sub">Write better prompts · Get better AI results</div><span class="lbadge">FREE</span></div></a>
+        <a href="https://www.youtube.com/results?search_query=make+money+online+affiliate+marketing+AI+2025" target="_blank" class="learn-card"><div class="learn-icon">💰</div><div class="learn-info"><div class="learn-title">AI + Affiliate Marketing Income</div><div class="learn-sub">Build income online with AI tools</div><span class="lbadge">FREE</span></div></a>
+        <a href="https://www.youtube.com/results?search_query=AI+video+creation+beginners+tutorial+free+2025" target="_blank" class="learn-card"><div class="learn-icon">🎬</div><div class="learn-info"><div class="learn-title">AI Video Making — Full Tutorial</div><div class="learn-sub">Make AI videos from scratch · Free tools</div><span class="lbadge">FREE</span></div></a>
+        <a href="https://www.youtube.com/results?search_query=faceless+youtube+channel+AI+automation+2025" target="_blank" class="learn-card"><div class="learn-icon">📺</div><div class="learn-info"><div class="learn-title">Faceless YouTube Channel — AI</div><div class="learn-sub">Build a channel with AI · No camera needed</div><span class="lbadge">FREE</span></div></a>
+
+        <div class="section-title">📊 MICROSOFT EXCEL</div>
+        <a href="https://www.youtube.com/results?search_query=microsoft+excel+complete+beginners+course+free" target="_blank" class="learn-card"><div class="learn-icon">📊</div><div class="learn-info"><div class="learn-title">Excel — Complete Beginner Course</div><div class="learn-sub">Formulas, charts, spreadsheets · All free</div><span class="lbadge">FREE</span></div></a>
+        <a href="https://support.microsoft.com/en-us/training" target="_blank" class="learn-card"><div class="learn-icon">🪟</div><div class="learn-info"><div class="learn-title">Microsoft Official Free Training</div><div class="learn-sub">Excel, Word, PowerPoint, Teams · Official</div><span class="lbadge">FREE · OFFICIAL</span></div></a>
+
+        <div class="section-title">🎓 FREE CERTIFICATES</div>
+        <a href="https://grow.google/certificates/ai-essentials/" target="_blank" class="learn-card"><div class="learn-icon">🔵</div><div class="learn-info"><div class="learn-title">Google AI Essentials Certificate</div><div class="learn-sub">Official Google AI training · Free certificate</div><span class="lbadge">FREE CERTIFICATE</span></div></a>
+        <a href="https://www.anthropic.com/courses" target="_blank" class="learn-card"><div class="learn-icon">🟠</div><div class="learn-info"><div class="learn-title">Anthropic — Claude AI Courses</div><div class="learn-sub">Official Claude training · Free from Anthropic</div><span class="lbadge">FREE · OFFICIAL</span></div></a>
+        <a href="https://www.elementsofai.com" target="_blank" class="learn-card"><div class="learn-icon">🎓</div><div class="learn-info"><div class="learn-title">Elements of AI — Helsinki University</div><div class="learn-sub">Learn AI from ground up · University certificate</div><span class="lbadge">FREE CERTIFICATE</span></div></a>
+
+        <!-- ══════════════════════════════════
+             LEARNING MODE — BUILT IN
+        ══════════════════════════════════ -->
+        <div class="section-title">🧠 LEARNING MODE — ASK BECKY</div>
+
+        <!-- EXPLAIN A CONCEPT -->
+        <div class="card">
+          <div class="card-title">💡 EXPLAIN A CONCEPT</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.7;">Type anything you want to understand and Becky explains it simply — like a teacher sitting next to you.</div>
+          <div class="quick-chips" style="margin-bottom:10px;">
+            <div class="qchip" onclick="learnExplain('What is an AI agent and how is it different from a regular AI assistant?')">AI Agent vs Assistant</div>
+            <div class="qchip" onclick="learnExplain('What is an API and why do AI tools use them?')">What is an API?</div>
+            <div class="qchip" onclick="learnExplain('Explain prompt engineering in simple terms with examples')">Prompt Engineering</div>
+            <div class="qchip" onclick="learnExplain('What is affiliate marketing and how do I earn money from it?')">Affiliate Marketing</div>
+            <div class="qchip" onclick="learnExplain('How does AI video generation actually work?')">AI Video Making</div>
+            <div class="qchip" onclick="learnExplain('What is a large language model and how does it think?')">How AI Thinks</div>
+            <div class="qchip" onclick="learnExplain('What is the difference between TikTok Shorts Instagram Reels and YouTube Shorts?')">Video Platforms</div>
+            <div class="qchip" onclick="learnExplain('How do I grow a social media following from zero using AI tools?')">Grow Social Media</div>
+            <div class="qchip" onclick="learnExplain('Explain what Groq API is and why my app uses it')">Groq API Explained</div>
+            <div class="qchip" onclick="learnExplain('What skills from 22 years in chemical plant operations transfer directly to AI business?')">My Skills + AI</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <textarea id="explainInput" placeholder="Type any concept you want explained simply... e.g. What is machine learning?" rows="2" style="flex:1;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:14px;outline:none;resize:none;writing-mode:horizontal-tb!important;direction:ltr!important;"></textarea>
+            <button class="icon-btn gold" onclick="learnExplainCustom()" style="width:46px;height:46px;flex-shrink:0;">➤</button>
+          </div>
+          <div id="explainAnswer" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(245,197,24,0.2);border-radius:10px;padding:13px;font-size:13px;color:var(--text);line-height:1.7;margin-top:4px;white-space:pre-wrap;"></div>
+        </div>
+
+        <!-- PRACTICE PROMPTS GENERATOR -->
+        <div class="card">
+          <div class="card-title">✏️ PRACTICE PROMPTS GENERATOR</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.7;">Get 5 practice prompts on any topic. Copy them and use them in Becky, Claude, or ChatGPT to build your AI skills.</div>
+          <div class="quick-chips" style="margin-bottom:10px;">
+            <div class="qchip" onclick="learnPrompts('AI tools for beginners')">AI Beginner</div>
+            <div class="qchip" onclick="learnPrompts('affiliate marketing video scripts')">Affiliate Scripts</div>
+            <div class="qchip" onclick="learnPrompts('job interview preparation for plant supervisor')">Job Interview</div>
+            <div class="qchip" onclick="learnPrompts('writing social media captions')">Social Captions</div>
+            <div class="qchip" onclick="learnPrompts('understanding how APIs work')">APIs</div>
+            <div class="qchip" onclick="learnPrompts('building a business with AI tools')">AI Business</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <input id="promptTopic" placeholder="Type a topic to get 5 practice prompts..." style="flex:1;padding:11px 13px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:14px;outline:none;"/>
+            <button class="icon-btn gold" onclick="learnPromptsCustom()" style="width:46px;height:46px;flex-shrink:0;">➤</button>
+          </div>
+          <div id="promptsAnswer" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(245,197,24,0.2);border-radius:10px;padding:13px;font-size:13px;color:var(--text);line-height:1.8;margin-top:4px;white-space:pre-wrap;"></div>
+          <button id="copyPromptsBtn" onclick="copyLearning('promptsAnswer')" style="display:none;margin-top:8px;" class="action-btn btn-gray">📋 Copy All Prompts</button>
+        </div>
+
+        <!-- CODE REVIEWER / APP EXPLAINER -->
+        <div class="card">
+          <div class="card-title">🔍 CODE & APP EXPLAINER</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.7;">Paste any code snippet or app feature and Becky explains what it does in plain English — no tech knowledge needed.</div>
+          <textarea id="codeInput" placeholder="Paste any code snippet here and Becky will explain it in plain English...&#10;&#10;Or ask: 'What does the sendMsg function in my Hub Engine app do?'" rows="4" style="width:100%;padding:11px 13px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;resize:none;writing-mode:horizontal-tb!important;direction:ltr!important;margin-bottom:8px;line-height:1.5;"></textarea>
+          <button class="action-btn btn-blue" onclick="learnCode()" style="margin-bottom:8px;">🔍 EXPLAIN THIS IN PLAIN ENGLISH</button>
+          <div id="codeAnswer" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(66,133,244,0.25);border-radius:10px;padding:13px;font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap;"></div>
+        </div>
+
+        <!-- DAILY LEARNING LOOP -->
+        <div class="card">
+          <div class="card-title">📅 DAILY LEARNING LOOP</div>
+          <div style="font-size:12px;color:var(--muted);line-height:2.0;margin-bottom:12px;">
+            Do this every day — takes 15 minutes and builds real AI skills fast:
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.15);border-radius:10px;">
+              <span style="font-size:20px;flex-shrink:0;">1️⃣</span>
+              <div><div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:3px;">Ask one question</div><div style="font-size:12px;color:var(--muted);">Use the Explain button above. One concept per day. Write it in your notebook.</div></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.15);border-radius:10px;">
+              <span style="font-size:20px;flex-shrink:0;">2️⃣</span>
+              <div><div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:3px;">Get 5 practice prompts</div><div style="font-size:12px;color:var(--muted);">Use the Practice Prompts generator above. Try each one in Becky today.</div></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.15);border-radius:10px;">
+              <span style="font-size:20px;flex-shrink:0;">3️⃣</span>
+              <div><div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:3px;">Take one small action</div><div style="font-size:12px;color:var(--muted);">Apply what you learned. Make a video. Write a caption. Apply for a job. Log it below.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI FOR WAREHOUSE WORKERS CURRICULUM -->
+        <div class="card" style="border-color:rgba(15,157,88,0.35);">
+          <div class="card-title" style="color:var(--green);">🏭 AI FOR INDUSTRIAL WORKERS — YOUR UNIQUE NICHE</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:12px;">
+            Your 22 years in chemical plants is a <strong style="color:var(--text);">superpower</strong>. No 25-year-old developer understands procedures, shift handovers, safety protocols, and Excel reporting the way you do. This is your unique teaching niche.
+          </div>
+          <div class="quick-chips" style="margin-bottom:12px;">
+            <div class="qchip" onclick="learnExplain('Create a 3-lesson AI curriculum for warehouse and plant workers who have never used AI before. Make it practical and simple.')">📋 Generate AI Curriculum for Plant Workers</div>
+            <div class="qchip" onclick="learnExplain('What AI tools would most help a chemical plant operator or warehouse supervisor do their job better?')">🏭 AI Tools for Plant Workers</div>
+            <div class="qchip" onclick="learnExplain('Write a 60-second video script where I explain to fellow plant workers how AI can help them find their next job faster after a layoff')">🎬 Video Script — AI for Laid-Off Workers</div>
+            <div class="qchip" onclick="learnExplain('How can someone with 22 years of industrial operations experience position themselves as an AI educator for that specific industry?')">💡 My Teaching Opportunity</div>
+          </div>
+        </div>
+
+        <!-- VIDEO LEARNING LABELS -->
+        <div class="card">
+          <div class="card-title">🎬 WHAT YOU ARE LEARNING WITH EACH VIDEO</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+            Every video you make teaches you a real skill. Here is what each step builds:
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+            <div style="padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:12px;"><strong style="color:var(--gold);">Writing a script with Becky</strong> <span style="color:var(--muted);">→ Teaches: prompt engineering + copywriting</span></div>
+            <div style="padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:12px;"><strong style="color:var(--gold);">Building scenes from script</strong> <span style="color:var(--muted);">→ Teaches: content structure + visual storytelling</span></div>
+            <div style="padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:12px;"><strong style="color:var(--gold);">Recording and downloading MP4</strong> <span style="color:var(--muted);">→ Teaches: browser APIs + file workflows</span></div>
+            <div style="padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:12px;"><strong style="color:var(--gold);">Posting to TikTok/YouTube</strong> <span style="color:var(--muted);">→ Teaches: platform strategy + SEO basics</span></div>
+            <div style="padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:12px;"><strong style="color:var(--gold);">Generating captions + hashtags</strong> <span style="color:var(--muted);">→ Teaches: social media marketing + AI writing</span></div>
+            <div style="padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:12px;"><strong style="color:var(--gold);">Writing affiliate promo scripts</strong> <span style="color:var(--muted);">→ Teaches: sales copywriting + affiliate marketing</span></div>
+          </div>
+        </div>
+
+        <div class="section-title">🤖 AI SKILLS — FREE YOUTUBE</div>
+        <a href="https://www.youtube.com/results?search_query=learn+AI+skills+beginners+free+2025" target="_blank" class="learn-card"><div class="learn-icon">🤖</div><div class="learn-info"><div class="learn-title">Learn AI Skills — Beginners</div><div class="learn-sub">Complete beginner AI training · Free on YouTube</div><span class="lbadge">FREE</span></div></a>
+        <a href="https://www.youtube.com/results?search_query=AI+tools+for+beginners+tutorial+2025" target="_blank" class="learn-card"><div class="learn-icon">🧠</div><div class="learn-info"><div class="learn-title">AI Tools for Beginners</div><div class="learn-sub">Learn Claude, Gemini, ChatGPT step by step</div><span class="lbadge">FREE</span></div></a>
+        <a href="https://grow.google/certificates/ai-essentials/" target="_blank" class="learn-card"><div class="learn-icon">🔵</div><div class="learn-info"><div class="learn-title">Google AI Essentials Certificate</div><div class="learn-sub">Official Google AI training · Free certificate</div><span class="lbadge">FREE CERTIFICATE</span></div></a>
+        <a href="https://www.elementsofai.com" target="_blank" class="learn-card"><div class="learn-icon">🎓</div><div class="learn-info"><div class="learn-title">Elements of AI — Helsinki University</div><div class="learn-sub">Learn AI from ground up · Free certificate</div><span class="lbadge">FREE CERTIFICATE</span></div></a>
+
+      </div>
+    </div>
+
+    <!-- AI TOOLS -->
+    <div class="page" id="page-aitools">
+      <div class="page-inner">
+
+        <!-- FREE VIDEO MAKER FEATURED -->
+        <a href="hub-video-generator-studio.html" target="_blank" style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(15,157,88,0.08);border:1px solid rgba(15,157,88,0.35);border-radius:12px;margin-bottom:14px;text-decoration:none;color:var(--text);">
+          <span style="font-size:28px;">🎬</span>
+          <div><div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--green);">AI Video Generator Studio</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Susan · Alisha · Lisa · Paul · Script writer · Record MP4 · Post</div><span style="display:inline-block;padding:2px 8px;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.3);border-radius:10px;font-size:9px;color:var(--green);font-weight:700;margin-top:4px;">FREE · UNLIMITED · NO CREDITS</span></div>
+        </a>
+
+        <div class="section-title">🤖 AI CHAT TOOLS</div>
+        <div class="link-grid">
+          <a href="https://claude.ai" target="_blank" class="link-btn"><span class="lb-icon">🟠</span><span class="lb-name">Claude AI</span><span class="lb-sub">Anthropic</span></a>
+          <a href="https://gemini.google.com" target="_blank" class="link-btn"><span class="lb-icon">💎</span><span class="lb-name">Gemini</span><span class="lb-sub">Google</span></a>
+          <a href="https://chatgpt.com" target="_blank" class="link-btn"><span class="lb-icon">⭐</span><span class="lb-name">ChatGPT</span><span class="lb-sub">OpenAI</span></a>
+          <a href="https://grok.com" target="_blank" class="link-btn"><span class="lb-icon">⚡</span><span class="lb-name">Grok</span><span class="lb-sub">xAI</span></a>
+          <a href="https://perplexity.ai" target="_blank" class="link-btn"><span class="lb-icon">🔍</span><span class="lb-name">Perplexity</span><span class="lb-sub">Search AI</span></a>
+          <a href="https://meta.ai" target="_blank" class="link-btn"><span class="lb-icon">🌐</span><span class="lb-name">Meta AI</span><span class="lb-sub">Facebook</span></a>
+          <a href="https://deepseek.com" target="_blank" class="link-btn"><span class="lb-icon">🧠</span><span class="lb-name">DeepSeek</span></a>
+          <a href="https://notebooklm.google.com" target="_blank" class="link-btn"><span class="lb-icon">📓</span><span class="lb-name">NotebookLM</span><span class="lb-sub">Google</span></a>
+        </div>
+
+        <div class="section-title">🎥 FREE VIDEO TOOLS</div>
+        <div class="link-grid">
+          <a href="https://flow.google.com" target="_blank" class="link-btn"><span class="lb-icon">🌊</span><span class="lb-name">Google Flow</span><span class="lb-sub">Veo 3</span></a>
+          <a href="https://aistudio.google.com" target="_blank" class="link-btn"><span class="lb-icon">🎤</span><span class="lb-name">AI Studio</span><span class="lb-sub">Free voice</span></a>
+          <a href="https://invideo.io" target="_blank" class="link-btn"><span class="lb-icon">🎬</span><span class="lb-name">InVideo AI</span></a>
+          <a href="https://dreamina.capcut.com" target="_blank" class="link-btn"><span class="lb-icon">✂️</span><span class="lb-name">CapCut</span><span class="lb-sub">Edit free</span></a>
+          <a href="https://vider.ai" target="_blank" class="link-btn"><span class="lb-icon">🎞️</span><span class="lb-name">Vider.ai</span><span class="lb-sub">Unlimited free</span></a>
+          <a href="https://fixart.ai" target="_blank" class="link-btn"><span class="lb-icon">🖼️</span><span class="lb-name">FixArt AI</span><span class="lb-sub">No signup</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOCIAL -->
+    <div class="page" id="page-social">
+      <div class="page-inner">
+        <div class="section-title">📱 SOCIAL MEDIA</div>
+        <div class="link-grid">
+          <a href="https://tiktok.com" target="_blank" class="link-btn"><span class="lb-icon">🎵</span><span class="lb-name">TikTok</span></a>
+          <a href="https://youtube.com" target="_blank" class="link-btn"><span class="lb-icon">▶️</span><span class="lb-name">YouTube</span></a>
+          <a href="https://instagram.com" target="_blank" class="link-btn"><span class="lb-icon">📸</span><span class="lb-name">Instagram</span></a>
+          <a href="https://facebook.com" target="_blank" class="link-btn"><span class="lb-icon">👥</span><span class="lb-name">Facebook</span></a>
+          <a href="https://linkedin.com" target="_blank" class="link-btn"><span class="lb-icon">💼</span><span class="lb-name">LinkedIn</span></a>
+          <a href="https://twitter.com" target="_blank" class="link-btn"><span class="lb-icon">🐦</span><span class="lb-name">X / Twitter</span></a>
+          <a href="https://snapchat.com" target="_blank" class="link-btn"><span class="lb-icon">👻</span><span class="lb-name">Snapchat</span></a>
+          <a href="https://pinterest.com" target="_blank" class="link-btn"><span class="lb-icon">📌</span><span class="lb-name">Pinterest</span></a>
+        </div>
+        <div class="section-title">💬 ASK BECKY FOR CAPTIONS</div>
+        <div style="background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.15);border-radius:10px;padding:13px;font-size:12px;color:var(--muted);line-height:1.8;">
+          Go to <strong style="color:var(--gold);">BECKY tab</strong> and say:<br/>
+          • "Write me a viral TikTok caption about AI news"<br/>
+          • "Give me 5 hashtags for YouTube Shorts"<br/>
+          • "Write a Facebook post promoting my video"
+        </div>
+      </div>
+    </div>
+
+    <!-- AFFILIATE -->
+    <div class="page" id="page-affiliate">
+      <div class="page-inner">
+        <!-- BECKY AFFILIATE PROMO STUDIO BUTTON -->
+        <a href="becky-affiliate.html" target="_blank" style="display:flex;align-items:center;gap:14px;padding:16px;background:linear-gradient(135deg,rgba(245,197,24,0.1),rgba(232,160,32,0.06));border:2px solid rgba(245,197,24,0.4);border-radius:14px;margin-bottom:14px;text-decoration:none;color:var(--text);">
+          <span style="font-size:36px;">💰</span>
+          <div style="flex:1;">
+            <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--gold);letter-spacing:1px;margin-bottom:4px;">BECKY AFFILIATE PROMO STUDIO</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6;">Hook Writer · 30-Sec Script · Podcast Dialogue · Caption · CTA · Disclosure</div>
+            <div style="display:inline-block;margin-top:6px;padding:3px 10px;background:rgba(15,157,88,0.15);border:1px solid rgba(15,157,88,0.3);border-radius:10px;font-size:10px;color:var(--green);font-weight:700;">BECKY HOST + BECKY GUEST · NO HARD SELLING · FTC COMPLIANT</div>
+          </div>
+        </a>
+
+        <div class="section-title">💰 AFFILIATE PROGRAMS</div>
+        <div class="link-grid">
+          <a href="https://invideo.io/affiliate" target="_blank" class="link-btn"><span class="lb-icon">🎥</span><span class="lb-name">InVideo</span><span class="lb-sub">30% commission</span></a>
+          <a href="https://accounts.clickbank.com/signup/" target="_blank" class="link-btn"><span class="lb-icon">🏦</span><span class="lb-name">ClickBank</span></a>
+          <a href="https://www.digistore24.com" target="_blank" class="link-btn"><span class="lb-icon">💰</span><span class="lb-name">Digistore24</span></a>
+          <a href="https://affiliate-program.amazon.com" target="_blank" class="link-btn"><span class="lb-icon">📦</span><span class="lb-name">Amazon</span></a>
+          <a href="https://www.shareasale.com" target="_blank" class="link-btn"><span class="lb-icon">🤝</span><span class="lb-name">ShareASale</span></a>
+          <a href="https://www.cj.com" target="_blank" class="link-btn"><span class="lb-icon">🌐</span><span class="lb-name">CJ Affiliate</span></a>
+          <a href="https://www.jvzoo.com" target="_blank" class="link-btn"><span class="lb-icon">⚡</span><span class="lb-name">JVZoo</span></a>
+        </div>
+        <div class="section-title">💬 MARKETING HELP FROM BECKY</div>
+        <div style="background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.15);border-radius:10px;padding:13px;font-size:12px;color:var(--muted);line-height:1.8;">
+          Go to <strong style="color:var(--gold);">BECKY tab</strong> and ask:<br/>
+          • "Help me write an email campaign for ClickBank"<br/>
+          • "Give me 5 ways to promote affiliate links with AI videos"
+        </div>
+      </div>
+    </div>
+
+    <!-- MY LOG -->
+    <div class="page" id="page-log">
+      <div class="page-inner">
+        <div class="card-title" style="padding:0 0 10px;">📋 MY DAILY LOG</div>
+        <div class="quick-chips">
+          <div class="qchip" onclick="addQuick('Watched a learning video 📺')">📺 Learning</div>
+          <div class="qchip" onclick="addQuick('Tried an AI tool 🤖')">🤖 AI Tool</div>
+          <div class="qchip" onclick="addQuick('Applied for a job 💼')">💼 Job Applied</div>
+          <div class="qchip" onclick="addQuick('Made a video 🎬')">🎬 Made Video</div>
+          <div class="qchip" onclick="addQuick('Affiliate marketing work 💰')">💰 Affiliate</div>
+          <div class="qchip" onclick="addQuick('Completed a course lesson 🎓')">🎓 Course</div>
+          <div class="qchip" onclick="addQuick('Helped with family care 🙏')">🙏 Family</div>
+          <div class="qchip" onclick="addQuick('Talked to Becky AI 💬')">💬 Chat</div>
+        </div>
+        <div class="log-add-row">
+          <input id="logInput" placeholder="Type what you accomplished today..." onkeydown="if(event.key==='Enter')addLogEntry()"/>
+          <button class="icon-btn gold" onclick="addLogEntry()" style="width:46px;height:46px;">+</button>
+        </div>
+        <div id="logList"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-inner">
+        <div class="card">
+          <div class="card-title">🔑 GROQ API KEY</div>
+          <div id="setStatus" class="set-status set-err">No API key saved</div>
+          <div class="set-row">
+            <div class="set-label">GROQ API KEY</div>
+            <input id="setApiKey" class="set-input" type="password" placeholder="gsk_..."/>
+          </div>
+          <button class="action-btn btn-gold" onclick="saveApiKey()">💾 Save API Key</button>
+          <button class="action-btn btn-gray" onclick="clearApiKey()">🗑️ Clear Key</button>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.7;">Free key from console.groq.com — powers Becky AI chat inside this app</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔊 BECKY'S VOICE</div>
+          <div class="set-row">
+            <div class="set-label">CHOOSE VOICE</div>
+            <select id="voiceSelectSettings" class="set-input" onchange="saveVoiceFromSettings()"><option>Loading...</option></select>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="action-btn btn-blue" style="margin:0;flex:1" onclick="speakText('Hello John! Becky here, ready to help!')">🔈 Test Voice</button>
+            <button class="action-btn btn-gray" style="margin:0;flex:1" onclick="stopCurrentAudio()">⏹️ Stop</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">💰 MONTHLY COSTS — UPDATED</div>
+          <div style="font-size:13px;color:var(--text);line-height:2.4;">
+            🎬 Hub Engine Video Maker — <strong style="color:var(--green);">FREE FOREVER</strong><br/>
+            🤖 Groq AI (Becky chat) — <strong style="color:var(--green);">FREE</strong><br/>
+            🌐 Vercel hosting — <strong style="color:var(--green);">FREE</strong><br/>
+            📁 GitHub — <strong style="color:var(--green);">FREE</strong><br/>
+            <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px;">
+              <strong style="color:var(--green);font-size:16px;">TOTAL: $0/MONTH ✅</strong><br/>
+              <span style="font-size:11px;color:var(--muted);">All tools are now free · No more subscriptions</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">👤 YOUR PROFILE</div>
+          <div class="profile-field"><div class="profile-label">NAME & LOCATION</div><div class="profile-val">John Lanter · Orange, Texas</div></div>
+          <div class="profile-field"><div class="profile-label">WORK HISTORY — 22 YEARS</div><div class="profile-val">Lead Operator · Live Oak Warehouse (05/2004–01/2012)<br/>Production Warehouse A Operator · Firestone Polymers (01/2012–08/2019)<br/>Production Warehouse A Operator · Lion Elastomers (08/2019–12/2025)</div></div>
+          <div class="profile-field"><div class="profile-label">CURRENT GOALS</div><div class="profile-val">1. Find operations job in SE Texas<br/>2. Learn AI skills every day<br/>3. Build affiliate marketing income with videos<br/>4. Grow AffiliateMediaHub Studio</div></div>
+          <div class="profile-field"><div class="profile-label">THE HUB ENGINE v3 TEAM</div><div class="profile-val">👑 John Lanter — CEO · Builder · Vision<br/>🎙️ Becky — AI Assistant · Creative Director<br/>🔧 Claude — Technical Architect · Developer<br/>🔍 Perplexity — Research · Strategy<br/><em style="color:var(--muted);font-size:11px;">Four Minds · One Mission · Zero Cost</em></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /pages -->
+
+  <!-- TAB BAR — clean and simple -->
+  <div class="tab-bar">
+    <div class="tab-btn active" onclick="showTab('becky')"><span>🎙️</span><span>BECKY</span></div>
+    <div class="tab-btn" onclick="showTab('jobs')"><span>💼</span><span>JOBS</span></div>
+    <div class="tab-btn" onclick="showTab('video')"><span>🎬</span><span>VIDEO</span></div>
+    <div class="tab-btn" onclick="showTab('learn')"><span>📚</span><span>LEARN</span></div>
+    <div class="tab-btn" onclick="showTab('aitools')"><span>🧰</span><span>TOOLS</span></div>
+    <div class="tab-btn" onclick="showTab('social')"><span>📱</span><span>SOCIAL</span></div>
+    <div class="tab-btn" onclick="showTab('affiliate')"><span>🔗</span><span>AFFILIATE</span></div>
+    <div class="tab-btn" onclick="showTab('log')"><span>✅</span><span>LOG</span></div>
+    <div class="tab-btn" onclick="showTab('settings')"><span>⚙️</span><span>SETTINGS</span></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PW='JohnHub2025';
+let groqKey='',recognition=null,msgHistory={},logEntries=[];
+
+/* ── LOGIN ── */
+function initLoginScreen(){
+  const saved=localStorage.getItem('hub_groq');
+  if(saved){const s=document.getElementById('loginApiStep');if(s)s.style.display='none';}
+}
+function doLogin(){
+  const pw=document.getElementById('pwInput').value.trim();
+  const err=document.getElementById('loginErr');
+  if(pw!==PW){err.textContent='Incorrect password';return;}
+  const apiInp=document.getElementById('apiInput');
+  const typed=(apiInp&&apiInp.value.trim())||'';
+  const saved=localStorage.getItem('hub_groq')||'';
+  const key=typed||saved;
+  if(!key){err.textContent='Please enter your Groq API key (gsk_...)';const s=document.getElementById('loginApiStep');if(s)s.style.display='block';return;}
+  const clean=key.replace(/[^\x20-\x7E]/g,'').trim();
+  if(!clean.startsWith('gsk_')){err.textContent='Key must start with gsk_';return;}
+  groqKey=clean;localStorage.setItem('hub_groq',clean);localStorage.setItem('hub_auth','1');
+  launchApp();
+}
+function launchApp(){
+  document.getElementById('loginScreen').style.display='none';
+  const a=document.getElementById('app');a.style.display='flex';a.style.flexDirection='column';
+  loadLog();loadSettings();initVoice();
+  setTimeout(()=>{
+    msgHistory['becky']=[];
+    // Load memory
+    try{
+      const mem=JSON.parse(localStorage.getItem('hub_memory')||'{}');
+      if(mem.becky&&mem.becky.length){
+        const box=document.getElementById('msgs-becky');
+        const d1=document.createElement('div');d1.style.cssText='text-align:center;font-size:10px;color:rgba(245,197,24,0.35);padding:6px;';d1.textContent='── Previous session ──';box.appendChild(d1);
+        mem.becky.slice(-8).forEach(m=>{const d=document.createElement('div');d.className=m.role==='user'?'msg user':'msg bot';d.textContent=m.content;box.appendChild(d);});
+        const d2=document.createElement('div');d2.style.cssText='text-align:center;font-size:10px;color:rgba(245,197,24,0.35);padding:6px;';d2.textContent='── New session ──';box.appendChild(d2);
+        box.scrollTop=box.scrollHeight;
+        msgHistory['becky']=mem.becky.slice(-8).map(m=>({role:m.role,content:m.content}));
+      }
+    }catch(e){}
+    addBotMsg('becky','Good morning John! 👋 I\'m Becky — your AI assistant. I can help you find jobs in SE Texas, learn AI skills, write cover letters, plan your video business, create affiliate content, or just talk through your plans. What would you like to work on today?');
+  },200);
+}
+
+/* ── TABS ── */
+function showTab(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const tabs=['becky','jobs','video','learn','aitools','social','affiliate','log','settings'];
+  const idx=tabs.indexOf(id);if(idx>=0)document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+}
+
+/* ── MESSAGES ── */
+function addBotMsg(tab,text){
+  const box=document.getElementById('msgs-'+tab);if(!box)return;
+  const d=document.createElement('div');d.className='msg bot';d.textContent=text;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+  saveToMemory(tab,'assistant',text);
+}
+function addUserMsg(tab,text){
+  const box=document.getElementById('msgs-'+tab);if(!box)return;
+  const d=document.createElement('div');d.className='msg user';d.textContent=text;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+  saveToMemory(tab,'user',text);
+}
+function addThinkingMsg(tab){
+  const box=document.getElementById('msgs-'+tab);if(!box)return;
+  const d=document.createElement('div');d.className='msg bot thinking';d.id='thinking-'+tab;d.textContent='Becky is thinking...';
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+}
+function removeThinking(tab){const el=document.getElementById('thinking-'+tab);if(el)el.remove();}
+function saveToMemory(tab,role,content){
+  try{const mem=JSON.parse(localStorage.getItem('hub_memory')||'{}');if(!mem[tab])mem[tab]=[];mem[tab].push({role,content});if(mem[tab].length>30)mem[tab]=mem[tab].slice(-30);localStorage.setItem('hub_memory',JSON.stringify(mem));}catch(e){}
+}
+
+/* ── SEND MESSAGE ── */
+const BECKY_SYSTEM=`You are Becky, John Lanter's personal AI assistant inside The Hub Engine v3 app on his phone.
+
+ABOUT JOHN:
+- 59 years old, Orange Texas
+- 22 years chemical plant/warehouse operations experience
+- Lead Operator Live Oak Warehouse 2004-2012
+- Production Warehouse A Operator Firestone Polymers 2012-2019  
+- Production Warehouse A Operator Lion Elastomers 2019-2025 (laid off Dec 2025 when plant closed)
+- Married, cares for sister-in-law on dialysis at home
+- Uses OnePlus 13R phone as main device
+
+JOHN'S GOALS:
+1. Find operations/supervisor job in SE Texas (immediate priority)
+2. Learn AI skills daily
+3. Build affiliate marketing income
+4. Launch AI video business in May 2026 with his video studio (Abacus.ai - paused until May)
+5. Grow Hub Engine v3 as his business platform
+
+VIDEO AGENTS (ready in May):
+- Susan: Monday Podcast Host
+- Alisha: Wednesday Podcast Co-Host  
+- Lisa: Friday Podcast + Affiliate
+- Paul: Thursday Podcast Host
+
+VIDEO AGENTS — PODCAST + AFFILIATE FOCUS:
+- Susan: Monday — Podcast Host + Affiliate Promo
+- Alisha: Wednesday — Podcast Co-Host + Business Promo  
+- Paul: Thursday — Podcast Host + Tips & Education
+- Lisa: Friday + Saturday — Podcast + Affiliate Marketing
+
+THE TEAM:
+- John Lanter (CEO), Becky (You — AI Assistant), Claude (Technical Architect), Perplexity (Research & Strategy)
+
+YOUR ROLE: You are warm, encouraging, practical and honest. You help John with:
+- Job search and career coaching (cover letters, resume, interview prep)
+- Learning AI skills step by step
+- Affiliate marketing strategy
+- Video business planning
+- Technical help with the app and tools
+- Daily encouragement and planning
+
+Be conversational and friendly. Keep responses clear and practical. John uses voice sometimes so avoid long bullet lists — use natural flowing sentences when possible.`;
+
+async function sendMsg(tab){
+  const inp=document.getElementById('inp-'+tab);
+  const text=inp.value.trim();if(!text)return;
+  inp.value='';inp.style.height='auto';
+  if(!groqKey){addBotMsg(tab,'I need the Groq API key to work. Go to Settings tab and enter it!');return;}
+  const imageData=inp.dataset.imageData||null;
+  if(imageData){delete inp.dataset.imageData;}
+  addUserMsg(tab,text);
+  if(!msgHistory[tab])msgHistory[tab]=[];
+  msgHistory[tab].push({role:'user',content:text});
+  addThinkingMsg(tab);
+  try{
+    let model='llama-3.3-70b-versatile',userContent=text;
+    if(imageData){model='meta-llama/llama-4-scout-17b-16e-instruct';userContent=[{type:'text',text},{type:'image_url',image_url:{url:imageData}}];}
+    const messages=[{role:'system',content:BECKY_SYSTEM},...msgHistory[tab].slice(-12).map((m,i,arr)=>{
+      if(i===arr.length-1&&imageData)return{role:m.role,content:userContent};
+      return{role:m.role,content:typeof m.content==='string'?m.content:text};
+    })];
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model,messages,max_tokens:700,temperature:0.8})});
+    const data=await res.json();removeThinking(tab);
+    if(data.error){addBotMsg(tab,'Error: '+data.error.message);return;}
+    const reply=data.choices[0].message.content;
+    msgHistory[tab].push({role:'assistant',content:reply});
+    addBotMsg(tab,reply);
+    if(speaking)speakText(cleanForSpeech(reply));
+  }catch(e){removeThinking(tab);addBotMsg(tab,'Connection error. Check your API key in Settings.');}
+}
+function handleKey(e,tab){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg(tab);}
+  const t=e.target;t.style.height='auto';t.style.height=Math.min(t.scrollHeight,130)+'px';
+}
+
+/* ── VOICE ── */
+let speaking=true,synth=window.speechSynthesis,voices=[],chosenVoice=null;
+function initVoice(){
+  if(!synth)return;
+  const load=()=>{voices=synth.getVoices();if(voices.length>0)buildVoiceSelects();};
+  load();synth.onvoiceschanged=load;setTimeout(load,700);setTimeout(load,2000);
+}
+function buildVoiceSelects(){
+  ['voiceSelect','voiceSelectSettings'].forEach(sid=>{
+    const sel=document.getElementById(sid);if(!sel)return;sel.innerHTML='';
+    const eng=voices.filter(v=>v.lang.startsWith('en'));
+    const other=voices.filter(v=>!v.lang.startsWith('en'));
+    [...eng,...other].forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+' ('+v.lang+')';sel.appendChild(o);});
+    const saved=localStorage.getItem('hub_voice_name');
+    if(saved&&sel.querySelector('option[value="'+saved+'"]'))sel.value=saved;
+    chosenVoice=voices.find(v=>v.name===sel.value)||eng[0]||voices[0];
+  });
+}
+function saveVoice(){const sel=document.getElementById('voiceSelect');if(!sel)return;chosenVoice=voices.find(v=>v.name===sel.value)||chosenVoice;localStorage.setItem('hub_voice_name',sel.value);const v2=document.getElementById('voiceSelectSettings');if(v2)v2.value=sel.value;showToast('Voice saved!');speakText('Hello John!');}
+function saveVoiceFromSettings(){const sel=document.getElementById('voiceSelectSettings');if(!sel)return;chosenVoice=voices.find(v=>v.name===sel.value)||chosenVoice;localStorage.setItem('hub_voice_name',sel.value);const v1=document.getElementById('voiceSelect');if(v1)v1.value=sel.value;showToast('Voice saved!');speakText('Hello John!');}
+function testVoice(){speakText('Hello John! Becky here, ready to help you today!');showToast('Testing voice...');}
+function speakText(text){
+  if(!speaking||!synth||!text)return;
+  const c=cleanForSpeech(text);if(!c)return;
+  synth.cancel();
+  const u=new SpeechSynthesisUtterance(c);
+  const allV=synth.getVoices();
+  const best=allV.find(v=>/en.?GB/i.test(v.lang))
+    ||allV.find(v=>/en.?AU/i.test(v.lang))
+    ||allV.find(v=>/samantha|karen|victoria|moira|zira|hazel|susan/i.test(v.name))
+    ||chosenVoice
+    ||allV.find(v=>v.lang.startsWith('en')&&v.localService)
+    ||allV.find(v=>v.lang.startsWith('en'));
+  if(best)u.voice=best;
+  u.rate=0.87;u.pitch=1.0;u.volume=1.0;
+  synth.speak(u);
+}
+function stopCurrentAudio(){if(synth)synth.cancel();}
+function cleanForSpeech(t){return t.replace(/[\u{1F300}-\u{1FAD6}]/gu,'').replace(/[\u{2600}-\u{27BF}]/gu,'').replace(/[^\w\s.,!?'":\-]/g,' ').replace(/\s+/g,' ').trim().substring(0,600);}
+function toggleSpeak(){
+  speaking=!speaking;
+  const vs=document.getElementById('voiceStatus');
+  if(vs)vs.textContent=speaking?'🔊 VOICE ON':'🔇 VOICE OFF';
+  if(!speaking)stopCurrentAudio();
+  showToast(speaking?'🔊 Voice ON':'🔇 Voice OFF');
+}
+
+/* ── MIC ── */
+function toggleMic(tab){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){showToast('Speech needs Chrome browser');return;}
+  const btn=document.getElementById('mic-'+tab);
+  if(recognition&&recognition._tab===tab){recognition.stop();recognition=null;btn.textContent='🎤';btn.classList.remove('mic-active');return;}
+  if(recognition){recognition.stop();recognition=null;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();recognition._tab=tab;recognition.lang='en-US';recognition.continuous=false;recognition.interimResults=false;
+  recognition.onresult=e=>{
+    const txt=e.results[0][0].transcript;
+    const inp=document.getElementById('inp-'+tab);
+    inp.value=txt;
+    inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,130)+'px';
+    btn.textContent='🎤';btn.classList.remove('mic-active');recognition=null;
+    showToast('Tap ➤ to send');
+  };
+  recognition.onerror=()=>{btn.textContent='🎤';btn.classList.remove('mic-active');recognition=null;};
+  recognition.onend=()=>{btn.textContent='🎤';btn.classList.remove('mic-active');recognition=null;};
+  recognition.start();btn.textContent='🔴';btn.classList.add('mic-active');showToast('Listening — speak now');
+}
+
+/* ── FILE ATTACH ── */
+function attachFile(e,tab){
+  const file=e.target.files[0];if(!file)return;
+  const isImage=file.type.startsWith('image/');const reader=new FileReader();
+  if(isImage){
+    reader.onload=evt=>{
+      const base64=evt.target.result;
+      const box=document.getElementById('msgs-'+tab);
+      const imgDiv=document.createElement('div');imgDiv.className='msg user';
+      imgDiv.innerHTML='<img src="'+base64+'" style="max-width:200px;max-height:150px;border-radius:8px;display:block;"/>';
+      box.appendChild(imgDiv);box.scrollTop=box.scrollHeight;
+      const inp=document.getElementById('inp-'+tab);
+      inp.dataset.imageData=base64;
+      inp.value=inp.value||'What do you see in this image?';
+      showToast('Image attached! Tap ➤ to send');
+    };
+    reader.readAsDataURL(file);
+  }else{
+    reader.onload=evt=>{
+      document.getElementById('inp-'+tab).value='[File: '+file.name+']\n'+evt.target.result.substring(0,3000);
+      showToast('File attached: '+file.name);
+    };
+    reader.readAsText(file);
+  }
+  e.target.value='';
+}
+
+/* ── LOG ── */
+function loadLog(){logEntries=JSON.parse(localStorage.getItem('hub_log')||'[]');renderLog();}
+function saveLog(){localStorage.setItem('hub_log',JSON.stringify(logEntries));}
+function renderLog(){
+  const list=document.getElementById('logList');if(!list)return;list.innerHTML='';
+  if(!logEntries.length){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:24px;">Tap a chip above or type what you accomplished today!</div>';return;}
+  logEntries.forEach((e,i)=>{
+    const d=document.createElement('div');d.className='log-entry';
+    const cb=document.createElement('input');cb.type='checkbox';cb.className='log-cb';cb.checked=e.done;cb.onchange=()=>{logEntries[i].done=cb.checked;saveLog();};
+    const span=document.createElement('div');span.className='log-text';span.textContent=e.text;if(e.done)span.style.textDecoration='line-through';
+    const del=document.createElement('button');del.className='log-del';del.textContent='✕';del.onclick=()=>{logEntries.splice(i,1);saveLog();renderLog();};
+    d.appendChild(cb);d.appendChild(span);d.appendChild(del);list.appendChild(d);
+  });
+}
+function addLogEntry(){const inp=document.getElementById('logInput');const text=inp.value.trim();if(!text)return;logEntries.unshift({text,done:false,date:new Date().toLocaleDateString()});saveLog();renderLog();inp.value='';showToast('Logged! Good work John!');}
+function addQuick(text){logEntries.unshift({text,done:false,date:new Date().toLocaleDateString()});saveLog();renderLog();showToast('Logged!');}
+
+/* ── SETTINGS ── */
+function loadSettings(){
+  const saved=localStorage.getItem('hub_groq');const stat=document.getElementById('setStatus');
+  if(saved){groqKey=saved.replace(/[^\x20-\x7E]/g,'').trim();if(stat){stat.className='set-status set-ok';stat.textContent='✅ API Key Active — Becky is ready!';}}
+  else{if(stat){stat.className='set-status set-err';stat.textContent='No API key — enter it below to activate Becky';}}
+}
+function saveApiKey(){
+  const inp=document.getElementById('setApiKey');const val=inp.value.trim().replace(/[^\x20-\x7E]/g,'');
+  if(!val||!val.startsWith('gsk_')){showToast('Key must start with gsk_');return;}
+  groqKey=val;localStorage.setItem('hub_groq',val);inp.value='';
+  document.getElementById('setStatus').className='set-status set-ok';
+  document.getElementById('setStatus').textContent='✅ API Key Active — Becky is ready!';
+  showToast('API Key saved! Becky is ready!');
+}
+function clearApiKey(){localStorage.removeItem('hub_groq');localStorage.removeItem('hub_auth');groqKey='';document.getElementById('setStatus').className='set-status set-err';document.getElementById('setStatus').textContent='No API key saved';showToast('Key cleared');}
+
+/* ── LEARNING MODE ── */
+async function learnExplain(concept) {
+  document.getElementById('explainInput').value = concept;
+  await learnExplainCustom();
+}
+
+async function learnExplainCustom() {
+  const concept = document.getElementById('explainInput').value.trim();
+  if (!concept) { showToast('Type a concept to explain!'); return; }
+  if (!groqKey) { showToast('Enter your Groq API key in Settings!'); return; }
+  const ansBox = document.getElementById('explainAnswer');
+  ansBox.style.display = 'block';
+  ansBox.textContent = '⏳ Becky is explaining...';
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {role:'system', content:'You are Becky, a patient AI teacher for John Lanter, 59, Orange Texas, 22 years chemical plant ops, now learning AI. Explain concepts simply and clearly. Use real-world examples he can relate to — industrial work, warehouses, safety procedures. Never use jargon without explaining it. Be warm and encouraging.'},
+          {role:'user', content: 'Explain this concept to me simply, step by step, using examples I can relate to as someone from a chemical plant background:\n\n' + concept}
+        ],
+        max_tokens: 600,
+        temperature: 0.7
+      })
+    });
+    const data = await res.json();
+    if (data.error) { ansBox.textContent = 'Error: ' + data.error.message; return; }
+    ansBox.textContent = data.choices[0].message.content.trim();
+    showToast('Explanation ready! Read and take notes.');
+  } catch(e) { ansBox.textContent = 'Connection error. Check API key in Settings.'; }
+}
+
+async function learnPrompts(topic) {
+  document.getElementById('promptTopic').value = topic;
+  await learnPromptsCustom();
+}
+
+async function learnPromptsCustom() {
+  const topic = document.getElementById('promptTopic').value.trim();
+  if (!topic) { showToast('Type a topic first!'); return; }
+  if (!groqKey) { showToast('Enter your Groq API key in Settings!'); return; }
+  const ansBox = document.getElementById('promptsAnswer');
+  const copyBtn = document.getElementById('copyPromptsBtn');
+  ansBox.style.display = 'block';
+  ansBox.textContent = '⏳ Becky is generating practice prompts...';
+  copyBtn.style.display = 'none';
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {role:'system', content:'You are Becky, an AI practice prompt generator for John Lanter, 59, Orange Texas. Generate exactly 5 numbered practice prompts that John can copy and paste into any AI tool to practice and learn. Make each prompt practical, specific, and immediately useful for someone building an AI business, learning AI skills, or creating affiliate marketing videos.'},
+          {role:'user', content: 'Give me 5 numbered practice prompts for learning about: ' + topic + '\n\nFormat each as:\n1. [Complete ready-to-use prompt]\n2. [Complete ready-to-use prompt]\netc.\n\nMake each prompt something I can immediately copy and paste into Claude or ChatGPT to get a useful result.'}
+        ],
+        max_tokens: 500,
+        temperature: 0.8
+      })
+    });
+    const data = await res.json();
+    if (data.error) { ansBox.textContent = 'Error: ' + data.error.message; return; }
+    ansBox.textContent = data.choices[0].message.content.trim();
+    copyBtn.style.display = 'block';
+    showToast('5 prompts ready! Copy and try them in Becky.');
+  } catch(e) { ansBox.textContent = 'Connection error.'; }
+}
+
+async function learnCode() {
+  const code = document.getElementById('codeInput').value.trim();
+  if (!code) { showToast('Paste some code or ask a question first!'); return; }
+  if (!groqKey) { showToast('Enter your Groq API key in Settings!'); return; }
+  const ansBox = document.getElementById('codeAnswer');
+  ansBox.style.display = 'block';
+  ansBox.textContent = '⏳ Becky is reading this...';
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {role:'system', content:'You are Becky, a plain-English code explainer for John Lanter, 59, Orange Texas, no coding background. Explain code like you are talking to a smart person who has never programmed. Use real-world analogies from industrial work. Never use unexplained jargon. Be patient, warm, clear.'},
+          {role:'user', content: 'Explain what this does in plain English. Imagine I have no coding background but I am smart and worked in industrial operations for 22 years:\n\n' + code}
+        ],
+        max_tokens: 500,
+        temperature: 0.7
+      })
+    });
+    const data = await res.json();
+    if (data.error) { ansBox.textContent = 'Error: ' + data.error.message; return; }
+    ansBox.textContent = data.choices[0].message.content.trim();
+    showToast('Explanation ready!');
+  } catch(e) { ansBox.textContent = 'Connection error.'; }
+}
+
+function copyLearning(elId) {
+  const el = document.getElementById(elId);
+  if (el && el.textContent) {
+    navigator.clipboard.writeText(el.textContent);
+    showToast('Copied! Paste into Becky or your notebook.');
+  }
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+/* ── STARTUP ── */
+window.onload=function(){
+  initLoginScreen();
+  const k=localStorage.getItem('hub_groq'),auth=localStorage.getItem('hub_auth');
+  if(k&&auth==='1'){groqKey=k.replace(/[^\x20-\x7E]/g,'').trim();launchApp();}
+};
+</script>
+</body>
+</html>
