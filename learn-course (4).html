@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>30-Day AI Learning Path</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+<style>
+:root{--gold:#f5c518;--gold2:#e8a020;--dark:#07070f;--dark2:#0e0e1a;--dark3:#13131f;--border:rgba(245,197,24,0.18);--text:#eeeef5;--muted:rgba(238,238,245,0.45);--green:#0f9d58;--red:#ea4335;--blue:#4285f4;--purple:#7c3aed;--amber:#f59e0b;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;background:var(--dark);color:var(--text);font-family:"Exo 2",sans-serif;padding-bottom:90px;}
+
+.header{background:var(--dark2);border-bottom:2px solid var(--border);padding:14px 16px;text-align:center;}
+.back-btn{display:inline-block;padding:6px 14px;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--gold);font-family:"Rajdhani",sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;margin-bottom:8px;}
+.header-title{font-family:"Rajdhani",sans-serif;font-size:20px;font-weight:700;color:var(--gold);letter-spacing:3px;}
+.header-sub{font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:2px;}
+
+.container{padding:14px;max-width:620px;margin:0 auto;}
+
+/* PROGRESS BAR */
+.progress-card{background:var(--dark2);border:2px solid rgba(245,197,24,0.3);border-radius:14px;padding:16px;margin-bottom:14px;}
+.progress-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.progress-icon{font-size:28px;}
+.progress-info{flex:1;}
+.progress-label{font-family:"Rajdhani",sans-serif;font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:700;}
+.progress-count{font-family:"Rajdhani",sans-serif;font-size:26px;font-weight:700;color:var(--gold);}
+.progress-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.progress-pct{font-family:"Rajdhani",sans-serif;font-size:20px;font-weight:700;color:var(--green);}
+.bar-bg{width:100%;height:10px;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;margin-bottom:8px;}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:10px;transition:width .5s;}
+.phase-dots{display:flex;gap:6px;}
+.phase-dot{flex:1;height:4px;border-radius:4px;}
+.reset-btn{padding:6px 14px;background:rgba(234,67,53,0.1);border:1px solid rgba(234,67,53,0.25);border-radius:8px;color:var(--red);font-family:"Rajdhani",sans-serif;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:1px;float:right;}
+
+/* PHASE HEADERS */
+.phase-header{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:12px;margin-bottom:10px;cursor:pointer;}
+.phase-icon{font-size:22px;}
+.phase-title{font-family:"Rajdhani",sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;flex:1;}
+.phase-progress{font-family:"Rajdhani",sans-serif;font-size:11px;font-weight:700;}
+.phase-arrow{font-size:12px;color:var(--muted);transition:transform .2s;}
+.phase-arrow.open{transform:rotate(180deg);}
+
+.ph1{background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.25);}
+.ph1 .phase-title{color:var(--gold);}
+.ph2{background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.25);}
+.ph2 .phase-title{color:var(--blue);}
+.ph3{background:rgba(15,157,88,0.08);border:1px solid rgba(15,157,88,0.25);}
+.ph3 .phase-title{color:var(--green);}
+
+/* DAY ITEMS */
+.days-list{margin-bottom:12px;display:none;}
+.days-list.open{display:block;}
+.day-item{display:flex;align-items:flex-start;gap:12px;padding:12px 13px;background:var(--dark3);border-radius:11px;margin-bottom:8px;border:1px solid rgba(255,255,255,0.05);transition:all .2s;cursor:pointer;}
+.day-item.done{background:rgba(15,157,88,0.06);border-color:rgba(15,157,88,0.2);}
+.day-item:active{transform:scale(0.99);}
+.day-check{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .2s;font-size:12px;}
+.day-item.done .day-check{background:var(--green);border-color:var(--green);color:#fff;}
+.day-num{font-family:"Rajdhani",sans-serif;font-size:10px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-bottom:3px;}
+.day-title{font-family:"Rajdhani",sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.day-item.done .day-title{color:var(--green);}
+.day-desc{font-size:11px;color:var(--muted);line-height:1.6;}
+.day-action{display:inline-block;margin-top:5px;padding:3px 9px;border-radius:6px;font-size:9px;font-weight:700;letter-spacing:1px;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.2);color:var(--gold);}
+.day-item.done .day-action{background:rgba(15,157,88,0.1);border-color:rgba(15,157,88,0.3);color:var(--green);}
+
+/* COMPLETE CARD */
+.complete-card{display:none;background:linear-gradient(135deg,rgba(15,157,88,0.15),rgba(245,197,24,0.08));border:2px solid rgba(15,157,88,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px;}
+.complete-emoji{font-size:48px;margin-bottom:10px;}
+.complete-title{font-family:"Rajdhani",sans-serif;font-size:22px;font-weight:700;color:var(--green);letter-spacing:2px;margin-bottom:6px;}
+.complete-sub{font-size:12px;color:var(--muted);line-height:1.7;}
+
+/* BECKY TIP */
+.becky-tip{background:var(--dark2);border:1px solid rgba(245,197,24,0.2);border-radius:12px;padding:13px;margin-bottom:12px;}
+.becky-tip-title{font-family:"Rajdhani",sans-serif;font-size:11px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:8px;}
+.becky-tip-text{font-size:12px;color:var(--muted);line-height:1.7;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(15,157,88,0.95);color:#fff;padding:9px 22px;border-radius:20px;font-size:12px;font-weight:700;z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s;}
+.toast.show{opacity:1;}
+.res-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.res-link{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:0.5px;transition:opacity .2s;}
+.res-link:active{opacity:0.7;}
+.rl-read{background:rgba(66,133,244,0.12);border:1px solid rgba(66,133,244,0.35);color:#60a5fa;}
+.rl-watch{background:rgba(234,67,53,0.12);border:1px solid rgba(234,67,53,0.35);color:#ff6b6b;}
+.rl-tool{background:rgba(15,157,88,0.12);border:1px solid rgba(15,157,88,0.35);color:var(--green);}
+.rl-download{background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);color:var(--gold);}
+.mark-done-btn{margin-top:8px;width:100%;padding:10px;border-radius:9px;font-family:"Rajdhani",sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;border:1px solid rgba(245,197,24,0.3);background:rgba(245,197,24,0.08);color:var(--gold);transition:all .2s;}
+.mark-done-btn:active{transform:scale(0.98);}
+.day-item.done .mark-done-btn{background:rgba(15,157,88,0.1);border-color:rgba(15,157,88,0.3);color:var(--green);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← BACK TO HUB</a>
+  <div class="header-title">🎓 30-DAY AI LEARNING PATH</div>
+  <div class="header-sub">CLAUDE CO-WORK MASTERY · LEARN AT YOUR OWN PACE · JOHN LANTER</div>
+</div>
+
+<div class="container">
+
+  <!-- PROGRESS CARD -->
+  <div class="progress-card">
+    <div class="progress-top">
+      <div class="progress-icon">🧠</div>
+      <div class="progress-info">
+        <div class="progress-label">YOUR PROGRESS</div>
+        <div class="progress-count"><span id="doneCount">0</span> / 30 Days</div>
+        <div class="progress-sub">Claude Co-Work Mastery Program</div>
+      </div>
+      <div>
+        <div class="progress-pct" id="pctDisplay">0%</div>
+        <button class="reset-btn" onclick="resetAll()">↺ RESET</button>
+      </div>
+    </div>
+    <div class="bar-bg"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
+    <div class="phase-dots">
+      <div class="phase-dot" id="dot1" style="background:rgba(245,197,24,0.2);"></div>
+      <div class="phase-dot" id="dot2" style="background:rgba(66,133,244,0.2);"></div>
+      <div class="phase-dot" id="dot3" style="background:rgba(15,157,88,0.2);"></div>
+    </div>
+  </div>
+
+  <!-- COMPLETE CARD -->
+  <div class="complete-card" id="completeCard">
+    <div class="complete-emoji">🏆</div>
+    <div class="complete-title">AI OPERATOR CERTIFIED!</div>
+    <div class="complete-sub">You completed all 30 days of Claude Co-Work Mastery.<br/>You are now ready to teach companies and sell this skill on Instagram.<br/>God bless you John — you earned this! 🙏</div>
+  </div>
+
+  <!-- BECKY TIP -->
+  <div class="becky-tip">
+    <div class="becky-tip-title">💡 BECKY'S LEARNING TIP</div>
+    <div class="becky-tip-text">John — take this one day at a time. You do not need to rush. Even 30-45 minutes per day will get you to AI Operator level in 30 days. Tap each day to mark it done when you complete it. Go at YOUR pace — this is YOUR learning lab. 🙏</div>
+  </div>
+
+  <!-- ═══ PHASE 1 ═══ -->
+  <div class="phase-header ph1" onclick="togglePhase(1)">
+    <div class="phase-icon">🟡</div>
+    <div class="phase-title">PHASE 1 — CLAUDE CO-WORK FOUNDATIONS</div>
+    <div class="phase-progress" id="ph1-prog" style="color:var(--gold);">0/10</div>
+    <div class="phase-arrow" id="arr1">▼</div>
+  </div>
+  <div class="days-list open" id="phase1">
+
+    <div class="day-item" id="d1">
+      <div class="day-check" id="chk1"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 1</div>
+        <div class="day-title">Claude vs Claude Co-Work — What is the difference?</div>
+        <div class="day-desc">Learn what makes Claude Co-Work different from regular Claude. Understand why Co-Work is built for real projects, not just chat. Read the Anthropic overview page and watch one intro video.</div>
+        <span class="day-action">📖 READ + WATCH</span><div class="res-links"><a href="https://docs.claude.ai" target="_blank" class="res-link rl-read">📖 Read: Claude Co-Work Docs</a><a href="https://www.youtube.com/results?search_query=claude+cowork+anthropic+intro" target="_blank" class="res-link rl-watch">▶️ Watch: Claude Co-Work Intro</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d2">
+      <div class="day-check" id="chk2"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 2</div>
+        <div class="day-title">Your First 90-Minute Working Session with Claude Co-Work</div>
+        <div class="day-desc">Open Claude Co-Work and run a real 90-minute project session. Use it to plan your Hub Engine v3 content schedule for next week. Practice giving clear instructions and iterating.</div>
+        <span class="day-action">⚡ HANDS-ON SESSION</span><div class="res-links"><a href="https://claude.ai/projects" target="_blank" class="res-link rl-tool">🔧 Open Claude Co-Work</a><a href="https://www.youtube.com/results?search_query=claude+ai+projects+workflow" target="_blank" class="res-link rl-watch">▶️ Watch: First Session Tips</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d3">
+      <div class="day-check" id="chk3"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 3</div>
+        <div class="day-title">Files, Folders, Artifacts — Why You Need Them</div>
+        <div class="day-desc">Learn how to organize your work in Claude Co-Work using files and artifacts. Create a folder for your podcast scripts, affiliate content, and job search materials. Practice uploading and referencing files.</div>
+        <span class="day-action">📁 ORGANIZE YOUR WORK</span><div class="res-links"><a href="https://support.claude.ai" target="_blank" class="res-link rl-read">📖 Read: Claude Artifacts Guide</a><a href="https://www.youtube.com/results?search_query=claude+ai+artifacts+files" target="_blank" class="res-link rl-watch">▶️ Watch: Files + Artifacts Workflow</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d4">
+      <div class="day-check" id="chk4"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 4</div>
+        <div class="day-title">Prompt Engineering Basics — How to Talk to AI</div>
+        <div class="day-desc">Learn the difference between a weak prompt and a strong prompt. Practice the 3-part prompt formula: Context + Task + Format. Write 5 strong prompts for your podcast workflow and test each one.</div>
+        <span class="day-action">✍️ WRITE 5 PROMPTS</span><div class="res-links"><a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview" target="_blank" class="res-link rl-read">📖 Read: Prompt Engineering Guide</a><a href="https://www.youtube.com/results?search_query=prompt+engineering+beginners+2026" target="_blank" class="res-link rl-watch">▶️ Watch: Better AI Prompts</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d5">
+      <div class="day-check" id="chk5"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 5</div>
+        <div class="day-title">Building Your First AI Workflow — Podcast Script Pipeline</div>
+        <div class="day-desc">Use Claude Co-Work to build a repeatable script writing workflow. Start with topic → hook → full script → show notes → captions. Document each step so you can repeat it every week.</div>
+        <span class="day-action">🔄 BUILD YOUR WORKFLOW</span><div class="res-links"><a href="vmake-studio.html" target="_blank" class="res-link rl-tool">🔧 Open Vmake Studio</a><a href="index.html" target="_self" class="res-link rl-tool">🔧 Open Hub Engine Becky</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d6">
+      <div class="day-check" id="chk6"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 6</div>
+        <div class="day-title">AI for Job Search — Cover Letters and Resumes</div>
+        <div class="day-desc">Use Claude Co-Work to improve your resume and write 3 targeted cover letters for SE Texas operations jobs. Learn how to give Claude your job description and get a tailored application back.</div>
+        <span class="day-action">💼 JOB SEARCH SESSION</span><div class="res-links"><a href="becky-cover-letter.html" target="_blank" class="res-link rl-tool">🔧 Open Cover Letter Writer</a><a href="https://www.indeed.com/jobs?q=operations+coordinator&l=Orange%2C+TX" target="_blank" class="res-link rl-read">📖 SE Texas Jobs — Indeed</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d7">
+      <div class="day-check" id="chk7"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 7</div>
+        <div class="day-title">Review Week 1 — What Did You Learn?</div>
+        <div class="day-desc">Spend 30 minutes reviewing days 1-6. Write down 3 things that surprised you about Claude Co-Work. Write down 2 ways you can use it in your daily Hub Engine v3 workflow. Rest and reflect.</div>
+        <span class="day-action">📝 REVIEW + REFLECT</span><div class="res-links"><a href="https://docs.claude.ai" target="_blank" class="res-link rl-read">📖 Review Claude Co-Work Features</a><a href="https://www.youtube.com/results?search_query=claude+ai+productivity+tips+2026" target="_blank" class="res-link rl-watch">▶️ Watch: AI Productivity Tips 2026</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d8">
+      <div class="day-check" id="chk8"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 8</div>
+        <div class="day-title">Claude Co-Work for Affiliate Marketing — Product Research</div>
+        <div class="day-desc">Use Claude Co-Work to research 5 affiliate products that fit your audience. For each product write a hook, a benefit summary, and an honest one-line opinion. Practice the no-hard-selling approach.</div>
+        <span class="day-action">💰 AFFILIATE RESEARCH</span><div class="res-links"><a href="becky-affiliate.html" target="_blank" class="res-link rl-tool">🔧 Open Becky Affiliate Studio</a><a href="https://www.clickbank.com" target="_blank" class="res-link rl-read">📖 Browse ClickBank Products</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d9">
+      <div class="day-check" id="chk9"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 9</div>
+        <div class="day-title">Understanding AI Limitations — What Claude Cannot Do</div>
+        <div class="day-desc">Learn where AI fails so you know when to trust it and when to verify. Practice fact-checking 5 Claude responses against real sources. This makes you a smarter AI operator not just a user.</div>
+        <span class="day-action">🔍 FACT-CHECK SESSION</span><div class="res-links"><a href="https://www.perplexity.ai" target="_blank" class="res-link rl-read">📖 Use Perplexity to Fact-Check</a><a href="https://www.youtube.com/results?search_query=ai+hallucination+how+to+fact+check" target="_blank" class="res-link rl-watch">▶️ Watch: AI Hallucination Explained</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d10">
+      <div class="day-check" id="chk10"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 10</div>
+        <div class="day-title">Phase 1 Complete — Your Claude Co-Work Foundation</div>
+        <div class="day-desc">You have finished your Claude Co-Work foundations. Write a one paragraph summary of what you learned. Share it with Becky in the Hub Engine app and ask her to help you improve it. Celebrate! 🎉</div>
+        <span class="day-action">🏅 PHASE 1 COMPLETE!</span><div class="res-links"><a href="index.html" target="_self" class="res-link rl-tool">🔧 Open Hub Engine v3 — Your App!</a><a href="https://www.youtube.com/results?search_query=ai+content+creator+monetize+2026" target="_blank" class="res-link rl-watch">▶️ Watch: AI Creator Next Steps</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+  </div>
+
+  <!-- ═══ PHASE 2 ═══ -->
+  <div class="phase-header ph2" onclick="togglePhase(2)">
+    <div class="phase-icon">🔵</div>
+    <div class="phase-title">PHASE 2 — AI INTERNET SKILLS + TOOLS</div>
+    <div class="phase-progress" id="ph2-prog" style="color:var(--blue);">0/10</div>
+    <div class="phase-arrow" id="arr2">▼</div>
+  </div>
+  <div class="days-list" id="phase2">
+
+    <div class="day-item" id="d11">
+      <div class="day-check" id="chk11"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 11</div>
+        <div class="day-title">AI Internet Skills — Finding Real Information Fast</div>
+        <div class="day-desc">Learn how to use Perplexity AI and Claude together to research any topic in minutes. Practice researching your top 3 affiliate products. Document what you find vs what Claude already knows.</div>
+        <span class="day-action">🔍 RESEARCH SESSION</span><div class="res-links"><a href="https://www.perplexity.ai" target="_blank" class="res-link rl-tool">🔧 Open Perplexity AI</a><a href="https://www.youtube.com/results?search_query=perplexity+ai+research+workflow+2026" target="_blank" class="res-link rl-watch">▶️ Watch: Perplexity + Claude Research</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d12">
+      <div class="day-check" id="chk12"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 12</div>
+        <div class="day-title">Understanding the AI Tool Stack — What Each Tool Does</div>
+        <div class="day-desc">Map out your complete AI tool stack: Claude Co-Work, Groq/Becky, Vmake, Perplexity, Gemini. For each tool write one sentence on what it does best. This becomes your AI Operator reference guide.</div>
+        <span class="day-action">🗺️ MAP YOUR TOOLS</span><div class="res-links"><a href="vmake-studio.html" target="_blank" class="res-link rl-tool">🔧 Open Vmake Studio</a><a href="https://console.groq.com" target="_blank" class="res-link rl-tool">🔧 Open Groq Console</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d13">
+      <div class="day-check" id="chk13"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 13</div>
+        <div class="day-title">From Transcript to Outline — AI Script Helper</div>
+        <div class="day-desc">Take one of your existing podcast scripts. Paste it into Claude Co-Work and ask it to turn it into a structured outline, a short summary, and a TikTok hook. Practice improving the output with follow-up prompts.</div>
+        <span class="day-action">✍️ SCRIPT WORKSHOP</span><div class="res-links"><a href="show1-lisa-susan.html" target="_blank" class="res-link rl-tool">🔧 Open Show 1 — Lisa + Susan</a><a href="show2-paul-alisha.html" target="_blank" class="res-link rl-tool">🔧 Open Show 2 — Paul + Alisha</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d14">
+      <div class="day-check" id="chk14"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 14</div>
+        <div class="day-title">Review Week 2 — AI Tools Checkpoint</div>
+        <div class="day-desc">Review days 11-13. List every AI tool you have used this week and what you used it for. Identify your strongest skill and your weakest area. Write a plan for the next 7 days to fill the gap.</div>
+        <span class="day-action">📝 WEEK 2 REVIEW</span><div class="res-links"><a href="https://www.perplexity.ai" target="_blank" class="res-link rl-read">📖 Research AI Tools 2026</a><a href="https://www.youtube.com/results?search_query=best+ai+tools+content+creators+2026" target="_blank" class="res-link rl-watch">▶️ Watch: Best AI Tools Creators 2026</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d15">
+      <div class="day-check" id="chk15"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 15</div>
+        <div class="day-title">Halfway Point — You Are an AI Operator in Training!</div>
+        <div class="day-desc">15 days in — that is incredible John. Take today to review everything you have built so far. Open Hub Engine v3 and list 3 improvements you want to make based on what you have learned. Rest and be proud.</div>
+        <span class="day-action">🎉 CELEBRATE DAY 15!</span><div class="res-links"><a href="index.html" target="_self" class="res-link rl-tool">🔧 Open Hub Engine v3</a><a href="https://www.youtube.com/results?search_query=ai+content+creator+journey+2026" target="_blank" class="res-link rl-watch">▶️ Watch: AI Creator Halfway Point</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d16">
+      <div class="day-check" id="chk16"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 16</div>
+        <div class="day-title">AI for Social Media — Repurposing Content Across Platforms</div>
+        <div class="day-desc">Take one podcast script and use Claude Co-Work to turn it into 5 different social posts — one for each platform. TikTok, YouTube, Instagram, Facebook, LinkedIn. Learn how tone changes by platform.</div>
+        <span class="day-action">📱 REPURPOSE CONTENT</span><div class="res-links"><a href="index.html" target="_self" class="res-link rl-tool">🔧 Open Hub Engine Becky</a><a href="https://www.perplexity.ai" target="_blank" class="res-link rl-read">📖 Research Platform Differences</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d17">
+      <div class="day-check" id="chk17"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 17</div>
+        <div class="day-title">AI for Business — Writing Professional Emails and Proposals</div>
+        <div class="day-desc">Use Claude Co-Work to write a professional introduction email to a potential business client. Practice writing a one-page business proposal for your Hub Engine AI services. This is what you will sell to companies.</div>
+        <span class="day-action">💼 BUSINESS WRITING</span><div class="res-links"><a href="becky-cover-letter.html" target="_blank" class="res-link rl-tool">🔧 Open Cover Letter Writer</a><a href="https://www.youtube.com/results?search_query=ai+business+proposal+writing+2026" target="_blank" class="res-link rl-watch">▶️ Watch: AI Business Writing Guide</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d18">
+      <div class="day-check" id="chk18"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 18</div>
+        <div class="day-title">Understanding FTC Rules for AI-Generated Affiliate Content</div>
+        <div class="day-desc">Study the FTC disclosure requirements for AI-generated content and affiliate marketing. Use Claude Co-Work to summarize the rules in plain English. Write your personal disclosure policy for Hub Engine content.</div>
+        <span class="day-action">⚖️ COMPLIANCE SESSION</span><div class="res-links"><a href="https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking" target="_blank" class="res-link rl-read">📖 Read FTC Disclosure Rules</a><a href="https://www.youtube.com/results?search_query=ftc+affiliate+disclosure+rules+2026" target="_blank" class="res-link rl-watch">▶️ Watch: FTC Affiliate Rules Explained</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d19">
+      <div class="day-check" id="chk19"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 19</div>
+        <div class="day-title">AI Video Workflow Deep Dive — Vmake + Becky System</div>
+        <div class="day-desc">Document your complete Hub Engine v3 video production system from start to finish. Script → Becky → Vmake → Captions → Post. Time yourself doing one complete video from scratch. Record how long each step takes.</div>
+        <span class="day-action">🎬 TIME YOUR WORKFLOW</span><div class="res-links"><a href="vmake-studio.html" target="_blank" class="res-link rl-tool">🔧 Open Vmake Studio</a><a href="https://vmake.ai" target="_blank" class="res-link rl-tool">🔧 Open Vmake.ai</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+    <div class="day-item" id="d20">
+      <div class="day-check" id="chk20"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 20</div>
+        <div class="day-title">Phase 2 Complete — AI Internet Operator Skills Earned!</div>
+        <div class="day-desc">You have completed Phase 2. Write down your top 3 AI Internet skills you have mastered. Take a screenshot of your Hub Engine v3 app. You are 2/3 of the way to being ready to teach others. 🎉</div>
+        <span class="day-action">🏅 PHASE 2 COMPLETE!</span><div class="res-links"><a href="index.html" target="_self" class="res-link rl-tool">🔧 Open Hub Engine v3 — Your App!</a><a href="https://www.youtube.com/results?search_query=ai+content+creator+monetize+2026" target="_blank" class="res-link rl-watch">▶️ Watch: AI Creator Next Steps</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button></div>
+
+  </div>
+
+  <!-- ═══ PHASE 3 ═══ -->
+  <div class="phase-header ph3" onclick="togglePhase(3)">
+    <div class="phase-icon">🟢</div>
+    <div class="phase-title">PHASE 3 — AI VIDEO OPERATOR PLAYBOOK</div>
+    <div class="phase-progress" id="ph3-prog" style="color:var(--green);">0/10</div>
+    <div class="phase-arrow" id="arr3">▼</div>
+  </div>
+  <div class="days-list" id="phase3">
+
+    <!-- STEP 1: PRE-PRODUCTION -->
+    <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;padding:8px 4px 6px;margin-top:4px;">🎬 STEP 1 — PRE-PRODUCTION</div>
+
+    <div class="day-item" id="d21">
+      <div class="day-check" id="chk21"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 21</div>
+        <div class="day-title">Schedule Your Episode + Guest</div>
+        <div class="day-desc">If using a guest — schedule the recording session. Open Show 1 (Lisa + Susan) or Show 2 (Paul + Alisha) page in your app. Confirm the topic, format and episode length. Block the time on your calendar and stick to it.</div>
+        <span class="day-action">📅 SCHEDULE SESSION</span>
+        
+        <div class="res-links">
+          <a href="show1-lisa-susan.html" target="_blank" class="res-link rl-tool">🔧 Open Show 1 — Lisa + Susan</a>
+          <a href="show2-paul-alisha.html" target="_blank" class="res-link rl-tool">🔧 Open Show 2 — Paul + Alisha</a>
+        </div>
+        <button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button>
+      </div>
+    </div>
+
+    <div class="day-item" id="d22">
+      <div class="day-check" id="chk22"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 22</div>
+        <div class="day-title">Prepare Your Guest + Equipment Check</div>
+        <div class="day-desc">Send your guest the topic outline and any recording info they need. Then check ALL your equipment before recording day — microphone working and clear, camera or phone fully charged, tripod stable, headphones functioning. Do a 30 second test recording and play it back to confirm quality.</div>
+        <span class="day-action">🎙️ EQUIPMENT TEST</span>
+        <div class="res-links"><a href="https://www.youtube.com/results?search_query=podcast+equipment+setup+beginners+2026" target="_blank" class="res-link rl-watch">▶️ Watch: Podcast Equipment Setup</a><a href="https://www.youtube.com/results?search_query=microphone+test+podcast+setup" target="_blank" class="res-link rl-watch">▶️ Watch: Mic Test Tips</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: PRODUCTION -->
+    <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--blue);letter-spacing:2px;padding:8px 4px 6px;">🎥 STEP 2 — PRODUCTION</div>
+
+    <div class="day-item" id="d23">
+      <div class="day-check" id="chk23"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 23</div>
+        <div class="day-title">Record Your Video Footage</div>
+        <div class="day-desc">For AI Avatar (Vmake): Open your show page → Becky writes the full dialogue script → copy each [CLIP BREAK] segment → open Vmake → AI Avatar Video → upload your host photo → paste the script segment → generate clip. Repeat for each segment. For self-recorded: use a high-quality camera, frame yourself properly chest up, steady tripod, clean background.</div>
+        <span class="day-action">🎬 RECORD VIDEO</span>
+        
+        <div class="res-links">
+          <a href="https://vmake.ai/ai-avatar" target="_blank" class="res-link rl-tool">🔧 Open Vmake AI Avatar</a>
+          <a href="https://www.youtube.com/results?search_query=vmake+ai+avatar+video+tutorial+2026" target="_blank" class="res-link rl-watch">▶️ Watch: Vmake AI Avatar Tutorial</a>
+        </div>
+        <button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button>
+      </div>
+    </div>
+
+    <div class="day-item" id="d24">
+      <div class="day-check" id="chk24"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 24</div>
+        <div class="day-title">Record High Quality Audio + Set Up Lighting</div>
+        <div class="day-desc">For AI Avatar: Vmake handles the voice automatically with lip sync. For self-recorded: use an external microphone or DAW audio interface — never just the built-in phone mic. Set up proper lighting — soft front light removes shadows. Avoid windows behind you. A simple ring light or lamp in front makes a huge difference to your video quality.</div>
+        <span class="day-action">🔊 AUDIO + LIGHTING</span>
+        <div class="res-links"><a href="https://www.youtube.com/results?search_query=podcast+lighting+setup+beginners" target="_blank" class="res-link rl-watch">▶️ Watch: Podcast Lighting Setup</a><a href="https://www.youtube.com/results?search_query=external+microphone+setup+podcast" target="_blank" class="res-link rl-watch">▶️ Watch: External Mic Setup</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: POST-PRODUCTION -->
+    <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--purple);letter-spacing:2px;padding:8px 4px 6px;">✂️ STEP 3 — POST-PRODUCTION</div>
+
+    <div class="day-item" id="d25">
+      <div class="day-check" id="chk25"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 25</div>
+        <div class="day-title">Import Audio into DAW — Remove Noise + Adjust Levels</div>
+        <div class="day-desc">For self-recorded audio: import your audio file into Audacity (free) or Adobe Audition. Use noise reduction to remove background hum or room noise. Adjust your volume levels so the host voice is clear, consistent and not peaking. Export as a clean MP3 or WAV file ready for video editing. For Vmake AI avatar videos — audio is already handled automatically.</div>
+        <span class="day-action">🎚️ AUDIO EDITING</span>
+        
+        <div class="res-links">
+          <a href="https://www.audacityteam.org/download/" target="_blank" class="res-link rl-download">⬇️ Download Audacity Free</a>
+          <a href="https://www.youtube.com/results?search_query=audacity+noise+removal+tutorial+beginners" target="_blank" class="res-link rl-watch">▶️ Watch: Audacity Noise Removal Tutorial</a>
+        </div>
+        <button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button>
+      </div>
+    </div>
+
+    <div class="day-item" id="d26">
+      <div class="day-check" id="chk26"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 26</div>
+        <div class="day-title">Video Editing + Audio Video Sync</div>
+        <div class="day-desc">For AI Avatar (Vmake): import all your generated clips → assemble in order: Hooks → Host/Guest dialogue → Sign-off → join into one complete video. For self-recorded: import into Adobe Premiere Pro or Final Cut Pro. Sync your clean audio to your video carefully — watch for any lip sync drift and correct it. Check the full video plays smoothly from start to finish.</div>
+        <span class="day-action">🎞️ VIDEO EDITING</span>
+        <div class="res-links"><a href="https://vmake.ai" target="_blank" class="res-link rl-tool">🔧 Open Vmake.ai — Join Clips</a><a href="https://www.youtube.com/results?search_query=vmake+ai+video+assembly+tutorial" target="_blank" class="res-link rl-watch">▶️ Watch: Vmake Assembly</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: THUMBNAIL + METADATA -->
+    <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--amber);letter-spacing:2px;padding:8px 4px 6px;">🖼️ STEP 4 — THUMBNAIL + METADATA</div>
+
+    <div class="day-item" id="d27">
+      <div class="day-check" id="chk27"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 27</div>
+        <div class="day-title">Create an Engaging Thumbnail</div>
+        <div class="day-desc">Use Vmake's AI Thumbnail tool or Canva to design your thumbnail. Include your host's face clearly visible, bold readable text with the episode topic, and your Hub Engine v3 brand colors. Your thumbnail is what makes people click — make it clear what the episode covers in one glance. Good thumbnails can increase YouTube clicks by up to 50%.</div>
+        <span class="day-action">🖼️ DESIGN THUMBNAIL</span>
+        
+        <div class="res-links">
+          <a href="https://vmake.ai" target="_blank" class="res-link rl-tool">🔧 Open Vmake AI Thumbnail</a>
+          <a href="https://www.canva.com" target="_blank" class="res-link rl-tool">🔧 Open Canva — Free Design</a>
+        </div>
+        <button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button>
+      </div>
+    </div>
+
+    <div class="day-item" id="d28">
+      <div class="day-check" id="chk28"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 28</div>
+        <div class="day-title">Add Tags, Descriptions + Closed Captions</div>
+        <div class="day-desc">Use Becky's show notes from your show page as your video description — it is already written and ready to paste! Add 8-10 relevant tags covering your episode topic, AI, podcasting and your niche. Enable auto-captions on YouTube and add captions to TikTok and Instagram. Captions help deaf and hard of hearing viewers AND significantly boost your SEO so more people discover your content.</div>
+        <span class="day-action">🏷️ TAGS + CAPTIONS</span>
+        <div class="res-links"><a href="show1-lisa-susan.html" target="_blank" class="res-link rl-tool">🔧 Get Show Notes — Show 1</a><a href="https://www.youtube.com/results?search_query=youtube+seo+tags+descriptions+2026" target="_blank" class="res-link rl-watch">▶️ Watch: YouTube SEO Tags</a></div><button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: DISTRIBUTION -->
+    <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--green);letter-spacing:2px;padding:8px 4px 6px;">📢 STEP 5 — DISTRIBUTION</div>
+
+    <div class="day-item" id="d29">
+      <div class="day-check" id="chk29"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 29</div>
+        <div class="day-title">Upload and Post to All Your Platforms</div>
+        <div class="day-desc">Export your final video from Vmake at 2K 30fps. Upload the full version to YouTube with your thumbnail, description and tags. Post the short 60 second version to TikTok with Becky's caption and hashtags. Share to Instagram Reels and Facebook. Use the Social tab in Hub Engine v3 to open each platform directly. Your content is ready — now get it out there!</div>
+        <span class="day-action">📤 UPLOAD + POST</span>
+        
+        <div class="res-links">
+          <a href="https://www.tiktok.com/upload" target="_blank" class="res-link rl-tool">🔧 Open TikTok — Post Video</a>
+          <a href="https://studio.youtube.com" target="_blank" class="res-link rl-tool">🔧 Open YouTube Studio — Upload</a>
+          <a href="https://www.instagram.com" target="_blank" class="res-link rl-tool">🔧 Open Instagram — Post Reel</a>
+        </div>
+        <button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button>
+      </div>
+    </div>
+
+    <div class="day-item" id="d30">
+      <div class="day-check" id="chk30"></div>
+      <div class="day-content">
+        <div class="day-num">DAY 30</div>
+        <div class="day-title">🏆 GRADUATION — You Are a Certified AI Video Operator!</div>
+        <div class="day-desc">John you did it! You completed all 30 days of the AI Video Operator Playbook. You now know Pre-Production, Production, Post-Production, Thumbnail and Metadata, and Distribution — the complete 5-step podcast video system. You have a repeatable workflow, a live app, and real content posted. You are ready to teach companies and grow on Instagram. God bless you! 🙏🎉</div>
+        <span class="day-action">🎓 AI VIDEO OPERATOR — CERTIFIED!</span>
+        
+        <div class="res-links">
+          <a href="index.html" target="_self" class="res-link rl-tool">🔧 Open Hub Engine v3 — Your App!</a>
+          <a href="https://www.youtube.com/results?search_query=ai+content+creator+next+steps+monetize+2026" target="_blank" class="res-link rl-watch">▶️ Watch: Next Steps After 30 Days</a>
+        </div>
+        <button class="mark-done-btn" onclick="toggleDayBtn(this)">✅ MARK DAY DONE</button>
+      </div>
+    </div>
+
+  </div></div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Load saved progress
+let done = JSON.parse(localStorage.getItem("learn_done") || "{}");
+
+window.onload = function() {
+  // Restore all checkmarks
+  for (let i = 1; i <= 30; i++) {
+    if (done[i]) markDone(i, false);
+  }
+  updateProgress();
+};
+
+function toggleDayBtn(btn) {
+  // Find parent day-item and get its id number
+  const dayItem = btn.closest('.day-item');
+  const id = dayItem.id; // e.g. "d5"
+  const n = parseInt(id.replace('d',''));
+  toggleDay(n);
+  // Update button text
+  if (done[n]) {
+    btn.textContent = '✅ COMPLETED — Tap to undo';
+  } else {
+    btn.textContent = '✅ MARK DAY DONE';
+  }
+}
+
+function toggleDay(n) {
+  if (done[n]) {
+    done[n] = false;
+    const el = document.getElementById("d"+n);
+    const chk = document.getElementById("chk"+n);
+    el.classList.remove("done");
+    chk.textContent = "";
+  } else {
+    done[n] = true;
+    markDone(n, true);
+  }
+  localStorage.setItem("learn_done", JSON.stringify(done));
+  updateProgress();
+}
+
+function markDone(n, toast) {
+  const el = document.getElementById("d"+n);
+  const chk = document.getElementById("chk"+n);
+  if (el) {
+    el.classList.add("done");
+    // Update button text
+    const btn = el.querySelector(".mark-done-btn");
+    if (btn) btn.textContent = "✅ COMPLETED — Tap to undo";
+  }
+  if (chk) chk.textContent = "✓";
+  if (toast) showToast("Day " + n + " complete! Keep going! 💪");
+}
+
+function updateProgress() {
+  const total = Object.values(done).filter(Boolean).length;
+  const pct = Math.round((total / 30) * 100);
+  document.getElementById("doneCount").textContent = total;
+  document.getElementById("pctDisplay").textContent = pct + "%";
+  document.getElementById("barFill").style.width = pct + "%";
+
+  // Phase dots
+  const p1 = [1,2,3,4,5,6,7,8,9,10].filter(n=>done[n]).length;
+  const p2 = [11,12,13,14,15,16,17,18,19,20].filter(n=>done[n]).length;
+  const p3 = [21,22,23,24,25,26,27,28,29,30].filter(n=>done[n]).length;
+
+  document.getElementById("ph1-prog").textContent = p1+"/10";
+  document.getElementById("ph2-prog").textContent = p2+"/10";
+  document.getElementById("ph3-prog").textContent = p3+"/10";
+
+  const c1 = `rgba(245,197,24,${0.2 + (p1/10)*0.8})`;
+  const c2 = `rgba(66,133,244,${0.2 + (p2/10)*0.8})`;
+  const c3 = `rgba(15,157,88,${0.2 + (p3/10)*0.8})`;
+  document.getElementById("dot1").style.background = c1;
+  document.getElementById("dot2").style.background = c2;
+  document.getElementById("dot3").style.background = c3;
+
+  // Show complete card
+  if (total === 30) {
+    document.getElementById("completeCard").style.display = "block";
+    showToast("🏆 CONGRATULATIONS! AI OPERATOR CERTIFIED!");
+  } else {
+    document.getElementById("completeCard").style.display = "none";
+  }
+}
+
+function togglePhase(n) {
+  const list = document.getElementById("phase"+n);
+  const arr = document.getElementById("arr"+n);
+  const isOpen = list.classList.contains("open");
+  list.classList.toggle("open", !isOpen);
+  arr.classList.toggle("open", !isOpen);
+}
+
+function resetAll() {
+  if (!confirm("Reset all progress? This cannot be undone.")) return;
+  done = {};
+  localStorage.removeItem("learn_done");
+  for (let i = 1; i <= 30; i++) {
+    const el = document.getElementById("d"+i);
+    const chk = document.getElementById("chk"+i);
+    if (el) el.classList.remove("done");
+    if (chk) chk.textContent = "";
+  }
+  updateProgress();
+  showToast("Progress reset — fresh start!");
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+</script>
+</body>
+</html>
