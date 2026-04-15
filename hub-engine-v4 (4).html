@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hub Engine v4 — AffiliateMediaHub Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0f1a;--bg2:#131726;--bg3:#1a1f30;--bg4:#1e2438;
+  --teal:#00d4aa;--gold:#f5c518;--blue:#4f8ef7;
+  --purple:#9b7fee;--green:#34d399;--red:#f87171;
+  --s1:#a78bfa;--s2:#f59e0b;--s3:#34d399;--aff:#f5c518;
+  --sw:220px;--th:56px;--rad:10px;
+  --txt:#e2e8f0;--muted:#94a3b8;--border:#2a3048;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;font-family:'Inter',sans-serif}
+input,textarea,select{font-family:'Inter',sans-serif}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:360px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+.login-lock{font-size:52px;margin-bottom:10px}
+.login-logo{font-size:22px;font-weight:800;color:var(--teal);margin-bottom:4px}
+.login-sub{color:var(--muted);font-size:12px;margin-bottom:20px}
+.login-divider{height:1px;background:var(--border);margin:16px 0}
+.login-label{text-align:left;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;margin-bottom:6px}
+.login-box input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--txt);font-size:14px;margin-bottom:12px;outline:none;letter-spacing:.1em}
+.login-box input:focus{border-color:var(--teal)}
+.login-btn{width:100%;padding:13px;background:var(--teal);color:#000;font-weight:700;font-size:14px;border:none;border-radius:8px;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.login-btn:hover{opacity:.86}
+.login-err{color:var(--red);font-size:13px;margin-top:10px;display:none}
+.login-footer{margin-top:20px;font-size:11px;color:var(--muted);line-height:1.7}
+
+/* APP */
+#app{display:none;min-height:100vh}
+
+/* SIDEBAR */
+#sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200;overflow-y:auto}
+.sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.sb-logo-text{font-size:14px;font-weight:800;color:var(--teal)}
+.sb-logo-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.sb-nav{padding:8px 0;flex:1}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;color:var(--muted);cursor:pointer;border-left:3px solid transparent;transition:.15s;user-select:none}
+.ni:hover{color:var(--txt);background:var(--bg3)}
+.ni.active{color:var(--teal);border-left-color:var(--teal);background:rgba(0,212,170,.07)}
+.ni-icon{font-size:15px;width:20px;text-align:center}
+.sb-section{font-size:10px;color:var(--muted);padding:12px 16px 4px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.sb-bottom{padding:12px 16px;border-top:1px solid var(--border)}
+.sb-user{font-size:12px;color:var(--muted)}
+.sb-user strong{display:block;color:var(--txt);font-size:13px}
+
+/* TOPBAR */
+#topbar{position:fixed;top:0;left:var(--sw);right:0;height:var(--th);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px;z-index:150}
+#tbl{font-size:14px;font-weight:600;color:var(--txt)}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-pill{background:rgba(0,212,170,.12);color:var(--teal);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px}
+#hamburger{display:none;background:none;border:none;color:var(--txt);font-size:20px;cursor:pointer;padding:4px 8px}
+
+/* MAIN */
+#main{margin-left:var(--sw);margin-top:var(--th);min-height:calc(100vh - var(--th));padding:24px;max-width:1200px}
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rad);padding:20px}
+.card-sm{padding:14px 16px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+/* TYPE */
+.pg-title{font-size:22px;font-weight:800;margin-bottom:4px}
+.pg-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+.sec-title{font-size:15px;font-weight:700;margin-bottom:12px}
+.label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px}
+.muted{color:var(--muted)}
+
+/* BADGES */
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+.b-teal{background:rgba(0,212,170,.15);color:var(--teal)}
+.b-gold{background:rgba(245,197,24,.15);color:var(--gold)}
+.b-blue{background:rgba(79,142,247,.15);color:var(--blue)}
+.b-green{background:rgba(52,211,153,.15);color:var(--green)}
+.b-red{background:rgba(248,113,113,.15);color:var(--red)}
+.b-purple{background:rgba(155,127,238,.15);color:var(--purple)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:.15s;text-decoration:none}
+.btn-teal{background:var(--teal);color:#000}.btn-teal:hover{opacity:.85}
+.btn-gold{background:var(--gold);color:#000}.btn-gold:hover{opacity:.85}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{opacity:.85}
+.btn-ghost{background:var(--bg3);color:var(--txt);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
+.btn-danger{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.3)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-xs{padding:4px 8px;font-size:11px}
+.w100{width:100%;justify-content:center}
+
+/* STATUS */
+.st{font-size:12px;padding:8px 12px;border-radius:6px;margin-top:8px;display:none}
+.st.on{display:block}
+.st-i{background:rgba(79,142,247,.15);color:var(--blue)}
+.st-k{background:rgba(52,211,153,.15);color:var(--green)}
+.st-e{background:rgba(248,113,113,.15);color:var(--red)}
+
+/* OUTPUT */
+.out{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;line-height:1.7;white-space:pre-wrap;display:none;min-height:60px;margin-top:8px}
+.out.on{display:block}
+
+/* PERSONA */
+.avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0}
+
+/* BECKY CHAT */
+#bmsgs{min-height:260px;max-height:400px;overflow-y:auto;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.msg{max-width:84%;padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.65}
+.msg-u{align-self:flex-end;background:rgba(0,212,170,.15);border-bottom-right-radius:3px}
+.msg-b{align-self:flex-start;background:var(--bg4);border-bottom-left-radius:3px}
+.msg-who{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.chat-row{display:flex;gap:8px;align-items:flex-end}
+#bin{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--txt);font-size:13px;resize:none;outline:none;min-height:46px;max-height:120px}
+#bin:focus{border-color:var(--teal)}
+.bquick{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.bq{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:6px 13px;font-size:12px;color:var(--muted);cursor:pointer;transition:.15s}
+.bq:hover{border-color:var(--teal);color:var(--teal)}
+
+/* JOB CARDS */
+.job-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}
+
+/* TRAINING */
+.day-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:6px}
+.day-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--teal);cursor:pointer;flex-shrink:0}
+.day-num{font-size:11px;color:var(--muted);width:40px;flex-shrink:0}
+.progress-bar{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin:10px 0}
+.progress-fill{height:100%;background:var(--teal);border-radius:4px;transition:.4s}
+
+/* CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:14px}
+.cal-day{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 8px;min-height:84px}
+.cal-day-name{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:4px}
+.cal-date{font-size:16px;font-weight:700;margin-bottom:6px}
+.cal-pill{font-size:10px;padding:3px 7px;border-radius:4px;font-weight:600;display:inline-block;margin-bottom:3px}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:11px 12px;border-bottom:1px solid rgba(42,48,72,.5)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.018)}
+
+/* SHOW SELECTOR */
+.show-card{flex:1;background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:.15s;text-align:center}
+.show-card.sel{border-color:var(--teal);background:rgba(0,212,170,.06)}
+.show-card:hover{border-color:var(--purple)}
+
+/* SKILLS */
+.skill-step{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(42,48,72,.5)}
+.skill-step:last-child{border-bottom:none}
+.step-num{width:22px;height:22px;background:rgba(0,212,170,.15);color:var(--teal);border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+
+/* STAT */
+.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px}
+.stat-num{font-size:28px;font-weight:800;color:var(--teal)}
+.stat-lbl{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* OVERLAY */
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:190}
+
+/* UTILS */
+.sep{height:1px;background:var(--border);margin:16px 0}
+.mb4{margin-bottom:4px}.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}
+.mb16{margin-bottom:16px}.mb20{margin-bottom:20px}.mb24{margin-bottom:24px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+.flex{display:flex}.fca{display:flex;align-items:center}
+.fsb{display:flex;align-items:center;justify-content:space-between}
+.gap8{gap:8px}.gap12{gap:12px}.gap16{gap:16px}.wrap{flex-wrap:wrap}
+.bold{font-weight:700}.teal{color:var(--teal)}.gold{color:var(--gold)}
+
+/* MOBILE */
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%);transition:transform .25s}
+  #sidebar.open{transform:translateX(0)}
+  #overlay.on{display:block}
+  #main{margin-left:0;padding:16px}
+  #topbar{left:0}
+  #hamburger{display:block}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .cal-grid{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:480px){.cal-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-lock">🔒</div>
+    <div class="login-logo">Hub Engine v4</div>
+    <div class="login-sub">AffiliateMediaHub Studio · John Lanter CEO</div>
+    <div class="login-divider"></div>
+    <div class="login-label">STUDIO PASSWORD</div>
+    <input id="pw-input" type="password" placeholder="Enter studio password..." autocomplete="current-password">
+    <button class="login-btn" onclick="chkPw()"><span>🔓</span> Enter Studio</button>
+    <div class="login-err" id="pw-err"></div>
+    <div class="login-footer">Secured workspace · Groq AI powered<br>Three Minds. One Mission. Zero Cost.</div>
+  </div>
+</div>
+<div id="app">
+  <div id="overlay" onclick="closeSidebar()"></div>
+  <div id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-text">🎙 Hub Engine v4</div>
+    <div class="sb-logo-sub">AffiliateMediaHub Studio</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Main</div>
+    <div class="ni active" onclick="nav('dashboard')"><span class="ni-icon">🏠</span>Dashboard</div>
+    <div class="ni" onclick="nav('employment')"><span class="ni-icon">💼</span>Employment</div>
+    <div class="ni" onclick="nav('becky')"><span class="ni-icon">🤖</span>Becky AI</div>
+    <div class="sb-section">Content</div>
+    <div class="ni" onclick="nav('podcast')"><span class="ni-icon">🎙</span>Podcast Studio</div>
+    <div class="ni" onclick="nav('video')"><span class="ni-icon">🎬</span>Video Studio</div>
+    <div class="ni" onclick="nav('business')"><span class="ni-icon">🏢</span>Business Team</div>
+    <div class="ni" onclick="nav('affiliate')"><span class="ni-icon">💰</span>Affiliate Team</div>
+    <div class="sb-section">Tools</div>
+    <div class="ni" onclick="nav('calendar')"><span class="ni-icon">📅</span>Content Calendar</div>
+    <div class="ni" onclick="nav('brand')"><span class="ni-icon">🎨</span>Brand Voice</div>
+    <div class="ni" onclick="nav('prompts')"><span class="ni-icon">💡</span>Prompt Library</div>
+    <div class="ni" onclick="nav('skills')"><span class="ni-icon">⚡</span>Skills &amp; Automations</div>
+    <div class="sb-section">Growth</div>
+    <div class="ni" onclick="nav('training')"><span class="ni-icon">🎓</span>Training Library</div>
+    <div class="ni" onclick="nav('files')"><span class="ni-icon">📁</span>Files &amp; Resources</div>
+    <div class="ni" onclick="nav('team')"><span class="ni-icon">👥</span>Team Management</div>
+    <div class="ni" onclick="nav('settings')"><span class="ni-icon">⚙</span>Settings</div>
+  </nav>
+  <div class="sb-bottom">
+    <div class="sb-user"><strong>John Lanter</strong>CEO · AffiliateMediaHub</div>
+  </div>
+</div>
+  <div id="topbar">
+  <div class="fca gap8">
+    <button id="hamburger" onclick="toggleSidebar()">☰</button>
+    <span id="tbl">Dashboard</span>
+  </div>
+  <div class="tb-right">
+    <span class="tb-pill">Three Minds. One Mission.</span>
+    <button class="btn btn-ghost btn-sm" onclick="nav('becky')">🤖 Becky</button>
+    <button class="btn btn-ghost btn-sm" onclick="nav('settings')">⚙</button>
+  </div>
+</div>
+  <div id="main">
+    <div id="pg-dashboard" class="page active">
+  <div class="fsb mb20">
+    <div><div class="pg-title">Good morning, John 👋</div>
+    <div class="pg-sub">AffiliateMediaHub Studio — Hub Engine v4</div></div>
+    <button class="btn btn-teal" onclick="nav('becky')">🤖 Ask Becky</button>
+  </div>
+  <div class="g4 mb20">
+    <div class="stat-box"><div class="stat-num">7</div><div class="stat-lbl">Jobs Applied</div></div>
+    <div class="stat-box"><div class="stat-num" id="vcr-dash">350</div><div class="stat-lbl">Vmake Credits</div></div>
+    <div class="stat-box"><div class="stat-num" id="tr-dash">0%</div><div class="stat-lbl">Training Progress</div></div>
+    <div class="stat-box"><div class="stat-num">4</div><div class="stat-lbl">AI Personas Active</div></div>
+  </div>
+  <div class="card mb16">
+    <div class="sec-title">📅 This Week — Show Schedule</div>
+    <div class="g3">
+      <div style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:8px;padding:14px">
+        <div style="color:#a78bfa;font-weight:700;font-size:12px;margin-bottom:6px">MON &amp; WED — SHOW 1</div>
+        <div style="font-size:15px;font-weight:800;margin-bottom:4px">Lisa + Susan</div>
+        <div class="muted mb12" style="font-size:12px">Podcast Only</div>
+        <button class="btn btn-ghost btn-sm w100" onclick="nav('podcast')">📝 Write Script</button>
+      </div>
+      <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:14px">
+        <div style="color:#f59e0b;font-weight:700;font-size:12px;margin-bottom:6px">TUE &amp; THU — SHOW 2</div>
+        <div style="font-size:15px;font-weight:800;margin-bottom:4px">Paul + Alisha</div>
+        <div class="muted mb12" style="font-size:12px">Podcast Only</div>
+        <button class="btn btn-ghost btn-sm w100" onclick="setPodShow(2);nav('podcast')">📝 Write Script</button>
+      </div>
+      <div style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:14px">
+        <div style="color:#34d399;font-weight:700;font-size:12px;margin-bottom:6px">FRI &amp; SAT — SHOW 3</div>
+        <div style="font-size:15px;font-weight:800;margin-bottom:4px">Susan + Alisha</div>
+        <div class="muted mb12" style="font-size:12px">Business Podcast</div>
+        <button class="btn btn-ghost btn-sm w100" onclick="nav('business')">📝 Write Script</button>
+      </div>
+    </div>
+  </div>
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="sec-title">🚀 Quick Actions</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-ghost w100" onclick="nav('podcast')" style="justify-content:flex-start">🎙 Podcast Studio</button>
+        <button class="btn btn-ghost w100" onclick="nav('affiliate')" style="justify-content:flex-start">💰 Affiliate Studio</button>
+        <button class="btn btn-ghost w100" onclick="nav('video')" style="justify-content:flex-start">🎬 Video Studio</button>
+        <button class="btn btn-ghost w100" onclick="nav('employment')" style="justify-content:flex-start">💼 Job Applications</button>
+        <button class="btn btn-ghost w100" onclick="nav('training')" style="justify-content:flex-start">🎓 Training Library</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">🤖 Becky — Creative Director</div>
+      <div style="background:var(--bg3);border-radius:8px;padding:14px;font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.65">
+        Hello John, how is your day going? I am ready to help you write scripts, plan content, or work through any creative challenge. What are we building today?
+      </div>
+      <button class="btn btn-teal w100" onclick="nav('becky')">💬 Chat with Becky →</button>
+    </div>
+  </div>
+  <div class="card mb16">
+    <div class="sec-title mb16">👥 AI Persona Team</div>
+    <div class="g4 mb12">
+      <div style="background:var(--bg3);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px">
+        <div class="avatar" style="background:rgba(167,139,250,.2);color:#a78bfa">L</div>
+        <div><div class="bold">Lisa</div><div style="font-size:12px;color:var(--muted)">Show 1 Host</div><div class="mt8"><span class="badge b-purple">Mon · Wed</span></div></div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px">
+        <div class="avatar" style="background:rgba(79,142,247,.2);color:#4f8ef7">S</div>
+        <div><div class="bold">Susan</div><div style="font-size:12px;color:var(--muted)">Show 1 Guest · Show 3 Host</div><div class="mt8"><span class="badge b-blue">Multi</span></div></div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px">
+        <div class="avatar" style="background:rgba(245,158,11,.2);color:#f59e0b">P</div>
+        <div><div class="bold">Paul</div><div style="font-size:12px;color:var(--muted)">Show 2 Host</div><div class="mt8"><span class="badge b-gold">Tue · Thu</span></div></div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px">
+        <div class="avatar" style="background:rgba(52,211,153,.2);color:#34d399">A</div>
+        <div><div class="bold">Alisha</div><div style="font-size:12px;color:var(--muted)">Show 2 Guest · Show 3 Guest</div><div class="mt8"><span class="badge b-green">Multi</span></div></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div style="background:var(--bg3);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px">
+        <div class="avatar" style="background:rgba(0,212,170,.2);color:var(--teal)">B</div>
+        <div><div class="bold">Becky — Host &amp; Guest</div><div style="font-size:12px;color:var(--muted)">Affiliate Team Only · Any Day</div><div class="mt8"><span class="badge b-teal">FTC Compliant</span></div></div>
+      </div>
+      <div style="background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:8px;padding:14px;font-size:12px;color:var(--muted)">
+        <div style="color:var(--red);font-weight:700;margin-bottom:6px">🚫 Team Rules</div>
+        Podcast crew never does affiliate promos.<br>
+        Becky never appears on podcast shows.<br>
+        Every affiliate video needs FTC disclosure.
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-title">🎯 Active Goals</div>
+    <div class="g3">
+      <div style="background:var(--bg3);border-radius:8px;padding:14px">
+        <div style="font-size:11px;color:var(--teal);font-weight:700;margin-bottom:6px">EMPLOYMENT</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">Land Office Job in SE Texas</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Operations · Logistics · Warehouse</div>
+        <button class="btn btn-ghost btn-xs w100" onclick="nav('employment')">View Applications →</button>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:14px">
+        <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px">AFFILIATE INCOME</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">Build Passive Revenue Stream</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">ClickBank · Amazon · Digistore24</div>
+        <button class="btn btn-ghost btn-xs w100" onclick="nav('affiliate')">Open Studio →</button>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:14px">
+        <div style="font-size:11px;color:var(--purple);font-weight:700;margin-bottom:6px">AI SKILLS</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">Complete 30-Day AI Training</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Prompts · Funnels · Video</div>
+        <button class="btn btn-ghost btn-xs w100" onclick="nav('training')">Continue Training →</button>
+      </div>
+    </div>
+  </div>
+</div>
+    <div id="pg-employment" class="page">
+  <div class="fsb mb20">
+    <div><div class="pg-title">💼 Employment Tracker</div>
+    <div class="pg-sub">Active job search — Southeast Texas · Office and Indoor Roles</div></div>
+    <button class="btn btn-teal" onclick="nav('becky')">🤖 Ask Becky</button>
+  </div>
+  <div class="card mb16">
+    <div class="sec-title">🎯 Target Roles</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <span class="badge b-teal" style="font-size:13px;padding:6px 14px">Operations Coordinator</span>
+      <span class="badge b-blue" style="font-size:13px;padding:6px 14px">Warehouse Supervisor</span>
+      <span class="badge b-gold" style="font-size:13px;padding:6px 14px">Logistics Coordinator</span>
+      <span class="badge b-purple" style="font-size:13px;padding:6px 14px">Production Supervisor</span>
+    </div>
+    <div class="g3">
+      <div><div class="label">Location</div><div>SE Texas · Orange, Beaumont, Port Arthur</div></div>
+      <div><div class="label">Work Type</div><div>Office-Based · Indoor · Less Physical</div></div>
+      <div><div class="label">Experience</div><div>20+ Years Manufacturing and Operations</div></div>
+    </div>
+  </div>
+  <div class="card mb16">
+    <div class="fsb mb16">
+      <div class="sec-title mb0">📋 Job Applications</div>
+      <div class="fca gap8">
+        <a href="https://www.indeed.com/jobs?q=operations+coordinator&l=Orange+TX" target="_blank" class="btn btn-ghost btn-sm">Indeed</a>
+        <a href="https://www.linkedin.com/jobs/" target="_blank" class="btn btn-ghost btn-sm">LinkedIn</a>
+        <a href="https://www.ziprecruiter.com/jobs-search?search=warehouse+supervisor&location=Orange+TX" target="_blank" class="btn btn-ghost btn-sm">ZipRecruiter</a>
+      </div>
+    </div>
+    <div class="job-card">
+      <div class="fsb mb8"><div><div class="bold mb4">Operations Coordinator</div><div style="font-size:12px;color:var(--muted)">Chevron Phillips Chemical · Orange, TX</div></div><span class="badge b-gold">Interview Scheduled</span></div>
+      <div style="font-size:12px;color:var(--muted)">Applied via LinkedIn · $55k–$70k · Full-time</div>
+      <div style="display:flex;gap:6px;margin-top:8px"><span class="badge b-teal">Forklift Cert ✅</span><span class="badge b-blue">Supervision ✅</span></div>
+    </div>
+    <div class="job-card">
+      <div class="fsb mb8"><div><div class="bold mb4">Warehouse Supervisor</div><div style="font-size:12px;color:var(--muted)">Port Arthur LNG · Port Arthur, TX</div></div><span class="badge b-blue">Applied</span></div>
+      <div style="font-size:12px;color:var(--muted)">Applied via Indeed · $60k–$75k · Full-time</div>
+      <div style="display:flex;gap:6px;margin-top:8px"><span class="badge b-teal">20 Yrs Exp ✅</span><span class="badge b-green">Conveyor Systems ✅</span></div>
+    </div>
+    <div class="job-card">
+      <div class="fsb mb8"><div><div class="bold mb4">Logistics Coordinator</div><div style="font-size:12px;color:var(--muted)">Huntsman Corporation · Port Neches, TX</div></div><span class="badge b-purple">In Review</span></div>
+      <div style="font-size:12px;color:var(--muted)">Applied via ZipRecruiter · $50k–$65k · Full-time</div>
+      <div style="display:flex;gap:6px;margin-top:8px"><span class="badge b-blue">Log Reporting ✅</span><span class="badge b-gold">Team Lead ✅</span></div>
+    </div>
+    <div class="job-card">
+      <div class="fsb mb8"><div><div class="bold mb4">Production Supervisor</div><div style="font-size:12px;color:var(--muted)">BASF Corporation · Beaumont, TX</div></div><span class="badge b-red">No Response</span></div>
+      <div style="font-size:12px;color:var(--muted)">Applied via Company Site · 3 weeks ago</div>
+    </div>
+  </div>
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="sec-title">🏆 Key Qualifications</div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:13px">
+        <div style="background:var(--bg3);border-radius:7px;padding:9px 13px">✅ <strong>20+ Years</strong> Lead Production Operator — Lion Elastomers</div>
+        <div style="background:var(--bg3);border-radius:7px;padding:9px 13px">✅ <strong>Forklift Certified</strong> — Valid certification</div>
+        <div style="background:var(--bg3);border-radius:7px;padding:9px 13px">✅ <strong>Conveyor Systems</strong> and Robotics experience</div>
+        <div style="background:var(--bg3);border-radius:7px;padding:9px 13px">✅ <strong>Team Supervision</strong> — Direct reports managed</div>
+        <div style="background:var(--bg3);border-radius:7px;padding:9px 13px">✅ <strong>Log and Compliance Reporting</strong></div>
+        <div style="background:var(--bg3);border-radius:7px;padding:9px 13px">✅ <strong>Sales</strong> — 9-state territory coverage</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">📜 Work History</div>
+      <table>
+        <tr><th>Employer</th><th>Role</th><th>Years</th></tr>
+        <tr><td><strong>Lion Elastomers</strong></td><td>Lead Production Operator</td><td>2012–2025</td></tr>
+        <tr><td>Live Oak Warehouse</td><td>Warehouse Operations</td><td>2004–2012</td></tr>
+        <tr><td>First Presbyterian</td><td>Facilities</td><td>2001–2004</td></tr>
+        <tr><td>Memorial Hermann</td><td>Support Staff</td><td>1999–2001</td></tr>
+        <tr><td>DAS Distributors</td><td>Sales Rep (9 States)</td><td>1996–1998</td></tr>
+        <tr><td>RiverPark Flowers</td><td>Sales and Operations</td><td>1993–1996</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-title">🤖 Becky — Job Search Assistant</div>
+    <div class="g3">
+      <button class="btn btn-ghost w100" onclick="qBecky('Write a cover letter for an Operations Coordinator role highlighting my 20 years at Lion Elastomers in Southeast Texas')">📝 Write Cover Letter</button>
+      <button class="btn btn-ghost w100" onclick="qBecky('Give me strong answers to common interview questions for a Warehouse Supervisor role in Southeast Texas')">🎤 Interview Prep</button>
+      <button class="btn btn-ghost w100" onclick="qBecky('What are the best job boards for manufacturing and logistics jobs in Southeast Texas?')">🔍 Find Job Boards</button>
+      <button class="btn btn-ghost w100" onclick="qBecky('Write a LinkedIn summary for John Lanter, former Lead Production Operator, seeking Operations Coordinator roles in SE Texas')">🔗 LinkedIn Summary</button>
+      <button class="btn btn-ghost w100" onclick="qBecky('What salary should I expect as an Operations Coordinator in Southeast Texas with 20 years of manufacturing experience?')">💵 Salary Research</button>
+      <button class="btn btn-ghost w100" onclick="qBecky('Write a polite follow-up email for a job application submitted 2 weeks ago with no response')">📧 Follow-Up Email</button>
+    </div>
+  </div>
+</div>
+    <div id="pg-becky" class="page">
+  <div class="fsb mb16">
+    <div><div class="pg-title">🤖 Becky AI — Creative Director</div>
+    <div class="pg-sub">Your AI partner — Groq · llama-3.3-70b-versatile</div></div>
+    <button class="btn btn-danger btn-sm" onclick="bClear()">🗑 Clear Chat</button>
+  </div>
+  <div class="g2" style="align-items:start">
+    <div>
+      <div class="card mb12">
+        <div class="label mb8">Quick Prompts</div>
+        <div class="bquick">
+          <span class="bq" onclick="bQ('Write a podcast hook for a show about AI making money online')">🎙 Podcast Hook</span>
+          <span class="bq" onclick="bQ('Write a 30-second affiliate promo script for a digital course')">💰 Affiliate Script</span>
+          <span class="bq" onclick="bQ('Give me 5 YouTube video ideas for AI affiliate marketing')">💡 Video Ideas</span>
+          <span class="bq" onclick="bQ('Write a LinkedIn post about my journey from factory worker to AI content creator')">🔗 LinkedIn Post</span>
+          <span class="bq" onclick="bQ('What are the best affiliate programs for beginners in 2025?')">📈 Affiliate Programs</span>
+          <span class="bq" onclick="bQ('Write a cover letter for an Operations Coordinator role in Southeast Texas')">📝 Cover Letter</span>
+          <span class="bq" onclick="bQ('Give me a 7-day content plan for an AI affiliate marketing channel')">📅 Content Plan</span>
+          <span class="bq" onclick="bQ('Hello Becky, please introduce yourself and tell me what you can help me with')">👋 Introduce Becky</span>
+        </div>
+      </div>
+      <div class="card">
+        <div id="bmsgs">
+          <div class="msg msg-b">
+            <div class="msg-who">BECKY</div>
+            Hello John, how is your day going? I am your Creative Director here at AffiliateMediaHub Studio. I can help you write scripts, plan content, research affiliate programs, prep for interviews, or brainstorm ideas. What are we working on today?
+          </div>
+        </div>
+        <div class="chat-row mt8">
+          <textarea id="bin" rows="2" placeholder="Message Becky... (Enter to send, Shift+Enter for new line)"></textarea>
+          <button class="btn btn-teal" id="bbtn" onclick="bSend()" style="height:46px;width:46px;padding:0;justify-content:center;font-size:18px" title="Send">➤</button>
+          <button class="btn btn-ghost" onclick="bPlus()" style="height:46px;width:46px;padding:0;justify-content:center;font-size:20px;font-weight:700" title="Add context">+</button>
+        </div>
+        <div id="bst" class="st mt8"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card mb12">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div class="avatar" style="background:rgba(0,212,170,.2);color:var(--teal);width:60px;height:60px;font-size:26px">B</div>
+          <div><div class="bold" style="font-size:18px">Becky</div>
+          <div style="color:var(--muted);font-size:13px">AI Creative Director</div>
+          <div class="mt8"><span class="badge b-teal">Active</span> <span class="badge b-gold">Affiliate Team</span></div></div>
+        </div>
+        <div class="sep"></div>
+        <div class="label mb8">Specialties</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+          <div>✅ Podcast and video script writing</div>
+          <div>✅ Affiliate marketing copy</div>
+          <div>✅ Job search assistance</div>
+          <div>✅ Content planning and ideation</div>
+          <div>✅ Brand voice and copywriting</div>
+          <div>✅ LinkedIn and resume help</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label mb8">AI Settings</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Model: <strong style="color:var(--txt)">llama-3.3-70b-versatile</strong></div>
+        <div id="bkey-st" style="font-size:12px;margin-bottom:10px"></div>
+        <button class="btn btn-ghost btn-sm w100" onclick="nav('settings')">⚙ Manage API Key →</button>
+      </div>
+    </div>
+  </div>
+</div>
+    <div id="pg-podcast" class="page">
+  <div class="fsb mb16">
+    <div><div class="pg-title">🎙 Podcast Studio</div>
+    <div class="pg-sub">Write full episode packages for Show 1 and Show 2</div></div>
+  </div>
+  <div style="display:flex;gap:12px;margin-bottom:16px">
+    <div class="show-card sel" id="pod-s1" onclick="setPodShow(1)">
+      <div style="color:#a78bfa;font-weight:700;font-size:12px;margin-bottom:4px">SHOW 1</div>
+      <div style="font-size:16px;font-weight:800">Lisa + Susan</div>
+      <div class="muted" style="font-size:12px;margin-top:4px">Monday &amp; Wednesday</div>
+    </div>
+    <div class="show-card" id="pod-s2" onclick="setPodShow(2)">
+      <div style="color:#f59e0b;font-weight:700;font-size:12px;margin-bottom:4px">SHOW 2</div>
+      <div style="font-size:16px;font-weight:800">Paul + Alisha</div>
+      <div class="muted" style="font-size:12px;margin-top:4px">Tuesday &amp; Thursday</div>
+    </div>
+  </div>
+  <div class="card mb16">
+    <div class="sec-title">📋 Episode Setup</div>
+    <div class="g2">
+      <div><div class="label mb4">Episode Topic</div>
+      <input id="pod-topic" type="text" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--txt);font-size:13px;outline:none" placeholder="e.g. How AI Is Changing Affiliate Marketing in 2025"></div>
+      <div><div class="label mb4">Episode Number / Title</div>
+      <input id="pod-ep" type="text" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--txt);font-size:13px;outline:none" placeholder="e.g. Episode 12 — AI Revolution"></div>
+    </div>
+  </div>
+  <div class="card mb16">
+    <div class="fsb mb12">
+      <div class="sec-title mb0">✍ Generate Episode Content</div>
+      <button class="btn btn-teal" onclick="Pod.all()">⚡ Write All 4 Sections</button>
+    </div>
+    <div class="g4">
+      <div><button class="btn btn-ghost w100 mb8" onclick="Pod.hooks()">🪝 Hooks</button>
+      <div id="pod-st-h" class="st"></div><div id="pod-out-h" class="out"></div>
+      <button id="pod-cp-h" class="btn btn-ghost btn-sm mt8" onclick="cpTxt('pod-out-h')" style="display:none">📋 Copy</button></div>
+      <div><button class="btn btn-ghost w100 mb8" onclick="Pod.script()">📜 Script</button>
+      <div id="pod-st-s" class="st"></div><div id="pod-out-s" class="out"></div>
+      <button id="pod-cp-s" class="btn btn-ghost btn-sm mt8" onclick="cpTxt('pod-out-s')" style="display:none">📋 Copy</button></div>
+      <div><button class="btn btn-ghost w100 mb8" onclick="Pod.notes()">📝 Show Notes</button>
+      <div id="pod-st-n" class="st"></div><div id="pod-out-n" class="out"></div>
+      <button id="pod-cp-n" class="btn btn-ghost btn-sm mt8" onclick="cpTxt('pod-out-n')" style="display:none">📋 Copy</button></div>
+      <div><button class="btn btn-ghost w100 mb8" onclick="Pod.caps()">📱 Captions</button>
+      <div id="pod-st-c" class="st"></div><div id="pod-out-c" class="out"></div>
+      <button id="pod-cp-c" class="btn btn-ghost btn-sm mt8" onclick="cpTxt('pod-out-c')" style="display:none">📋 Copy</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-title">🎤 Current Show Details</div>
+    <div class="g3">
+      <div><div class="label">Host</div><div id="pi-host">Lisa</div></div>
+      <div><div class="label">Guest</div><div id="pi-guest">Susan</div></div>
+      <div><div class="label">Air Days</div><div id="pi-days">Monday &amp; Wednesday</div></div>
+      <div><div class="label">Host Style</div><div id="pi-hs">Smooth, engaging, warm</div></div>
+      <div><div class="label">Guest Style</div><div id="pi-gs">Professional, confident, expert</div></div>
+      <div><div class="label">Show Type</div><div>Podcast Only</div></div>
+    </div>
+  </div>
+</div>
+    <div id="pg-video" class="page">
+  <div class="fsb mb16">
+    <div><div class="pg-title">🎬 Video Studio</div>
+    <div class="pg-sub">Vmake AI video production workflow</div></div>
+    <div class="fca gap8">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 16px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:var(--gold)" id="vcr-display">350</div>
+        <div style="font-size:10px;color:var(--muted)">Vmake Credits</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="vReset()">↺ Reset</button>
+    </div>
+  </div>
+  <div style="background:linear-gradient(135deg,rgba(245,197,24,.15),rgba(79,142,247,.1));border:1px solid rgba(245,197,24,.3);border-radius:12px;padding:18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+    <div><div style="font-weight:700;font-size:15px;color:var(--gold)">⭐ Vmake AI Studio</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:3px">Create Hub Engine videos with AI avatars and voiceover</div></div>
+    <a href="https://vmake.ai" target="_blank" class="btn btn-gold">Open Vmake.ai →</a>
+  </div>
+  <div class="card mb16">
+    <div class="sec-title">📋 5-Step Video Workflow</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:var(--bg3);border-radius:8px;padding:14px;display:flex;align-items:center;gap:14px">
+        <div style="width:36px;height:36px;background:rgba(0,212,170,.15);color:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0">1</div>
+        <div style="flex:1"><div class="bold mb4">Write Script</div><div style="font-size:12px;color:var(--muted)">Use Podcast, Business, or Affiliate Studio to generate your script</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="nav('podcast')">Go →</button>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:14px;display:flex;align-items:center;gap:14px">
+        <div style="width:36px;height:36px;background:rgba(79,142,247,.15);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0">2</div>
+        <div style="flex:1"><div class="bold mb4">Generate Audio</div><div style="font-size:12px;color:var(--muted)">Use ElevenLabs for AI persona voices — Becky British Female</div></div>
+        <a href="https://elevenlabs.io" target="_blank" class="btn btn-ghost btn-sm">ElevenLabs →</a>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:14px;display:flex;align-items:center;gap:14px">
+        <div style="width:36px;height:36px;background:rgba(245,197,24,.15);color:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0">3</div>
+        <div style="flex:1"><div class="bold mb4">Create Video in Vmake</div><div style="font-size:12px;color:var(--muted)">Upload audio, select avatar — costs 10–35 credits per video</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="vDeduct(20)">— 20 Credits</button>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:14px;display:flex;align-items:center;gap:14px">
+        <div style="width:36px;height:36px;background:rgba(155,127,238,.15);color:var(--purple);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0">4</div>
+        <div style="flex:1"><div class="bold mb4">Edit and Join Clips</div><div style="font-size:12px;color:var(--muted)">Add captions, music, and branding in Vmake editor</div></div>
+        <a href="https://vmake.ai" target="_blank" class="btn btn-ghost btn-sm">Vmake →</a>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:14px;display:flex;align-items:center;gap:14px">
+        <div style="width:36px;height:36px;background:rgba(52,211,153,.15);color:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0">5</div>
+        <div style="flex:1"><div class="bold mb4">Publish and Distribute</div><div style="font-size:12px;color:var(--muted)">Post to TikTok, YouTube, Instagram Reels, Facebook</div></div>
+        <div class="fca gap6"><a href="https://tiktok.com" target="_blank" class="btn btn-ghost btn-xs">TikTok</a><a href="https://youtube.com" target="_blank" class="btn btn-ghost btn-xs">YouTube</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="fsb mb12"><div class="sec-title mb0">💳 Credit Tracker</div><button class="btn btn-ghost btn-sm" onclick="vReset()">↺ Reset to 350</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="vDeduct(10)">— 10 (Short Clip)</button>
+        <button class="btn btn-ghost" onclick="vDeduct(20)">— 20 (Full Video)</button>
+        <button class="btn btn-ghost" onclick="vDeduct(35)">— 35 (Long Video)</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">📤 Distribution</div>
+      <div class="g2" style="gap:8px">
+        <a href="https://tiktok.com" target="_blank" class="btn btn-ghost w100">🎵 TikTok</a>
+        <a href="https://youtube.com/upload" target="_blank" class="btn btn-ghost w100">▶ YouTube</a>
+        <a href="https://instagram.com" target="_blank" class="btn btn-ghost w100">📸 Instagram</a>
+        <a href="https://facebook.com" target="_blank" class="btn btn-ghost w100">👥 Facebook</a>
+      </div>
+    </div>
+  </div>
+</div>
+    <div id="pg-business" class="page">
+  <div class="fsb mb16">
+    <div><div class="pg-title">🏢 Business Team Studio</div>
+    <div class="pg-sub">Show 3 — Susan (Host) + Alisha (Guest) · Friday and Saturday</div></div>
+  </div>
+  <div style="background:linear-gradient(135deg,rgba(52,211,153,.12),rgba(79,142,247,.08));border:1px solid rgba(52,211,153,.3);border-radius:12px;padding:16px;margin-bottom:16px">
+    <div class="fca gap12">
+      <div class="avatar" style="background:rgba(79,142,247,.2);color:#4f8ef7">S</div>
+      <div><div class="bold">Susan</div><div style="font-size:12px;color:var(--muted)">Host — Professional, Confident, Late 30s–40s</div></div>
+      <div style="color:var(--muted);margin:0 8px">+</div>
+      <div class="avatar" style="background:rgba(52,211,153,.2);color:#34d399">A</div>
+      <div><div class="bold">Alisha</div><div style="font-size:12px;color:var(--muted)">Guest — Charismatic, Persuasive, 40s</div></div>
+      <span class="badge b-green" style="margin-left:auto">Fri &amp; Sat</span>
+    </div>
+  </div>
+  <div class="card mb16">
+    <div class="sec-title">📋 Episode Setup</div>
+    <div class="g2">
+      <div><div class="label mb4">Business Topic</div>
+      <input id="biz-topic" type="text" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--txt);font-size:13px;outline:none" placeholder="e.g. Building a 6-Figure Affiliate Business from Home"></div>
+      <div><div class="label mb4">Episode Title</div>
+      <input id="biz-ep" type="text" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--txt);font-size:13px;outline:none" placeholder="e.g. Episode 8 — The Affiliate Blueprint"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="fsb mb12">
+      <div class="sec-title mb0">✍ Generate Business Content</div>
+      <button class="btn btn-teal" onclick="Biz.all()">⚡ Write All 4 Sections</button>
+    </div>
+    <div class="g4">
+      <div><button class="btn btn-ghost w100 mb8" onclick="Biz.hooks()">🪝 Hooks</button>
+      <div id="bst-h" class="st"></div><div id="bout-h" class="out"></div>
+      <button id="bcp-h" class="btn btn-ghost btn-sm mt8" onclick="cpTxt('bout-h')" style="display:none">📋 Copy</button></div>
+      <div><button class="btn btn-ghost w100 mb8" onclick="Biz.script()">📜 Script</button>
+      <div id="bst-s" class="st"></div><div id="bout-s" class="out"></div>
+      <button id="bcp-s" class="btn btn-ghost btn-sm mt8" onclick="cpTxt('bout-s')" style="display:none">📋 Copy</button></div>
+      <div><button class="btn btn-ghost w100 mb8" onclick="Biz.notes()">📝 Show Notes</button>
+      <div id="bst-n" class="st"></div><div id="bout-n" class="out"></div>
+      <button id="bcp-n" class="btn btn-ghost btn-sm mt8" onclick="cpTxt('bout-n')" style="display:none">📋 Copy</button></div>
+      <div><button class="btn btn-ghost w100 mb8" onclick="Biz.captions()">📱 Captions</button>
+      <div id="bst-c" class="st"></div><div id="bout-c" class="out"></div>
+      <button id="bcp-c" class="btn btn-ghost btn-sm mt8" onclick="cpTxt('bout-c')" style="display:none">📋 Copy</button></div>
+    </div>
+  </div>
+</div>
+    <div id="pg-affiliate" class="page">
+  <div class="fsb mb16">
+    <div><div class="pg-title">💰 Affiliate Team Studio</div>
+    <div class="pg-sub">Becky Host + Becky Guest · Any Day · FTC Compliant</div></div>
+  </div>
+  <div style="background:linear-gradient(135deg,rgba(245,197,24,.12),rgba(0,212,170,.08));border:1px solid rgba(245,197,24,.3);border-radius:12px;padding:16px;margin-bottom:16px">
+    <div class="fca gap8 mb8"><span class="badge b-gold">🚨 FTC REQUIRED</span><span style="font-size:13px;color:var(--muted)">Every affiliate video must include a paid promotion disclosure</span></div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px 14px;font-size:13px;font-style:italic">
+      "This video contains a paid promotion. We may earn a commission if you purchase through our links. Thank you for supporting our channel."
+    </div>
+  </div>
+  <div class="card mb16">
+    <div class="sec-title">📋 Promo Setup</div>
+    <div class="g2">
+      <div><div class="label mb4">Product / Offer</div>
+      <input id="aff-product" type="text" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--txt);font-size:13px;outline:none" placeholder="e.g. ClickBank AI Profits Course"></div>
+      <div><div class="label mb4">Affiliate Program</div>
+      <select id="aff-prog" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--txt);font-size:13px;outline:none">
+        <option>ClickBank</option><option>Amazon Associates</option><option>Digistore24</option>
+        <option>JVZoo</option><option>ShareASale</option><option>Commission Junction</option>
+        <option>Impact</option><option>Other</option>
+      </select></div>
+    </div>
+  </div>
+  <div class="card mb16">
+    <div class="fsb mb12">
+      <div class="sec-title mb0">✍ Generate Affiliate Content</div>
+      <button class="btn btn-gold" onclick="Aff.all()">⚡ Write All 4 Sections</button>
+    </div>
+    <div class="g4">
+      <div><button class="btn btn-ghost w100 mb8" onclick="Aff.hooks()">🪝 Ad Hooks</button>
+      <div id="ast-h" class="st"></div><div id="aout-h" class="out"></div>
+      <button id="acp-h" class="btn btn-ghost btn-sm mt8" onclick="cpTxt('aout-h')" style="display:none">📋 Copy</button></div>
+      <div><button class="btn btn-ghost w100 mb8" onclick="Aff.script30()">⏱ 30-Sec Script</button>
+      <div id="ast-s" class="st"></div><div id="aout-s" class="out"></div>
+      <button id="acp-s" class="btn btn-ghost btn-sm mt8" onclick="cpTxt('aout-s')" style="display:none">📋 Copy</button></div>
+      <div><button class="btn btn-ghost w100 mb8" onclick="Aff.dialogue()">🗣 Becky Dialogue</button>
+      <div id="ast-d" class="st"></div><div id="aout-d" class="out"></div>
+      <button id="acp-d" class="btn btn-ghost btn-sm mt8" onclick="cpTxt('aout-d')" style="display:none">📋 Copy</button></div>
+      <div><button class="btn btn-ghost w100 mb8" onclick="Aff.cap()">📱 Caption</button>
+      <div id="ast-c" class="st"></div><div id="aout-c" class="out"></div>
+      <button id="acp-c" class="btn btn-ghost btn-sm mt8" onclick="cpTxt('aout-c')" style="display:none">📋 Copy</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-title">🏦 Affiliate Programs</div>
+    <div class="g4">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <div style="font-size:22px;font-weight:800;color:var(--gold)">75%</div>
+        <div class="bold mb4 mt8">ClickBank</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Digital courses, e-books, software</div>
+        <a href="https://clickbank.com" target="_blank" class="btn btn-ghost btn-xs w100">Visit →</a>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <div style="font-size:22px;font-weight:800;color:var(--gold)">10%</div>
+        <div class="bold mb4 mt8">Amazon Associates</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Millions of products</div>
+        <a href="https://affiliate-program.amazon.com" target="_blank" class="btn btn-ghost btn-xs w100">Visit →</a>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <div style="font-size:22px;font-weight:800;color:var(--gold)">70%</div>
+        <div class="bold mb4 mt8">Digistore24</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">EU digital marketplace</div>
+        <a href="https://digistore24.com" target="_blank" class="btn btn-ghost btn-xs w100">Visit →</a>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <div style="font-size:22px;font-weight:800;color:var(--gold)">50%</div>
+        <div class="bold mb4 mt8">JVZoo</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Software and marketing tools</div>
+        <a href="https://jvzoo.com" target="_blank" class="btn btn-ghost btn-xs w100">Visit →</a>
+      </div>
+    </div>
+  </div>
+</div>
+    <div id="pg-calendar" class="page">
+  <div class="fsb mb16">
+    <div><div class="pg-title">📅 Content Calendar</div>
+    <div class="pg-sub">7-Day Rolling Show Schedule</div></div>
+    <button class="btn btn-teal" onclick="buildCal()">↺ Refresh</button>
+  </div>
+  <div class="card mb16">
+    <div class="fca gap12 wrap mb12" style="font-size:12px">
+      <span><span style="display:inline-block;width:11px;height:11px;background:#a78bfa;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Show 1 — Lisa + Susan (Mon &amp; Wed)</span>
+      <span><span style="display:inline-block;width:11px;height:11px;background:#f59e0b;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Show 2 — Paul + Alisha (Tue &amp; Thu)</span>
+      <span><span style="display:inline-block;width:11px;height:11px;background:#34d399;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Show 3 — Susan + Alisha (Fri &amp; Sat)</span>
+      <span><span style="display:inline-block;width:11px;height:11px;background:#f5c518;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Affiliate — Becky (Any Day)</span>
+    </div>
+    <div id="calGrid" class="cal-grid"></div>
+  </div>
+  <div class="card">
+    <div class="sec-title">📋 Weekly Checklist</div>
+    <table>
+      <tr><th>Day</th><th>Show</th><th>Task</th><th>Action</th></tr>
+      <tr><td>Monday</td><td style="color:#a78bfa;font-weight:600">Show 1</td><td>Write and record Lisa + Susan</td><td><button class="btn btn-ghost btn-xs" onclick="nav('podcast')">Studio</button></td></tr>
+      <tr><td>Tuesday</td><td style="color:#f59e0b;font-weight:600">Show 2</td><td>Write and record Paul + Alisha</td><td><button class="btn btn-ghost btn-xs" onclick="setPodShow(2);nav('podcast')">Studio</button></td></tr>
+      <tr><td>Wednesday</td><td style="color:#a78bfa;font-weight:600">Show 1</td><td>Post and distribute Monday episode</td><td><a href="https://youtube.com/upload" target="_blank" class="btn btn-ghost btn-xs">YouTube</a></td></tr>
+      <tr><td>Thursday</td><td style="color:#f59e0b;font-weight:600">Show 2</td><td>Post and distribute Tuesday episode</td><td><a href="https://tiktok.com" target="_blank" class="btn btn-ghost btn-xs">TikTok</a></td></tr>
+      <tr><td>Friday</td><td style="color:#34d399;font-weight:600">Show 3</td><td>Write and record Susan + Alisha</td><td><button class="btn btn-ghost btn-xs" onclick="nav('business')">Studio</button></td></tr>
+      <tr><td>Saturday</td><td style="color:#f5c518;font-weight:600">Affiliate</td><td>Write and post Becky promo</td><td><button class="btn btn-ghost btn-xs" onclick="nav('affiliate')">Studio</button></td></tr>
+      <tr><td>Sunday</td><td style="color:var(--muted);font-weight:600">Rest</td><td>Plan next week and review analytics</td><td><button class="btn btn-ghost btn-xs" onclick="nav('prompts')">Prompts</button></td></tr>
+    </table>
+  </div>
+</div>
+
+<div id="pg-brand" class="page">
+  <div class="pg-title mb4">🎨 Brand Voice</div>
+  <div class="pg-sub">AffiliateMediaHub Studio — Identity, Tone and Messaging Standards</div>
+  <div class="g2 mb16 mt16">
+    <div class="card">
+      <div class="sec-title">🏷 Brand Identity</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div><div class="label">Studio Name</div><div>AffiliateMediaHub Studio</div></div>
+        <div><div class="label">Tagline</div><div style="color:var(--teal);font-weight:700">Three Minds. One Mission. Zero Cost.</div></div>
+        <div><div class="label">Mission</div><div>Empower everyday people to build income online using AI tools, authentic storytelling, and affiliate marketing.</div></div>
+        <div><div class="label">Primary Colors</div>
+          <div class="fca gap8 mt4">
+            <div style="width:26px;height:26px;border-radius:5px;background:#00d4aa"></div><span style="font-size:12px">#00d4aa Teal</span>
+            <div style="width:26px;height:26px;border-radius:5px;background:#f5c518;margin-left:8px"></div><span style="font-size:12px">#f5c518 Gold</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">🎤 Tone of Voice</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:var(--bg3);border-radius:8px;padding:10px 14px"><div style="font-weight:700;font-size:13px;color:var(--teal);margin-bottom:3px">Always Be</div><div style="font-size:13px">Authentic · Conversational · Encouraging · Faith-driven · Relatable</div></div>
+        <div style="background:var(--bg3);border-radius:8px;padding:10px 14px"><div style="font-weight:700;font-size:13px;color:var(--red);margin-bottom:3px">Never Be</div><div style="font-size:13px">Pushy · Overpromising · Hard-sell · Aggressive · Fake-urgent</div></div>
+        <div style="background:var(--bg3);border-radius:8px;padding:10px 14px"><div style="font-weight:700;font-size:13px;color:var(--gold);margin-bottom:3px">CTA Style</div><div style="font-size:13px">Soft invitations — check it out if it feels right — link in bio</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="sec-title">🎯 Target Audience</div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:13px">
+        <div style="background:var(--bg3);border-radius:7px;padding:9px 13px">👷 Blue-collar workers looking to build income online</div>
+        <div style="background:var(--bg3);border-radius:7px;padding:9px 13px">🏠 Stay-at-home adults exploring affiliate marketing</div>
+        <div style="background:var(--bg3);border-radius:7px;padding:9px 13px">📱 Beginner content creators ages 35–65</div>
+        <div style="background:var(--bg3);border-radius:7px;padding:9px 13px">🙏 Faith-based communities in Southeast Texas and beyond</div>
+        <div style="background:var(--bg3);border-radius:7px;padding:9px 13px">💻 AI-curious beginners without tech overwhelm</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">📣 Messaging Pillars</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:rgba(0,212,170,.08);border-left:3px solid var(--teal);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px"><strong>Real People, Real Stories</strong><br><span class="muted">John story from factory floor to AI studio.</span></div>
+        <div style="background:rgba(245,197,24,.08);border-left:3px solid var(--gold);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px"><strong>AI Is For Everyone</strong><br><span class="muted">You do not need to be technical to start.</span></div>
+        <div style="background:rgba(155,127,238,.08);border-left:3px solid var(--purple);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px"><strong>Build While You Work</strong><br><span class="muted">Side income while employed. No quitting required.</span></div>
+        <div style="background:rgba(52,211,153,.08);border-left:3px solid var(--green);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px"><strong>Faith Over Fear</strong><br><span class="muted">Purpose-driven work. Every video is a seed planted.</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-title">🤖 Becky Brand Writing</div>
+    <div class="g3">
+      <button class="btn btn-ghost w100" onclick="qBecky('Write a brand bio for AffiliateMediaHub Studio in 100 words — authentic, faith-driven, AI-powered')">📝 Write Brand Bio</button>
+      <button class="btn btn-ghost w100" onclick="qBecky('Write 5 brand tagline variations for AffiliateMediaHub Studio with the theme: AI tools for everyday people')">💡 Tagline Ideas</button>
+      <button class="btn btn-ghost w100" onclick="qBecky('Write an Instagram bio for AffiliateMediaHub Studio — affiliate marketing meets AI, conversational tone')">📸 Instagram Bio</button>
+    </div>
+  </div>
+</div>
+
+<div id="pg-prompts" class="page">
+  <div class="pg-title mb4">💡 Prompt Library</div>
+  <div class="pg-sub">Ready-to-use AI prompts for every Hub Engine workflow</div>
+  <div id="prompt-cats" class="mt16"></div>
+</div>
+
+<div id="pg-skills" class="page">
+  <div class="pg-title mb4">⚡ Skills &amp; Automations</div>
+  <div class="pg-sub">Step-by-step workflows for every Hub Engine production task</div>
+  <div id="skills-list" class="mt16"></div>
+</div>
+
+<div id="pg-training" class="page">
+  <div class="fsb mb16">
+    <div><div class="pg-title">🎓 Training Library</div>
+    <div class="pg-sub">30-Day AI Content Creator and Affiliate Marketing Course</div></div>
+    <div style="text-align:right">
+      <div style="font-size:22px;font-weight:800;color:var(--teal)" id="tr-pct">0%</div>
+      <div style="font-size:11px;color:var(--muted)">Complete</div>
+    </div>
+  </div>
+  <div class="card mb16">
+    <div class="fsb mb8"><div class="sec-title mb0">Overall Progress</div><button class="btn btn-ghost btn-sm" onclick="resetTrain()">↺ Reset</button></div>
+    <div class="progress-bar"><div class="progress-fill" id="tr-bar" style="width:0%"></div></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px"><span id="tr-done">0</span> of 30 days complete</div>
+  </div>
+  <div id="training-phases"></div>
+</div>
+
+<div id="pg-files" class="page">
+  <div class="pg-title mb4">📁 Files &amp; Resources</div>
+  <div class="pg-sub">Documents, tools, and important links</div>
+  <div class="g2 mb16 mt16">
+    <div class="card">
+      <div class="sec-title">📄 Key Documents</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between"><div><div class="bold" style="font-size:13px">John Lanter Resume</div><div style="font-size:12px;color:var(--muted)">PDF — Updated 2025</div></div><a href="https://drive.google.com" target="_blank" class="btn btn-ghost btn-xs">Drive →</a></div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between"><div><div class="bold" style="font-size:13px">LinkedIn Banner</div><div style="font-size:12px;color:var(--muted)">PNG — 1584x396px</div></div><a href="https://drive.google.com" target="_blank" class="btn btn-ghost btn-xs">Drive →</a></div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between"><div><div class="bold" style="font-size:13px">Hub Engine v4 App</div><div style="font-size:12px;color:var(--muted)">Live on Vercel</div></div><a href="https://project-cj1zx.vercel.app" target="_blank" class="btn btn-ghost btn-xs">Live →</a></div>
+        <div id="ftc-src" style="display:none">This video contains a paid promotion. We may earn a commission if you purchase through our links. Thank you for supporting our channel.</div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between"><div><div class="bold" style="font-size:13px">FTC Disclosure Template</div><div style="font-size:12px;color:var(--muted)">Required for affiliate videos</div></div><button class="btn btn-ghost btn-xs" onclick="cpTxt('ftc-src')">📋 Copy</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">🔗 Important Links</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <a href="https://project-cj1zx.vercel.app" target="_blank" style="background:var(--bg3);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border)"><div><div class="bold" style="font-size:13px">Hub Engine v4 Live</div><div style="font-size:12px;color:var(--muted)">project-cj1zx.vercel.app</div></div><span style="color:var(--teal)">→</span></a>
+        <a href="https://hubengine.abacusai.app" target="_blank" style="background:var(--bg3);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border)"><div><div class="bold" style="font-size:13px">Hub Engine Video Maker</div><div style="font-size:12px;color:var(--muted)">Abacus.ai · ElevenLabs voices</div></div><span style="color:var(--teal)">→</span></a>
+        <a href="https://vmake.ai" target="_blank" style="background:var(--bg3);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border)"><div><div class="bold" style="font-size:13px">Vmake AI Studio</div><div style="font-size:12px;color:var(--muted)">AI video generation · 350 credits</div></div><span style="color:var(--gold)">→</span></a>
+        <a href="https://elevenlabs.io" target="_blank" style="background:var(--bg3);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border)"><div><div class="bold" style="font-size:13px">ElevenLabs</div><div style="font-size:12px;color:var(--muted)">AI voices · $5/mo</div></div><span style="color:var(--blue)">→</span></a>
+        <a href="https://console.groq.com" target="_blank" style="background:var(--bg3);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border)"><div><div class="bold" style="font-size:13px">Groq Console</div><div style="font-size:12px;color:var(--muted)">API key management · Free</div></div><span style="color:var(--green)">→</span></a>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-title">🛠 AI Tools Grid</div>
+    <div class="g4">
+      <a href="https://claude.ai" target="_blank" class="card card-sm" style="text-align:center;display:block"><div style="font-size:26px;margin-bottom:6px">🤖</div><div class="bold" style="font-size:13px">Claude</div><div style="font-size:11px;color:var(--muted)">Script writing · Dev</div></a>
+      <a href="https://groq.com" target="_blank" class="card card-sm" style="text-align:center;display:block"><div style="font-size:26px;margin-bottom:6px">⚡</div><div class="bold" style="font-size:13px">Groq</div><div style="font-size:11px;color:var(--muted)">Fast AI · Becky engine</div></a>
+      <a href="https://elevenlabs.io" target="_blank" class="card card-sm" style="text-align:center;display:block"><div style="font-size:26px;margin-bottom:6px">🎙</div><div class="bold" style="font-size:13px">ElevenLabs</div><div style="font-size:11px;color:var(--muted)">AI voices · Personas</div></a>
+      <a href="https://vmake.ai" target="_blank" class="card card-sm" style="text-align:center;display:block"><div style="font-size:26px;margin-bottom:6px">🎬</div><div class="bold" style="font-size:13px">Vmake</div><div style="font-size:11px;color:var(--muted)">AI video generation</div></a>
+      <a href="https://abacus.ai" target="_blank" class="card card-sm" style="text-align:center;display:block"><div style="font-size:26px;margin-bottom:6px">🏭</div><div class="bold" style="font-size:13px">Abacus.ai</div><div style="font-size:11px;color:var(--muted)">Video maker · $20/mo</div></a>
+      <a href="https://vercel.com" target="_blank" class="card card-sm" style="text-align:center;display:block"><div style="font-size:26px;margin-bottom:6px">🚀</div><div class="bold" style="font-size:13px">Vercel</div><div style="font-size:11px;color:var(--muted)">Free app hosting</div></a>
+      <a href="https://github.com" target="_blank" class="card card-sm" style="text-align:center;display:block"><div style="font-size:26px;margin-bottom:6px">📦</div><div class="bold" style="font-size:13px">GitHub</div><div style="font-size:11px;color:var(--muted)">Source code · Deploys</div></a>
+      <a href="https://linkedin.com" target="_blank" class="card card-sm" style="text-align:center;display:block"><div style="font-size:26px;margin-bottom:6px">🔗</div><div class="bold" style="font-size:13px">LinkedIn</div><div style="font-size:11px;color:var(--muted)">Job search · Network</div></a>
+    </div>
+  </div>
+</div>
+
+<div id="pg-team" class="page">
+  <div class="pg-title mb4">👥 Team Management</div>
+  <div class="pg-sub">All AI persona assignments, show rules, and production standards</div>
+  <div class="g3 mb16 mt16">
+    <div class="card" style="border-top:3px solid #a78bfa">
+      <div style="color:#a78bfa;font-weight:700;font-size:12px;margin-bottom:12px">SHOW 1 — MON &amp; WED</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="avatar" style="background:rgba(167,139,250,.2);color:#a78bfa">L</div><div><div class="bold">Lisa</div><div style="font-size:12px;color:var(--muted)">HOST — Smooth, engaging, warm</div></div></div>
+      <div style="display:flex;align-items:center;gap:12px"><div class="avatar" style="background:rgba(79,142,247,.2);color:#4f8ef7">S</div><div><div class="bold">Susan</div><div style="font-size:12px;color:var(--muted)">GUEST — Professional, confident</div></div></div>
+      <div class="sep"></div>
+      <button class="btn btn-ghost btn-sm w100" onclick="nav('podcast')">📝 Write Show 1 Script</button>
+    </div>
+    <div class="card" style="border-top:3px solid #f59e0b">
+      <div style="color:#f59e0b;font-weight:700;font-size:12px;margin-bottom:12px">SHOW 2 — TUE &amp; THU</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="avatar" style="background:rgba(245,158,11,.2);color:#f59e0b">P</div><div><div class="bold">Paul Baby Boss</div><div style="font-size:12px;color:var(--muted)">HOST — Trustworthy, grandfatherly</div></div></div>
+      <div style="display:flex;align-items:center;gap:12px"><div class="avatar" style="background:rgba(52,211,153,.2);color:#34d399">A</div><div><div class="bold">Alisha</div><div style="font-size:12px;color:var(--muted)">GUEST — Charismatic, persuasive</div></div></div>
+      <div class="sep"></div>
+      <button class="btn btn-ghost btn-sm w100" onclick="setPodShow(2);nav('podcast')">📝 Write Show 2 Script</button>
+    </div>
+    <div class="card" style="border-top:3px solid #34d399">
+      <div style="color:#34d399;font-weight:700;font-size:12px;margin-bottom:12px">SHOW 3 — FRI &amp; SAT</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="avatar" style="background:rgba(79,142,247,.2);color:#4f8ef7">S</div><div><div class="bold">Susan</div><div style="font-size:12px;color:var(--muted)">HOST — Professional, confident</div></div></div>
+      <div style="display:flex;align-items:center;gap:12px"><div class="avatar" style="background:rgba(52,211,153,.2);color:#34d399">A</div><div><div class="bold">Alisha</div><div style="font-size:12px;color:var(--muted)">GUEST — Charismatic, persuasive</div></div></div>
+      <div class="sep"></div>
+      <button class="btn btn-ghost btn-sm w100" onclick="nav('business')">📝 Write Show 3 Script</button>
+    </div>
+  </div>
+  <div class="card mb16" style="border-top:3px solid #f5c518">
+    <div style="color:#f5c518;font-weight:700;font-size:12px;margin-bottom:12px">AFFILIATE TEAM — ANY DAY</div>
+    <div class="g2">
+      <div style="display:flex;align-items:center;gap:12px;background:var(--bg3);border-radius:10px;padding:14px"><div class="avatar" style="background:rgba(0,212,170,.2);color:var(--teal)">B</div><div><div class="bold">Becky (Host)</div><div style="font-size:12px;color:var(--muted)">Affiliate Promo Host · British Female</div><div style="font-size:11px;color:var(--muted);margin-top:4px">Voice ID: exsUS4vynmxd379XN4yO</div></div></div>
+      <div style="display:flex;align-items:center;gap:12px;background:var(--bg3);border-radius:10px;padding:14px"><div class="avatar" style="background:rgba(0,212,170,.12);color:var(--teal)">B</div><div><div class="bold">Becky (Guest)</div><div style="font-size:12px;color:var(--muted)">Affiliate Promo Guest · Same Persona</div><div style="font-size:11px;color:var(--muted);margin-top:4px">FTC Disclosure required always</div></div></div>
+    </div>
+    <button class="btn btn-gold mt12" onclick="nav('affiliate')">💰 Open Affiliate Studio</button>
+  </div>
+  <div class="card" style="border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.04)">
+    <div style="color:var(--red);font-weight:700;font-size:15px;margin-bottom:12px">🚫 Non-Negotiable Team Rules</div>
+    <div style="display:flex;flex-direction:column;gap:7px;font-size:13px">
+      <div style="background:var(--bg3);border-left:3px solid var(--red);padding:10px 14px;border-radius:0 8px 8px 0">Podcast crew (Lisa, Susan, Paul, Alisha) NEVER does affiliate promos</div>
+      <div style="background:var(--bg3);border-left:3px solid var(--red);padding:10px 14px;border-radius:0 8px 8px 0">Becky Host/Guest NEVER appears on podcast or business shows</div>
+      <div style="background:var(--bg3);border-left:3px solid var(--red);padding:10px 14px;border-radius:0 8px 8px 0">No hard selling on any channel — ever</div>
+      <div style="background:var(--bg3);border-left:3px solid var(--red);padding:10px 14px;border-radius:0 8px 8px 0">Every affiliate video requires FTC disclosure at the start</div>
+    </div>
+  </div>
+</div>
+
+<div id="pg-settings" class="page">
+  <div class="pg-title mb4">⚙ Settings</div>
+  <div class="pg-sub">API keys, profile, and app configuration</div>
+  <div class="g2 mb16 mt16">
+    <div class="card">
+      <div class="sec-title">🔑 Groq API Key</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Powers Becky AI. Get your free key at console.groq.com</div>
+      <div class="label mb4">API Key</div>
+      <input id="groq-inp" type="password" placeholder="gsk_..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--txt);font-size:13px;outline:none;margin-bottom:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-teal" onclick="saveKey()">💾 Save Key</button>
+        <button class="btn btn-ghost" onclick="clearKey()">🗑 Clear Key</button>
+        <a href="https://console.groq.com/keys" target="_blank" class="btn btn-ghost">Get Key →</a>
+      </div>
+      <div id="key-st" class="st mt8"></div>
+    </div>
+    <div class="card">
+      <div class="sec-title">👤 Profile</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+        <div><div class="label">Name</div><div>John Lanter</div></div>
+        <div><div class="label">Role</div><div>CEO — AffiliateMediaHub Studio</div></div>
+        <div><div class="label">Location</div><div>Orange, Texas</div></div>
+        <div><div class="label">Primary Email</div><div>AffiliateMediaHub@gmail.com</div></div>
+        <div><div class="label">Monthly Cost</div><div>$25/mo (Abacus $20 + ElevenLabs $5)</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card mb16">
+    <div class="sec-title">💳 Subscriptions</div>
+    <table>
+      <tr><th>Platform</th><th>Cost</th><th>Used For</th><th>Link</th></tr>
+      <tr><td>Abacus.ai</td><td style="color:var(--gold)">$20/mo</td><td>Hub Engine Video Maker</td><td><a href="https://abacus.ai" target="_blank" class="btn btn-ghost btn-xs">Visit</a></td></tr>
+      <tr><td>ElevenLabs</td><td style="color:var(--gold)">$5/mo</td><td>AI voices for personas</td><td><a href="https://elevenlabs.io" target="_blank" class="btn btn-ghost btn-xs">Visit</a></td></tr>
+      <tr><td>Groq</td><td style="color:var(--green)">Free</td><td>Becky AI (llama-3.3-70b)</td><td><a href="https://console.groq.com" target="_blank" class="btn btn-ghost btn-xs">Visit</a></td></tr>
+      <tr><td>Vercel</td><td style="color:var(--green)">Free</td><td>App hosting</td><td><a href="https://vercel.com" target="_blank" class="btn btn-ghost btn-xs">Visit</a></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <div class="sec-title">🗄 Data Management</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">All data stored in browser localStorage. Nothing sent externally except Groq API calls.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="exportData()">📤 Export Data</button>
+      <button class="btn btn-danger" onclick="if(confirm('Clear all app data?')){localStorage.clear();location.reload()}">🗑 Clear All Data</button>
+    </div>
+  </div>
+</div>
+  </div>
+</div>
+<script>
+// ═══ DATA (backtick strings — apostrophe-safe) ═══════════════════════
+
+var podShow = 1;
+
+var SHOWS = {
+  1: { host: `Lisa`, guest: `Susan`, days: `Monday &amp; Wednesday`, hs: `Smooth, engaging, warm`, gs: `Professional, confident, expert` },
+  2: { host: `Paul Baby Boss`, guest: `Alisha`, days: `Tuesday &amp; Thursday`, hs: `Trustworthy, grandfatherly, gravelly`, gs: `Charismatic, persuasive, energetic` }
+};
+
+var PROMPTS = [
+  { cat: `🎙 Podcast Scripts`, col: `#a78bfa`, items: [
+    { t: `Episode Hook Pack`, p: `Write 5 powerful podcast hooks for an episode about [TOPIC]. Each hook under 15 seconds when spoken. Conversational and curiosity-driven.` },
+    { t: `Full Episode Script`, p: `Write a complete podcast script for [EPISODE TITLE] with host and guest. Include intro, 3 main segments, transitions, and outro with CTA. Conversational and educational. 10-12 minutes.` },
+    { t: `Show Notes`, p: `Write detailed show notes for a podcast episode titled [TITLE]. Include episode summary, 5 key takeaways, timestamps, and 3 resource links. Format as a blog post.` },
+    { t: `Social Captions`, p: `Write social media captions for a podcast episode about [TOPIC]. One each for TikTok, Instagram Reels, Twitter X, Facebook, and LinkedIn. Include relevant hashtags.` }
+  ]},
+  { cat: `💰 Affiliate Marketing`, col: `#f5c518`, items: [
+    { t: `30-Second Promo Script`, p: `Write a 30-second affiliate promo script for [PRODUCT NAME]. Hook, 1 key benefit, soft CTA, FTC disclosure. No hard selling. Conversational tone.` },
+    { t: `Becky Dialogue`, p: `Write a 60-second dialogue between Becky Host and Becky Guest promoting [PRODUCT]. Natural conversation about benefits. FTC disclosure at the start. Sound authentic, not scripted.` },
+    { t: `YouTube Description`, p: `Write a YouTube video description for an affiliate promo about [PRODUCT]. Include hook summary, what viewers learn, affiliate link placeholder, FTC disclosure, and 10 hashtags.` },
+    { t: `Email Sequence`, p: `Write a 3-email affiliate marketing sequence for [PRODUCT]. Email 1: Story intro. Email 2: Benefits and social proof. Email 3: Soft CTA. Each 150-200 words. Non-pushy tone.` }
+  ]},
+  { cat: `💼 Employment and Job Search`, col: `#4f8ef7`, items: [
+    { t: `Cover Letter`, p: `Write a professional cover letter for an Operations Coordinator position. Highlight 20+ years at Lion Elastomers, forklift certification, team supervision, conveyor systems, log reporting. Location: Southeast Texas.` },
+    { t: `Interview Answers`, p: `Give me strong answers to these interview questions for a Warehouse Supervisor role: 1) Tell me about yourself 2) Greatest strength 3) Describe solving a workplace problem 4) Why are you leaving your previous job.` },
+    { t: `LinkedIn Summary`, p: `Write a LinkedIn About section for John Lanter, former Lead Production Operator in Southeast Texas. 20+ years at Lion Elastomers. Seeking Operations Coordinator or Logistics roles. Also building AffiliateMediaHub Studio. 200 words max.` },
+    { t: `Follow-Up Email`, p: `Write a professional follow-up email to send 2 weeks after applying for a Logistics Coordinator position with no response. Polite, brief, shows continued interest. Sign off as John Lanter, Orange TX.` }
+  ]},
+  { cat: `🎬 Video and Business`, col: `#34d399`, items: [
+    { t: `Video Script Short`, p: `Write a 60-second talking-head video script about [TOPIC] for YouTube Shorts or TikTok. Hook in first 3 seconds. One clear message. Soft CTA at end. No jargon. Conversational delivery.` },
+    { t: `Business Show Segment`, p: `Write a 5-minute business podcast segment for Susan (host) and Alisha (guest) discussing [BUSINESS TOPIC]. Opening question, 3 talking points with dialogue, and a closing insight. Professional but approachable.` },
+    { t: `Channel Intro Script`, p: `Write a 30-second channel intro for AffiliateMediaHub Studio. Introduce the mission: helping everyday people build income online using AI tools. Mention the three AI personas. Energetic and welcoming.` },
+    { t: `Content Strategy`, p: `Give me a 4-week content strategy for an affiliate marketing YouTube channel focused on AI tools for beginners. Weekly themes, video titles, posting schedule, and one affiliate product per week.` }
+  ]}
+];
+
+var SKILLS = [
+  { title: `🎙 Podcast Episode Production`, col: `#a78bfa`, steps: [
+    `Choose show — Show 1: Lisa and Susan or Show 2: Paul and Alisha`,
+    `Enter episode topic and title in Podcast Studio`,
+    `Click Write All 4 Sections — Becky writes hooks, script, notes, captions`,
+    `Copy script and paste into ElevenLabs to generate AI voices`,
+    `Upload audio to Vmake, select avatar, and render video`,
+    `Download video, add captions, post to YouTube, TikTok, and Instagram`,
+    `Use show notes as YouTube description and blog post`
+  ]},
+  { title: `💰 Affiliate Promo Workflow`, col: `#f5c518`, steps: [
+    `Choose product to promote from Affiliate Programs list`,
+    `Open Affiliate Team Studio and enter product name`,
+    `Generate all 4 sections: hooks, 30-sec script, Becky dialogue, caption`,
+    `Add FTC disclosure at beginning — required — use the template`,
+    `Copy dialogue and generate voices in ElevenLabs for Becky Host and Guest`,
+    `Build video in Vmake with AI avatars`,
+    `Post with caption to TikTok, Instagram Reels, YouTube Shorts`
+  ]},
+  { title: `💼 Job Application Workflow`, col: `#4f8ef7`, steps: [
+    `Open Employment page and review active application status`,
+    `Find new job on Indeed, LinkedIn, or ZipRecruiter`,
+    `Ask Becky to write a tailored cover letter for the specific role`,
+    `Copy cover letter and apply directly on employer site`,
+    `Log the application in the tracker and update status`,
+    `After 2 weeks with no response — ask Becky to write a follow-up email`,
+    `Prep for interviews using Becky interview answer templates`
+  ]},
+  { title: `🎬 Video Production Pipeline`, col: `#34d399`, steps: [
+    `Write script using Podcast, Business, or Affiliate Studio`,
+    `Generate ElevenLabs voice audio for the persona`,
+    `Log in to Vmake.ai and start a new project`,
+    `Upload audio file and select matching AI avatar`,
+    `Generate video — 20 to 35 credits per video`,
+    `Edit: add intro, outro, captions, background music in Vmake`,
+    `Export and distribute: YouTube, TikTok, Instagram, Facebook`
+  ]},
+  { title: `🤖 Becky AI Daily Workflow`, col: `#00d4aa`, steps: [
+    `Start each session by greeting Becky and telling her what you are building`,
+    `Use Quick Prompts for common tasks: hooks, scripts, cover letters`,
+    `For custom needs: be specific — topic, tone, length, and platform`,
+    `Copy outputs from Becky to use in ElevenLabs or social posts`,
+    `Use the + button to add extra context if Becky needs more information`,
+    `If Becky gives a generic answer: add more detail and ask again`,
+    `Clear chat between major tasks to keep Becky focused`
+  ]}
+];
+
+var TRAINING = [
+  { phase: `Phase 1 — Claude Co-Work Foundations`, col: `#f5c518`, days: [
+    `Set up Hub Engine v4 — password, Groq key, all tabs working`,
+    `Learn to use Becky — 5 effective prompting techniques`,
+    `Write your first complete podcast episode using Podcast Studio`,
+    `Publish your first video to YouTube using the production workflow`,
+    `Set up LinkedIn profile with AI-written summary and banner`,
+    `Apply for 3 jobs using Becky cover letters`,
+    `Write your first affiliate promo using Affiliate Team Studio`,
+    `Build a 7-day content calendar using the Calendar page`,
+    `Practice Becky chat — write 10 different types of content`,
+    `Review all settings, check Groq API usage, plan Week 2`
+  ]},
+  { phase: `Phase 2 — AI Internet Skills`, col: `#4f8ef7`, days: [
+    `Study affiliate marketing basics — Commission Junction walkthrough`,
+    `Sign up for ClickBank and find your first product to promote`,
+    `Write and post your first ClickBank affiliate video`,
+    `Learn YouTube SEO — titles, thumbnails, descriptions`,
+    `Set up TikTok and post your first short-form video`,
+    `Study the Prompt Library — master all 16 prompts`,
+    `Build a lead magnet concept using Becky`,
+    `Study email marketing basics — how affiliate sequences work`,
+    `Create a content strategy for the next 30 days`,
+    `Review analytics on YouTube and TikTok and adjust strategy`
+  ]},
+  { phase: `Phase 3 — AI Video Operator Playbook`, col: `#34d399`, days: [
+    `Advanced Vmake techniques — avatars, music, captions`,
+    `Create a branded intro and outro template for all shows`,
+    `Batch produce 3 videos in one session`,
+    `Set up a posting schedule and automate with Buffer or Later`,
+    `Study ElevenLabs voice cloning and optimize persona voices`,
+    `Build a full Show 1 production from script to posted video`,
+    `Build a full Show 3 business episode end to end`,
+    `Build a full affiliate promo video end to end`,
+    `Analyze all content performance and identify top performer`,
+    `Plan Month 2 strategy — scale what works, cut what does not`
+  ]}
+];
+
+// ═══ CORE NAVIGATION ═══════════════════════════════════════════════════
+
+function chkPw() {
+  var pw = document.getElementById(`pw-input`).value;
+  if (pw === `JohnHub2025`) {
+    sessionStorage.setItem(`hev4`, `ok`);
+    document.getElementById(`login-screen`).style.display = `none`;
+    document.getElementById(`app`).style.display = `block`;
+    initApp();
+  } else {
+    var err = document.getElementById(`pw-err`);
+    err.style.display = `block`;
+    err.textContent = `Incorrect password. Please try again.`;
+    document.getElementById(`pw-input`).value = ``;
+    document.getElementById(`pw-input`).focus();
+  }
+}
+
+function nav(id) {
+  document.querySelectorAll(`.page`).forEach(p => p.classList.remove(`active`));
+  document.querySelectorAll(`.ni`).forEach(n => n.classList.remove(`active`));
+  var pg = document.getElementById(`pg-${id}`);
+  if (pg) pg.classList.add(`active`);
+  document.querySelectorAll(`.ni`).forEach(n => {
+    if (n.getAttribute(`onclick`) && n.getAttribute(`onclick`).includes(`nav('${id}')`)) {
+      n.classList.add(`active`);
+    }
+  });
+  var LABELS = {
+    dashboard:`Dashboard`, employment:`Employment Tracker`, becky:`Becky AI`,
+    podcast:`Podcast Studio`, video:`Video Studio`, business:`Business Team`,
+    affiliate:`Affiliate Team`, calendar:`Content Calendar`, brand:`Brand Voice`,
+    prompts:`Prompt Library`, skills:`Skills & Automations`, training:`Training Library`,
+    files:`Files & Resources`, team:`Team Management`, settings:`Settings`
+  };
+  document.getElementById(`tbl`).textContent = LABELS[id] || id;
+  if (id === `becky`) refreshKeyStatus();
+  window.scrollTo(0, 0);
+  closeSidebar();
+}
+
+function toggleSidebar() {
+  document.getElementById(`sidebar`).classList.toggle(`open`);
+  document.getElementById(`overlay`).classList.toggle(`on`);
+}
+function closeSidebar() {
+  document.getElementById(`sidebar`).classList.remove(`open`);
+  document.getElementById(`overlay`).classList.remove(`on`);
+}
+
+function initApp() {
+  updVcr(); updTrDash(); buildCal(); buildPrompts(); buildSkills(); buildTraining(); refreshKeyStatus();
+}
+
+// ═══ VMAKE CREDITS ══════════════════════════════════════════════════════
+
+function getVcr() { return parseInt(localStorage.getItem(`vcr`) || `350`); }
+function updVcr() {
+  var v = getVcr();
+  [`vcr-display`, `vcr-dash`].forEach(id => { var el = document.getElementById(id); if (el) el.textContent = v; });
+}
+function vDeduct(n) { localStorage.setItem(`vcr`, Math.max(0, getVcr() - n)); updVcr(); }
+function vReset()  { localStorage.setItem(`vcr`, 350); updVcr(); }
+
+// ═══ TRAINING ═══════════════════════════════════════════════════════════
+
+function getTr() { try { return JSON.parse(localStorage.getItem(`hev4_train`) || `{}`); } catch(e) { return {}; } }
+function toggleDay(n) {
+  var d = getTr();
+  d[`d${n}`] = !d[`d${n}`];
+  localStorage.setItem(`hev4_train`, JSON.stringify(d));
+  updTrDash();
+  var done = Object.values(d).filter(Boolean).length;
+  var pct = Math.round(done / 30 * 100);
+  var bar = document.getElementById(`tr-bar`); if (bar) bar.style.width = pct + `%`;
+  var pctEl = document.getElementById(`tr-pct`); if (pctEl) pctEl.textContent = pct + `%`;
+  var pctEl2 = document.getElementById(`tr-dash`); if (pctEl2) pctEl2.textContent = pct + `%`;
+  var doneEl = document.getElementById(`tr-done`); if (doneEl) doneEl.textContent = done;
+  // Update strikethrough on the row label
+  var lbl = document.getElementById(`dlbl${n}`);
+  if (lbl) lbl.style.textDecoration = d[`d${n}`] ? `line-through` : `none`;
+}
+function updTrDash() {
+  var done = Object.values(getTr()).filter(Boolean).length;
+  var el = document.getElementById(`tr-dash`);
+  if (el) el.textContent = Math.round(done / 30 * 100) + `%`;
+}
+function resetTrain() {
+  if (confirm(`Reset all training progress?`)) { localStorage.removeItem(`hev4_train`); location.reload(); }
+}
+
+// ═══ BUILD DYNAMIC SECTIONS ═════════════════════════════════════════════
+
+function buildCal() {
+  var grid = document.getElementById(`calGrid`);
+  if (!grid) return;
+  var days = [`Sun`,`Mon`,`Tue`,`Wed`,`Thu`,`Fri`,`Sat`];
+  var sched = {
+    1:{lbl:`Show 1`,sub:`Lisa + Susan`,c:`#a78bfa`},
+    2:{lbl:`Show 2`,sub:`Paul + Alisha`,c:`#f59e0b`},
+    3:{lbl:`Show 1`,sub:`Lisa + Susan`,c:`#a78bfa`},
+    4:{lbl:`Show 2`,sub:`Paul + Alisha`,c:`#f59e0b`},
+    5:{lbl:`Show 3`,sub:`Susan + Alisha`,c:`#34d399`},
+    6:{lbl:`Affiliate`,sub:`Becky`,c:`#f5c518`}
+  };
+  var today = new Date();
+  var html = ``;
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(today); d.setDate(today.getDate() + i);
+    var dow = d.getDay();
+    var isToday = i === 0;
+    var show = sched[dow];
+    html += `<div class="cal-day" style="${isToday ? `border-color:var(--teal)` : ``}">`;
+    html += `<div class="cal-day-name">${days[dow]}</div>`;
+    html += `<div class="cal-date" style="${isToday ? `color:var(--teal)` : ``}">${d.getDate()}</div>`;
+    if (show) {
+      html += `<div class="cal-pill" style="background:${show.c}22;color:${show.c}">${show.lbl}</div>`;
+      html += `<div style="font-size:10px;color:var(--muted)">${show.sub}</div>`;
+    } else {
+      html += `<div style="font-size:10px;color:var(--muted)">Rest Day</div>`;
+    }
+    html += `</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function buildPrompts() {
+  var el = document.getElementById(`prompt-cats`);
+  if (!el) return;
+  var html = ``;
+  PROMPTS.forEach(cat => {
+    html += `<div class="card mb16">`;
+    html += `<div class="sec-title mb12" style="color:${cat.col}">${cat.cat}</div>`;
+    cat.items.forEach(item => {
+      html += `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px">`;
+      html += `<div class="bold mb8" style="font-size:13px">${item.t}</div>`;
+      html += `<div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.55">${item.p}</div>`;
+      html += `<div style="display:flex;gap:8px">`;
+      html += `<button class="btn btn-ghost btn-sm" data-p="${item.p.replace(/"/g,`&quot;`)}" onclick="cpStr(this.dataset.p)">📋 Copy Prompt</button>`;
+      html += `<button class="btn btn-ghost btn-sm" data-p="${item.p.replace(/"/g,`&quot;`)}" onclick="qBecky(this.dataset.p)">🤖 Use with Becky</button>`;
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  });
+  el.innerHTML = html;
+}
+
+function buildSkills() {
+  var el = document.getElementById(`skills-list`);
+  if (!el) return;
+  var html = ``;
+  SKILLS.forEach(sk => {
+    html += `<div class="card mb16" style="border-top:3px solid ${sk.col}">`;
+    html += `<div class="sec-title mb12">${sk.title}</div>`;
+    html += `<div>`;
+    sk.steps.forEach((step, i) => {
+      html += `<div class="skill-step"><div class="step-num">${i+1}</div><div style="font-size:13px;line-height:1.5">${step}</div></div>`;
+    });
+    html += `</div></div>`;
+  });
+  el.innerHTML = html;
+}
+
+function buildTraining() {
+  var el = document.getElementById(`training-phases`);
+  if (!el) return;
+  var d = getTr();
+  var totalDone = Object.values(d).filter(Boolean).length;
+  var pct = Math.round(totalDone / 30 * 100);
+  var bar = document.getElementById(`tr-bar`); if (bar) bar.style.width = pct + `%`;
+  var pctEl = document.getElementById(`tr-pct`); if (pctEl) pctEl.textContent = pct + `%`;
+  var doneEl = document.getElementById(`tr-done`); if (doneEl) doneEl.textContent = totalDone;
+  var dayNum = 0;
+  var html = ``;
+  TRAINING.forEach(phase => {
+    html += `<div class="card mb16">`;
+    html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div style="width:12px;height:12px;border-radius:50%;background:${phase.col}"></div><div class="sec-title mb0" style="color:${phase.col}">${phase.phase}</div></div>`;
+    phase.days.forEach(task => {
+      dayNum++;
+      var dn = dayNum;
+      var chk = d[`d${dn}`] ? `checked` : ``;
+      var strike = d[`d${dn}`] ? `text-decoration:line-through;color:var(--muted)` : ``;
+      html += `<div class="day-row">`;
+      html += `<input type="checkbox" ${chk} onchange="toggleDay(${dn})">`;
+      html += `<div class="day-num">Day ${dn}</div>`;
+      html += `<div id="dlbl${dn}" style="font-size:13px;flex:1;${strike}">${task}</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ═══ GROQ API ════════════════════════════════════════════════════════════
+
+async function groqCall(prompt, sys) {
+  var rawKey = localStorage.getItem(`hev4_groq`) || ``;
+  var key = rawKey.replace(/[^\x20-\x7E]/g, ``).trim();
+  if (!key) return `[No Groq API key set. Go to Settings to add your key.]`;
+  var body = {
+    model: `llama-3.3-70b-versatile`,
+    max_tokens: 1200,
+    messages: [
+      { role: `system`, content: sys || `You are Becky, the AI Creative Director for AffiliateMediaHub Studio. Help with podcast scripts, affiliate marketing copy, job search assistance, and content creation. Be helpful, conversational, and creative. Owner: John Lanter, CEO, Orange Texas.` },
+      { role: `user`, content: prompt }
+    ]
+  };
+  try {
+    var res = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
+      method: `POST`,
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': `application/json` },
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if (data.error) return `Error: ${data.error.message}`;
+    return data.choices[0].message.content;
+  } catch(e) {
+    return `Error connecting to Groq: ${e.message}`;
+  }
+}
+
+// ═══ STATUS / OUTPUT HELPERS ════════════════════════════════════════════
+
+function setSt(id, type, msg) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.className = `st on st-${type}`;
+  el.textContent = msg;
+}
+function hideSt(id) {
+  var el = document.getElementById(id);
+  if (el) { el.className = `st`; el.textContent = ``; }
+}
+function showOut(oid, cid, txt) {
+  var el = document.getElementById(oid);
+  var btn = document.getElementById(cid);
+  if (el) { el.className = `out on`; el.textContent = txt; }
+  if (btn) btn.style.display = `inline-flex`;
+}
+function cpTxt(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).catch(() => {});
+  var old = el.style.outline;
+  el.style.outline = `2px solid var(--teal)`;
+  setTimeout(() => { el.style.outline = old; }, 700);
+}
+function cpStr(str) {
+  navigator.clipboard.writeText(str).catch(() => {});
+}
+
+// ═══ BECKY CHAT ══════════════════════════════════════════════════════════
+
+function addMsg(who, text, role) {
+  var box = document.getElementById(`bmsgs`);
+  if (!box) return;
+  var div = document.createElement(`div`);
+  div.className = `msg ${role === `user` ? `msg-u` : `msg-b`}`;
+  div.innerHTML = `<div class="msg-who">${who}</div>${text.replace(/\n/g, `<br>`)}`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+async function bSend() {
+  var inp = document.getElementById(`bin`);
+  var msg = inp ? inp.value.trim() : ``;
+  if (!msg) return;
+  inp.value = ``;
+  addMsg(`YOU`, msg, `user`);
+  setSt(`bst`, `i`, `Becky is thinking...`);
+  var reply = await groqCall(msg);
+  hideSt(`bst`);
+  addMsg(`BECKY`, reply, `becky`);
+}
+
+function bQ(prompt) {
+  var inp = document.getElementById(`bin`);
+  if (inp) inp.value = prompt;
+  bSend();
+}
+
+function qBecky(msg) { nav(`becky`); setTimeout(() => bQ(msg), 300); }
+
+function bClear() {
+  var box = document.getElementById(`bmsgs`);
+  if (box) box.innerHTML = `<div class="msg msg-b"><div class="msg-who">BECKY</div>Chat cleared — ready for your next project, John!</div>`;
+}
+
+function bPlus() {
+  var extra = prompt(`Add extra context for Becky:`, ``);
+  if (extra) {
+    var inp = document.getElementById(`bin`);
+    if (inp) {
+      inp.value = inp.value ? inp.value + `\n\nAdditional context: ` + extra : `Context: ` + extra;
+      inp.focus();
+    }
+  }
+}
+
+// ═══ PODCAST SHOW SWITCHER ═══════════════════════════════════════════════
+
+function setPodShow(n) {
+  podShow = n;
+  document.getElementById(`pod-s1`).className = `show-card${n === 1 ? ` sel` : ``}`;
+  document.getElementById(`pod-s2`).className = `show-card${n === 2 ? ` sel` : ``}`;
+  var s = SHOWS[n];
+  document.getElementById(`pi-host`).textContent = s.host;
+  document.getElementById(`pi-guest`).textContent = s.guest;
+  document.getElementById(`pi-days`).innerHTML = s.days;
+  document.getElementById(`pi-hs`).textContent = s.hs;
+  document.getElementById(`pi-gs`).textContent = s.gs;
+}
+
+// ═══ PODCAST STUDIO ══════════════════════════════════════════════════════
+
+var Pod = {
+  topic() { return document.getElementById(`pod-topic`).value.trim() || `AI and the future of online business`; },
+  ep()    { return document.getElementById(`pod-ep`).value.trim() || `Episode 1`; },
+  async hooks() {
+    var s = SHOWS[podShow];
+    setSt(`pod-st-h`, `i`, `Writing hooks...`);
+    var out = await groqCall(`Write 5 powerful podcast hooks for Hub Engine Podcast. Host: ${s.host}. Topic: ${this.topic()}. Each hook under 15 seconds when spoken. Conversational and curiosity-driven. Numbered list.`);
+    setSt(`pod-st-h`, `k`, `Hooks ready!`);
+    showOut(`pod-out-h`, `pod-cp-h`, out);
+  },
+  async script() {
+    var s = SHOWS[podShow];
+    setSt(`pod-st-s`, `i`, `Writing full script — this takes about 15 seconds...`);
+    var out = await groqCall(`Write a complete podcast episode script. Show: Hub Engine Podcast. Episode: ${this.ep()}. Topic: ${this.topic()}. Host: ${s.host} (${s.hs}). Guest: ${s.guest} (${s.gs}). Include intro, 3 main segments with dialogue, transitions, outro with CTA. Format with HOST: and GUEST: labels. 8-10 minute episode.`, `You are a professional podcast script writer for Hub Engine Podcast.`);
+    setSt(`pod-st-s`, `k`, `Script ready!`);
+    showOut(`pod-out-s`, `pod-cp-s`, out);
+  },
+  async notes() {
+    setSt(`pod-st-n`, `i`, `Writing show notes...`);
+    var out = await groqCall(`Write detailed podcast show notes for: ${this.ep()} — Topic: ${this.topic()}. Include episode summary (2 paragraphs), 5 key takeaways, 3 discussion questions, hashtags for social media. Format as a blog-style post.`);
+    setSt(`pod-st-n`, `k`, `Show notes ready!`);
+    showOut(`pod-out-n`, `pod-cp-n`, out);
+  },
+  async caps() {
+    setSt(`pod-st-c`, `i`, `Writing captions...`);
+    var out = await groqCall(`Write social media captions for a podcast episode about: ${this.topic()}. One caption each for: TikTok (punchy, 20 words max), Instagram Reels, Twitter X (under 280 chars), Facebook, LinkedIn. Separate each clearly with labels.`);
+    setSt(`pod-st-c`, `k`, `Captions ready!`);
+    showOut(`pod-out-c`, `pod-cp-c`, out);
+  },
+  async all() { await this.hooks(); await this.script(); await this.notes(); await this.caps(); }
+};
+
+// ═══ BUSINESS STUDIO ════════════════════════════════════════════════════
+
+var Biz = {
+  topic() { return document.getElementById(`biz-topic`).value.trim() || `Building a profitable online business with AI`; },
+  ep()    { return document.getElementById(`biz-ep`).value.trim() || `Business Episode 1`; },
+  async hooks() {
+    setSt(`bst-h`, `i`, `Writing hooks...`);
+    var out = await groqCall(`Write 5 compelling podcast hooks for a business show. Host: Susan (professional, confident). Guest: Alisha (charismatic, persuasive). Topic: ${this.topic()}. Each hook under 15 seconds. Business-focused, authoritative but conversational.`);
+    setSt(`bst-h`, `k`, `Hooks ready!`);
+    showOut(`bout-h`, `bcp-h`, out);
+  },
+  async script() {
+    setSt(`bst-s`, `i`, `Writing script...`);
+    var out = await groqCall(`Write a complete business podcast episode script. Show: Hub Engine Business. Episode: ${this.ep()}. Topic: ${this.topic()}. Host: Susan (professional, late 30s-40s, confident). Guest: Alisha (charismatic, persuasive, 40s). Include intro, 3 business insight segments, Q&A format, actionable takeaway closing. Label SUSAN: and ALISHA:.`, `You are a business podcast script writer.`);
+    setSt(`bst-s`, `k`, `Script ready!`);
+    showOut(`bout-s`, `bcp-s`, out);
+  },
+  async notes() {
+    setSt(`bst-n`, `i`, `Writing show notes...`);
+    var out = await groqCall(`Write show notes for a business podcast episode: ${this.ep()} — ${this.topic()}. Include 2-paragraph summary, 5 business takeaways, 3 action steps listeners can take today, relevant hashtags.`);
+    setSt(`bst-n`, `k`, `Notes ready!`);
+    showOut(`bout-n`, `bcp-n`, out);
+  },
+  async captions() {
+    setSt(`bst-c`, `i`, `Writing captions...`);
+    var out = await groqCall(`Write social media captions for a business podcast about: ${this.topic()}. One each for TikTok, Instagram, Twitter X, Facebook, LinkedIn. Business-focused tone with relevant hashtags.`);
+    setSt(`bst-c`, `k`, `Captions ready!`);
+    showOut(`bout-c`, `bcp-c`, out);
+  },
+  async all() { await this.hooks(); await this.script(); await this.notes(); await this.captions(); }
+};
+
+// ═══ AFFILIATE STUDIO ════════════════════════════════════════════════════
+
+var Aff = {
+  product() { return document.getElementById(`aff-product`).value.trim() || `AI Affiliate Profits Course`; },
+  prog()    { return document.getElementById(`aff-prog`).value; },
+  async hooks() {
+    setSt(`ast-h`, `i`, `Writing ad hooks...`);
+    var out = await groqCall(`Write 5 powerful ad hooks for an affiliate promo promoting: ${this.product()} from ${this.prog()}. Each hook under 5 seconds. No hard selling. Curiosity-based. Start strong. Numbered list.`);
+    setSt(`ast-h`, `k`, `Hooks ready!`);
+    showOut(`aout-h`, `acp-h`, out);
+  },
+  async script30() {
+    setSt(`ast-s`, `i`, `Writing 30-second script...`);
+    var out = await groqCall(`Write a 30-second affiliate promo script for: ${this.product()} (Program: ${this.prog()}). Structure: 1) FTC disclosure 2) Hook 3) Problem 4) Solution 5) Soft CTA with link in description. No hard selling. Mark each section.`);
+    setSt(`ast-s`, `k`, `Script ready!`);
+    showOut(`aout-s`, `acp-s`, out);
+  },
+  async dialogue() {
+    setSt(`ast-d`, `i`, `Writing Becky dialogue...`);
+    var out = await groqCall(`Write a 60-second dialogue between Becky Host and Becky Guest (British, warm, authentic) promoting: ${this.product()}. Start with FTC disclosure by Becky Host. Natural conversation about benefits. Soft CTA at end. Label BECKY HOST: and BECKY GUEST: clearly. No hard selling.`);
+    setSt(`ast-d`, `k`, `Dialogue ready!`);
+    showOut(`aout-d`, `acp-d`, out);
+  },
+  async cap() {
+    setSt(`ast-c`, `i`, `Writing caption...`);
+    var out = await groqCall(`Write 3 social media captions promoting: ${this.product()} as an affiliate. Platform 1: TikTok (short, punchy). Platform 2: Instagram Reels. Platform 3: YouTube Shorts. All must include FTC disclosure note, soft CTA with link in description, relevant hashtags.`);
+    setSt(`ast-c`, `k`, `Caption ready!`);
+    showOut(`aout-c`, `acp-c`, out);
+  },
+  async all() { await this.hooks(); await this.script30(); await this.dialogue(); await this.cap(); }
+};
+
+// ═══ SETTINGS ════════════════════════════════════════════════════════════
+
+function saveKey() {
+  var val = document.getElementById(`groq-inp`).value.replace(/[^\x20-\x7E]/g, ``).trim();
+  if (!val) { setSt(`key-st`, `e`, `Please enter a valid API key.`); return; }
+  localStorage.setItem(`hev4_groq`, val);
+  setSt(`key-st`, `k`, `API key saved successfully!`);
+  refreshKeyStatus();
+}
+
+function clearKey() {
+  localStorage.removeItem(`hev4_groq`);
+  document.getElementById(`groq-inp`).value = ``;
+  setSt(`key-st`, `i`, `API key cleared.`);
+  refreshKeyStatus();
+}
+
+function refreshKeyStatus() {
+  var k = localStorage.getItem(`hev4_groq`) || ``;
+  var el = document.getElementById(`bkey-st`);
+  if (el) {
+    el.innerHTML = k
+      ? `<span style="color:var(--green)">✅ API key active — Becky is ready</span>`
+      : `<span style="color:var(--red)">⚠ No API key — go to Settings</span>`;
+  }
+  var inp = document.getElementById(`groq-inp`);
+  if (inp && k) inp.placeholder = `Key saved ✅ (hidden for security)`;
+}
+
+function exportData() {
+  var data = {};
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k.startsWith(`hev4`) || k === `vcr`) data[k] = localStorage.getItem(k);
+  }
+  var blob = new Blob([JSON.stringify(data, null, 2)], { type: `application/json` });
+  var a = document.createElement(`a`);
+  a.href = URL.createObjectURL(blob);
+  a.download = `hub-engine-v4-backup.json`;
+  a.click();
+}
+
+// ═══ KEYBOARD HANDLERS ═══════════════════════════════════════════════════
+
+document.addEventListener(`DOMContentLoaded`, () => {
+  var pwInp = document.getElementById(`pw-input`);
+  if (pwInp) {
+    pwInp.addEventListener(`keydown`, e => { if (e.key === `Enter`) chkPw(); });
+    pwInp.focus();
+  }
+  var bin = document.getElementById(`bin`);
+  if (bin) {
+    bin.addEventListener(`keydown`, e => { if (e.key === `Enter` && !e.shiftKey) { e.preventDefault(); bSend(); } });
+  }
+  if (sessionStorage.getItem(`hev4`) === `ok`) {
+    document.getElementById(`login-screen`).style.display = `none`;
+    document.getElementById(`app`).style.display = `block`;
+    initApp();
+  }
+});
+</script>
+</body>
+</html>
