@@ -1,4 +1,4 @@
-# Hub Engine v3 — Becky-First Architecture + Perplexity + Draft Persistence
+# Hub Engine v4 — Becky-First Architecture + Perplexity + Draft Persistence
 
 ## The hierarchy (this is the important part)
 
