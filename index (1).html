@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hub Engine v4</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #talk-to-becky-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: #fff;
+            cursor: pointer;
+        }
+        #talk-to-becky-button:hover {
+            background-color: #3e8e41;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hub Engine v4</h1>
+    <button id="talk-to-becky-button">🎤 Talk to Becky</button>
+    <button id="perplexity-button">Perplexity</button>
+    <div id="teams"></div>
+    <script>
+        var PROMPTS_NEW = [
+            "Faceless Factory: Create a video about AI affiliate marketing",
+            "Faceless Factory: Create a video about job search dashboard",
+            "LIVE VOICE Becky: Ask me about the Faceless Factory pipeline",
+            "LIVE VOICE Becky: Ask me about the Perplexity button"
+        ];
+
+        var recognition = new webkitSpeechRecognition() || new SpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.maxResults = 10;
+
+        document.getElementById("talk-to-becky-button").addEventListener("click", function() {
+            recognition.start();
+        });
+
+        recognition.onresult = function(event) {
+            var transcript = event.results[0][0].transcript;
+            console.log("Transcript: " + transcript);
+
+            // Groq TTS response
+            var tts = new SpeechSynthesisUtterance();
+            tts.text = "Hello, I'm Becky. How can I assist you today?";
+            tts.lang = "en-US";
+            tts.voice = "Google UK English Female";
+            speechSynthesis.speak(tts);
+
+            // Playai TTS response (autumn voice)
+            var audio = new Audio("https://playai.io/tts/autumn/" + encodeURIComponent(transcript));
+            audio.play();
+        };
+
+        document.getElementById("perplexity-button").addEventListener("click", function() {
+            // Perplexity button functionality
+            console.log("Perplexity button clicked");
+        });
+
+        // Teams functionality
+        var teams = document.getElementById("teams");
+        teams.innerHTML = "Teams: <ul><li>Team 1</li><li>Team 2</li></ul>";
+    </script>
+</body>
+</html>
