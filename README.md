@@ -1,4 +1,4 @@
-# Hub Engine v5 — Preservation Build
+# Hub Engine v4 — Preservation Build
 
 **Feature-complete single-file app that preserves everything from v4 and adds the missing workflows.**
 
@@ -40,7 +40,7 @@
 
 **deepMerge restore:** when a day record loads, existing data takes priority — fresh defaults only fill in missing nested fields. Nothing gets overwritten.
 
-**Self-verification:** the app console-logs a pass/fail for all 19 expected views on every page load. Open DevTools (F12) and check the Console — you should see `[Hub Engine v5] All 19 views verified present.`
+**Self-verification:** the app console-logs a pass/fail for all 19 expected views on every page load. Open DevTools (F12) and check the Console — you should see `[Hub Engine v4] All 19 views verified present.`
 
 ## Autosave (all wired)
 
@@ -79,9 +79,9 @@ Team Management also shows the team roster (John · Becky · Claude) at the top 
 
 Open DevTools Console (F12) and you'll see:
 ```
-[Hub Engine v5] All 19 views verified present.
-[Hub Engine v5] Today key: hubengine_day_2026-04-17
-[Hub Engine v5] Nav items: 19 views: 19
+[Hub Engine v4] All 19 views verified present.
+[Hub Engine v4] Today key: hubengine_day_2026-04-17
+[Hub Engine v4] Nav items: 19 views: 19
 ```
 
 If anything is ever missing, it'll show an error in the console with the exact missing view name.
