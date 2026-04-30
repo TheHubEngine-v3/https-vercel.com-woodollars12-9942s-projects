@@ -3085,6 +3085,9 @@ function bHistoryClear() {
   bRefreshBadge();
 }
 
+ function bHistoryGet() {
+  return BECKY_HISTORY.slice(-8);
+} 
 var PROMPTS = [
   { cat: `🎙 Podcast Scripts`, col: `#a78bfa`, items: [
     { t: `Episode Hook Pack`, p: `Write 5 powerful podcast hooks for an episode about [TOPIC]. Each hook under 15 seconds when spoken. Conversational and curiosity-driven.` },
