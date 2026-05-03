@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>John's Checkbook — AffiliateMediaHub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Code+Pro:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+
+:root {
+  --bg:       #0a0e1a;
+  --bg2:      #111827;
+  --bg3:      #1a2235;
+  --border:   rgba(255,255,255,.08);
+  --txt:      #f0f4ff;
+  --muted:    #6b7fa3;
+  --green:    #22d3a0;
+  --red:      #f87171;
+  --gold:     #f5c518;
+  --blue:     #60a5fa;
+  --teal:     #00d4aa;
+  --shadow:   0 8px 32px rgba(0,0,0,.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Lato', sans-serif;
+  background: var(--bg);
+  color: var(--txt);
+  min-height: 100vh;
+  padding: 0;
+}
+
+/* ── LOCK SCREEN ── */
+#lock-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0a0e1a 0%, #0d1520 50%, #0a1a14 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.lock-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px 32px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
+}
+
+.lock-icon {
+  font-size: 52px;
+  margin-bottom: 12px;
+}
+
+.lock-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--txt);
+  margin-bottom: 4px;
+}
+
+.lock-title span { color: var(--teal); }
+
+.lock-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  letter-spacing: .06em;
+}
+
+.lock-box input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 16px;
+  color: var(--txt);
+  font-size: 20px;
+  letter-spacing: .2em;
+  text-align: center;
+  outline: none;
+  margin-bottom: 12px;
+  transition: border-color .2s;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.lock-box input:focus { border-color: var(--teal); }
+
+.lock-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--teal);
+  color: #000;
+  font-weight: 700;
+  font-size: 15px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.lock-btn:hover { opacity: .86; }
+
+.lock-err {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--red);
+  min-height: 20px;
+}
+
+.lock-footer {
+  margin-top: 20px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+#app { display: none; }
+
+/* ── HEADER ── */
+.header {
+  background: linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0a1a14 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 24px rgba(0,0,0,.5);
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.header-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--txt);
+  letter-spacing: -.5px;
+}
+
+.header-title span { color: var(--teal); }
+
+.header-sub {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 300;
+  letter-spacing: .08em;
+  margin-top: 2px;
+}
+
+/* ── BALANCE CARDS ── */
+.balance-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.bal-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+
+.bal-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .1em;
+  margin-bottom: 4px;
+}
+
+.bal-amount {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.bal-amount.positive { color: var(--green); }
+.bal-amount.negative { color: var(--red); }
+.bal-amount.neutral  { color: var(--gold); }
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: .2s;
+  white-space: nowrap;
+}
+
+.tab.active {
+  color: var(--teal);
+  border-bottom-color: var(--teal);
+}
+
+/* ── MAIN CONTENT ── */
+.main { padding: 16px; max-width: 680px; margin: 0 auto; }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--txt);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── FORM ELEMENTS ── */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.form-row.full { grid-template-columns: 1fr; }
+.form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+.field label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .08em;
+  margin-bottom: 5px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--txt);
+  font-size: 14px;
+  font-family: 'Lato', sans-serif;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--teal);
+}
+
+.field select option { background: var(--bg2); }
+
+/* ── TYPE TOGGLE ── */
+.type-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.type-btn {
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: var(--bg3);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: .2s;
+  text-align: center;
+}
+
+.type-btn.active-debit {
+  border-color: var(--red);
+  background: rgba(248,113,113,.1);
+  color: var(--red);
+}
+
+.type-btn.active-credit {
+  border-color: var(--green);
+  background: rgba(34,211,160,.1);
+  color: var(--green);
+}
+
+/* ── BUTTONS ── */
+.btn {
+  padding: 11px 20px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: .2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-teal  { background: var(--teal);  color: #000; }
+.btn-red   { background: var(--red);   color: #000; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+.btn-gold  { background: var(--gold);  color: #000; }
+.btn-full  { width: 100%; justify-content: center; }
+.btn:hover { opacity: .85; }
+
+/* ── TRANSACTION LIST ── */
+.tx-list { display: flex; flex-direction: column; gap: 8px; }
+
+.tx-item {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-left: 3px solid var(--border);
+  transition: .15s;
+}
+
+.tx-item.debit  { border-left-color: var(--red); }
+.tx-item.credit { border-left-color: var(--green); }
+.tx-item.cleared { opacity: .6; }
+
+.tx-icon {
+  font-size: 22px;
+  width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.tx-body { flex: 1; min-width: 0; }
+
+.tx-desc {
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tx-meta {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tx-badge {
+  background: var(--bg2);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.tx-amount {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.tx-amount.debit  { color: var(--red); }
+.tx-amount.credit { color: var(--green); }
+
+.tx-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tx-btn {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: .15s;
+}
+
+.tx-btn:hover { border-color: var(--teal); color: var(--teal); }
+.tx-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+/* ── RECONCILE ── */
+.reconcile-diff {
+  text-align: center;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+
+.reconcile-diff.match {
+  background: rgba(34,211,160,.1);
+  border: 2px solid var(--green);
+}
+
+.reconcile-diff.mismatch {
+  background: rgba(248,113,113,.1);
+  border: 2px solid var(--red);
+}
+
+.reconcile-big {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 900;
+}
+
+/* ── CATEGORY GRID ── */
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.cat-item {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.cat-item .cat-emoji { font-size: 20px; margin-bottom: 4px; }
+.cat-item .cat-name  { font-size: 10px; color: var(--muted); font-weight: 700; }
+.cat-item .cat-amt   { font-family: 'Source Code Pro', monospace; font-size: 13px; font-weight: 600; }
+.cat-item .cat-amt.neg { color: var(--red); }
+.cat-item .cat-amt.pos { color: var(--green); }
+
+/* ── STATUS MESSAGES ── */
+.st { font-size: 12px; margin-top: 8px; padding: 8px 12px; border-radius: 6px; display: none; }
+.st.ok  { display:block; background:rgba(34,211,160,.1); color:var(--green); border:1px solid rgba(34,211,160,.3); }
+.st.err { display:block; background:rgba(248,113,113,.1); color:var(--red);   border:1px solid rgba(248,113,113,.3); }
+
+/* ── SEARCH ── */
+.search-bar {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--txt);
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 12px;
+}
+
+.search-bar:focus { border-color: var(--teal); }
+
+/* ── FILTER PILLS ── */
+.filter-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.pill {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--muted);
+  cursor: pointer;
+  transition: .15s;
+}
+
+.pill.active {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: rgba(0,212,170,.1);
+}
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+/* ── DIVIDER ── */
+.sep { height: 1px; background: var(--border); margin: 14px 0; }
+
+/* ── SMALL HELPERS ── */
+.fsb { display:flex; align-items:center; justify-content:space-between; }
+.fca { display:flex; align-items:center; }
+.gap8 { gap: 8px; }
+.mb8  { margin-bottom: 8px; }
+.mb12 { margin-bottom: 12px; }
+.txt-muted { color: var(--muted); font-size: 12px; }
+
+/* ── ACCOUNT SWITCHER ── */
+.acct-bar {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+}
+.acct-btn {
+  padding: 8px 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: .2s;
+  line-height: 1.4;
+}
+.acct-btn.active { border-color:var(--teal); background:rgba(0,212,170,.12); color:var(--teal); }
+.acct-btn.active-savings { border-color:var(--green); background:rgba(34,211,160,.12); color:var(--green); }
+.acct-btn.active-credit  { border-color:var(--red);   background:rgba(248,113,113,.12); color:var(--red); }
+.acct-btn.active-loan    { border-color:var(--gold);  background:rgba(245,197,24,.12);  color:var(--gold); }
+.acct-emoji { font-size:16px; display:block; margin-bottom:2px; }
+</style>
+</head>
+<body>
+
+<!-- ══ LOCK SCREEN ═══════════════════════════════════════════════════════ -->
+<div id="lock-screen">
+  <div class="lock-box">
+    <div class="lock-icon">🔒</div>
+    <div class="lock-title">✅ <span>John's</span> Checkbook</div>
+    <div class="lock-sub">PERSONAL FINANCE · SECURED</div>
+    <input type="password" id="lock-input" placeholder="••••" maxlength="10"
+      onkeydown="if(event.key==='Enter')checkLock()">
+    <button class="lock-btn" onclick="checkLock()">🔓 Open Checkbook</button>
+    <div class="lock-err" id="lock-err"></div>
+    <div class="lock-footer">John Lanter · AffiliateMediaHub Studio<br>Your data stays on this device only</div>
+  </div>
+</div>
+
+<!-- ══ APP ════════════════════════════════════════════════════════════════ -->
+<div id="app">
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-title">✅ <span>John's</span> Checkbook</div>
+      <div class="header-sub">AFFILIATEMEDIAHUB STUDIO · PERSONAL FINANCE TRACKER</div>
+    </div>
+    <button class="btn btn-ghost" onclick="exportCSV()" style="font-size:11px;padding:7px 12px">⬇ Export</button>
+  </div>
+
+  <!-- Account Switcher -->
+  <div class="acct-bar">
+    <div class="acct-btn active" id="acct-checking" onclick="switchAcct('checking')">
+      <span class="acct-emoji">🏦</span>CHECKING
+    </div>
+    <div class="acct-btn" id="acct-savings" onclick="switchAcct('savings')">
+      <span class="acct-emoji">💰</span>SAVINGS
+    </div>
+    <div class="acct-btn" id="acct-credit" onclick="switchAcct('credit')">
+      <span class="acct-emoji">💳</span>CREDIT CARD
+    </div>
+    <div class="acct-btn" id="acct-loan" onclick="switchAcct('loan')">
+      <span class="acct-emoji">🚗</span>AUTO LOANS
+    </div>
+  </div>
+
+  <!-- Balance Cards -->
+  <div class="balance-row">
+    <div class="bal-card">
+      <div class="bal-label" id="bal-main-label">MY BALANCE</div>
+      <div class="bal-amount positive" id="bal-checkbook">$0.00</div>
+    </div>
+    <div class="bal-card">
+      <div class="bal-label" id="bal-bank-label">BANK SAYS</div>
+      <div class="bal-amount neutral" id="bal-bank">$0.00</div>
+    </div>
+    <div class="bal-card">
+      <div class="bal-label">DIFFERENCE</div>
+      <div class="bal-amount" id="bal-diff">$0.00</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('register')"     id="tab-register">📋 Register</div>
+    <div class="tab"        onclick="switchTab('add')"          id="tab-add">➕ Add</div>
+    <div class="tab"        onclick="switchTab('reconcile')"    id="tab-reconcile">🔍 Reconcile</div>
+    <div class="tab"        onclick="switchTab('summary')"      id="tab-summary">📊 Summary</div>
+  </div>
+</div>
+
+<!-- ══ MAIN ════════════════════════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- ── REGISTER PANEL ─────────────────────────────────────────────────── -->
+  <div class="panel active" id="panel-register">
+
+    <div style="margin-top:14px">
+      <input class="search-bar" id="search-inp" placeholder="🔍 Search transactions..." oninput="renderRegister()">
+
+      <div class="filter-pills">
+        <div class="pill active" onclick="setFilter('all',this)">All</div>
+        <div class="pill" onclick="setFilter('debit',this)">Debits</div>
+        <div class="pill" onclick="setFilter('credit',this)">Credits</div>
+        <div class="pill" onclick="setFilter('uncleared',this)">Uncleared</div>
+        <div class="pill" onclick="setFilter('cleared',this)">Cleared</div>
+      </div>
+
+      <div class="tx-list" id="tx-list"></div>
+    </div>
+  </div>
+
+  <!-- ── ADD TRANSACTION PANEL ──────────────────────────────────────────── -->
+  <div class="panel" id="panel-add">
+    <div style="margin-top:14px">
+
+      <div class="card">
+        <div class="card-title">✏️ Add Transaction</div>
+
+        <!-- Debit / Credit toggle -->
+        <div class="type-toggle">
+          <div class="type-btn active-debit" id="type-debit" onclick="setType('debit')">
+            💸 Debit / Payment
+          </div>
+          <div class="type-btn" id="type-credit" onclick="setType('credit')">
+            💰 Credit / Deposit
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>DATE</label>
+            <input type="date" id="tx-date">
+          </div>
+          <div class="field">
+            <label>AMOUNT ($)</label>
+            <input type="number" id="tx-amount" placeholder="0.00" step="0.01" min="0">
+          </div>
+        </div>
+
+        <div class="form-row full">
+          <div class="field">
+            <label>DESCRIPTION / PAYEE</label>
+            <input type="text" id="tx-desc" placeholder="e.g. Walmart, Paycheck, Electric Bill">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>CATEGORY</label>
+            <select id="tx-cat">
+              <option value="Food & Groceries">🛒 Food & Groceries</option>
+              <option value="Gas & Auto">⛽ Gas & Auto</option>
+              <option value="Bills & Utilities">💡 Bills & Utilities</option>
+              <option value="Medical">🏥 Medical</option>
+              <option value="Income">💰 Income / Paycheck</option>
+              <option value="Transfer">🔄 Transfer</option>
+              <option value="Church & Giving">⛪ Church & Giving</option>
+              <option value="Home & Repairs">🏠 Home & Repairs</option>
+              <option value="Subscriptions">📱 Subscriptions</option>
+              <option value="Studio">🎙 Studio / Business</option>
+              <option value="Personal">👤 Personal</option>
+              <option value="Other">📌 Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>CHECK # (optional)</label>
+            <input type="text" id="tx-check" placeholder="e.g. 1042">
+          </div>
+        </div>
+
+        <div class="form-row full">
+          <div class="field">
+            <label>MEMO / NOTES (optional)</label>
+            <input type="text" id="tx-memo" placeholder="Optional note">
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <input type="checkbox" id="tx-cleared" style="width:16px;height:16px;cursor:pointer">
+          <label for="tx-cleared" style="font-size:13px;cursor:pointer;color:var(--muted)">Mark as cleared (already showing in bank)</label>
+        </div>
+
+        <button class="btn btn-teal btn-full" onclick="addTransaction()">✅ Add to Register</button>
+        <div class="st" id="add-st"></div>
+      </div>
+
+      <!-- Quick add chips -->
+      <div class="card">
+        <div class="card-title">⚡ Quick Add Common Transactions</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <span class="pill" onclick="quickFill('Walmart Groceries','Food & Groceries','debit')">🛒 Walmart</span>
+          <span class="pill" onclick="quickFill('Gas Station','Gas & Auto','debit')">⛽ Gas</span>
+          <span class="pill" onclick="quickFill('Electric Bill','Bills & Utilities','debit')">💡 Electric</span>
+          <span class="pill" onclick="quickFill('Water Bill','Bills & Utilities','debit')">💧 Water</span>
+          <span class="pill" onclick="quickFill('Church Offering','Church & Giving','debit')">⛪ Church</span>
+          <span class="pill" onclick="quickFill('Social Security','Income','credit')">💰 SS Check</span>
+          <span class="pill" onclick="quickFill('Paycheck','Income','credit')">💵 Paycheck</span>
+          <span class="pill" onclick="quickFill('Doctor Visit','Medical','debit')">🏥 Doctor</span>
+          <span class="pill" onclick="quickFill('Amazon Purchase','Personal','debit')">📦 Amazon</span>
+          <span class="pill" onclick="quickFill('ElevenLabs Subscription','Studio','debit')">🎙 ElevenLabs</span>
+        </div>
+      </div>
+
+      <!-- Set starting balance -->
+      <div class="card">
+        <div class="card-title">🏦 Set Starting Balance</div>
+        <div class="txt-muted mb8">Enter your current bank balance to start fresh. This sets your baseline.</div>
+        <div class="form-row">
+          <div class="field">
+            <label>STARTING BALANCE ($)</label>
+            <input type="number" id="start-bal" placeholder="e.g. 1250.00" step="0.01">
+          </div>
+          <div class="field" style="display:flex;align-items:flex-end">
+            <button class="btn btn-gold btn-full" onclick="setStartBalance()">💾 Set Balance</button>
+          </div>
+        </div>
+        <div class="st" id="start-st"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RECONCILE PANEL ─────────────────────────────────────────────────── -->
+  <div class="panel" id="panel-reconcile">
+    <div style="margin-top:14px">
+
+      <div class="card">
+        <div class="card-title">🔍 Reconcile with Bank Statement</div>
+        <div class="txt-muted mb8">Enter the ending balance from your bank statement to find any difference.</div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>BANK STATEMENT BALANCE ($)</label>
+            <input type="number" id="bank-bal" placeholder="0.00" step="0.01" oninput="updateBankBal()">
+          </div>
+          <div class="field">
+            <label>STATEMENT DATE</label>
+            <input type="date" id="stmt-date">
+          </div>
+        </div>
+      </div>
+
+      <!-- Difference display -->
+      <div class="reconcile-diff" id="rec-diff-box">
+        <div class="bal-label">DIFFERENCE (My Balance vs Bank)</div>
+        <div class="reconcile-big" id="rec-diff-amt">$0.00</div>
+        <div id="rec-diff-msg" style="font-size:13px;margin-top:8px;color:var(--muted)">Enter your bank balance above</div>
+      </div>
+
+      <!-- Uncleared transactions -->
+      <div class="card">
+        <div class="card-title">⏳ Uncleared Transactions</div>
+        <div class="txt-muted mb8">These haven't shown up in your bank yet. Check them off as they clear.</div>
+        <div id="uncleared-list"></div>
+      </div>
+
+      <!-- Reconcile tips -->
+      <div class="card" style="border-left:4px solid var(--gold)">
+        <div class="card-title">💡 How to Find the Difference</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+          <div style="background:var(--bg3);border-radius:6px;padding:10px">✅ Check if any deposits haven't cleared yet — subtract them from bank balance</div>
+          <div style="background:var(--bg3);border-radius:6px;padding:10px">✅ Check if any checks or payments haven't cleared — add them back</div>
+          <div style="background:var(--bg3);border-radius:6px;padding:10px">✅ Look for bank fees or interest not in your register</div>
+          <div style="background:var(--bg3);border-radius:6px;padding:10px">✅ Check for duplicate entries or wrong amounts</div>
+          <div style="background:var(--bg3);border-radius:6px;padding:10px">✅ Make sure you recorded every transaction</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SUMMARY PANEL ───────────────────────────────────────────────────── -->
+  <div class="panel" id="panel-summary">
+    <div style="margin-top:14px">
+
+      <!-- This month totals -->
+      <div class="card">
+        <div class="card-title">📅 This Month</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:rgba(34,211,160,.08);border:1px solid rgba(34,211,160,.2);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px">INCOME</div>
+            <div style="font-family:'Source Code Pro',monospace;font-size:20px;color:var(--green)" id="sum-income">$0.00</div>
+          </div>
+          <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">SPENDING</div>
+            <div style="font-family:'Source Code Pro',monospace;font-size:20px;color:var(--red)" id="sum-spending">$0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spending by category -->
+      <div class="card">
+        <div class="card-title">🏷 Spending by Category</div>
+        <div class="cat-grid" id="cat-grid"></div>
+      </div>
+
+      <!-- Recent summary -->
+      <div class="card">
+        <div class="card-title">📈 Transaction Count</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
+          <div style="background:var(--bg3);border-radius:8px;padding:12px">
+            <div style="font-size:22px;font-weight:700;color:var(--txt)" id="sum-total-count">0</div>
+            <div style="font-size:10px;color:var(--muted);font-weight:700">TOTAL</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:12px">
+            <div style="font-size:22px;font-weight:700;color:var(--red)" id="sum-debit-count">0</div>
+            <div style="font-size:10px;color:var(--muted);font-weight:700">DEBITS</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:12px">
+            <div style="font-size:22px;font-weight:700;color:var(--green)" id="sum-credit-count">0</div>
+            <div style="font-size:10px;color:var(--muted);font-weight:700">CREDITS</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="card" style="border-left:4px solid var(--red)">
+        <div class="card-title" style="color:var(--red)">⚠️ Data Management</div>
+        <div class="txt-muted mb12">All data is saved on this device only. Export regularly to keep a backup.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export CSV</button>
+          <button class="btn btn-ghost" onclick="importCSV()">⬆ Import CSV</button>
+          <button class="btn btn-ghost" style="border-color:var(--red);color:var(--red)" onclick="clearAll()">🗑 Clear All Data</button>
+        </div>
+        <input type="file" id="import-file" accept=".csv" style="display:none" onchange="handleImport(event)">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SAVINGS ACCOUNT PANEL ──────────────────────────────────────────── -->
+  <div class="panel" id="panel-savings" style="margin-top:14px">
+
+    <div class="card" style="border-left:4px solid var(--green)">
+      <div class="card-title">💰 Savings Account</div>
+      <div class="form-row">
+        <div class="field">
+          <label>CURRENT SAVINGS BALANCE ($)</label>
+          <input type="number" id="sav-balance" placeholder="0.00" step="0.01" oninput="savUpdateBal()">
+        </div>
+        <div class="field">
+          <label>INTEREST RATE (% APY)</label>
+          <input type="number" id="sav-rate" placeholder="e.g. 4.5" step="0.01" oninput="savUpdateBal()">
+        </div>
+      </div>
+      <button class="btn btn-teal btn-full" onclick="savSave()">💾 Save Savings Info</button>
+      <div class="st" id="sav-st"></div>
+    </div>
+
+    <div class="card" style="background:rgba(34,211,160,.05);border:1px solid rgba(34,211,160,.2)">
+      <div class="card-title">📈 Savings Summary</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:4px">CURRENT BALANCE</div>
+          <div style="font-family:'Source Code Pro',monospace;font-size:20px;color:var(--green)" id="sav-bal-disp">$0.00</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:10px;font-weight:700;color:var(--gold);margin-bottom:4px">MONTHLY INTEREST</div>
+          <div style="font-family:'Source Code Pro',monospace;font-size:20px;color:var(--gold)" id="sav-interest-disp">$0.00</div>
+        </div>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px">SAVINGS GOAL TRACKER</div>
+        <div class="form-row">
+          <div class="field">
+            <label>SAVINGS GOAL ($)</label>
+            <input type="number" id="sav-goal" placeholder="e.g. 5000" step="0.01" oninput="savUpdateBal()">
+          </div>
+          <div class="field" style="display:flex;align-items:flex-end">
+            <div style="width:100%">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:4px" id="sav-goal-pct">0% of goal</div>
+              <div style="height:8px;background:var(--bg2);border-radius:4px;overflow:hidden">
+                <div id="sav-goal-bar" style="height:100%;background:var(--green);border-radius:4px;width:0%;transition:width .4s"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📝 Savings Transaction Log</div>
+      <div class="type-toggle">
+        <div class="type-btn active-credit" id="sav-type-deposit" onclick="setSavType('deposit')">💰 Deposit</div>
+        <div class="type-btn" id="sav-type-withdraw" onclick="setSavType('withdraw')">💸 Withdrawal</div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>DATE</label>
+          <input type="date" id="sav-date">
+        </div>
+        <div class="field">
+          <label>AMOUNT ($)</label>
+          <input type="number" id="sav-amount" placeholder="0.00" step="0.01">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>DESCRIPTION</label>
+          <input type="text" id="sav-desc" placeholder="e.g. Transfer from checking, Interest earned">
+        </div>
+      </div>
+      <button class="btn btn-teal btn-full" onclick="savAddTx()">✅ Add Savings Transaction</button>
+      <div class="st" id="sav-tx-st"></div>
+      <div class="sep"></div>
+      <div id="sav-tx-list" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <!-- ── CREDIT CARD PANEL ───────────────────────────────────────────────── -->
+  <div class="panel" id="panel-credit" style="margin-top:14px">
+
+    <div class="card" style="border-left:4px solid var(--red)">
+      <div class="card-title">💳 Credit Card Setup</div>
+      <div class="form-row">
+        <div class="field">
+          <label>CARD NAME / BANK</label>
+          <input type="text" id="cc-name" placeholder="e.g. Chase Visa, Capital One">
+        </div>
+        <div class="field">
+          <label>CREDIT LIMIT ($)</label>
+          <input type="number" id="cc-limit" placeholder="e.g. 5000" step="0.01" oninput="ccUpdate()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>CURRENT BALANCE OWED ($)</label>
+          <input type="number" id="cc-balance" placeholder="0.00" step="0.01" oninput="ccUpdate()">
+        </div>
+        <div class="field">
+          <label>INTEREST RATE (% APR)</label>
+          <input type="number" id="cc-apr" placeholder="e.g. 22.99" step="0.01" oninput="ccUpdate()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>MINIMUM PAYMENT ($)</label>
+          <input type="number" id="cc-minpay" placeholder="0.00" step="0.01">
+        </div>
+        <div class="field">
+          <label>DUE DATE (each month)</label>
+          <input type="number" id="cc-dueday" placeholder="e.g. 15" min="1" max="31">
+        </div>
+      </div>
+      <button class="btn btn-full" style="background:var(--red);color:#000;border:none;border-radius:8px;padding:11px;font-weight:700;cursor:pointer" onclick="ccSave()">💾 Save Card Info</button>
+      <div class="st" id="cc-st"></div>
+    </div>
+
+    <!-- CC Summary -->
+    <div id="cc-summary-wrap" class="card" style="background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2)">
+      <div class="card-title">📊 Card Summary</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:10px;font-weight:700;color:var(--red);margin-bottom:4px">BALANCE OWED</div>
+          <div style="font-family:'Source Code Pro',monospace;font-size:20px;color:var(--red)" id="cc-bal-disp">$0.00</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:4px">AVAILABLE CREDIT</div>
+          <div style="font-family:'Source Code Pro',monospace;font-size:20px;color:var(--green)" id="cc-avail-disp">$0.00</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:10px;font-weight:700;color:var(--gold);margin-bottom:4px">MONTHLY INTEREST</div>
+          <div style="font-family:'Source Code Pro',monospace;font-size:16px;color:var(--gold)" id="cc-interest-disp">$0.00</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px">UTILIZATION</div>
+          <div style="font-family:'Source Code Pro',monospace;font-size:16px" id="cc-util-disp">0%</div>
+        </div>
+      </div>
+      <!-- Utilization bar -->
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Credit Utilization (keep under 30%)</div>
+      <div style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden;margin-bottom:12px">
+        <div id="cc-util-bar" style="height:100%;border-radius:5px;width:0%;transition:width .4s;background:var(--green)"></div>
+      </div>
+      <div id="cc-due-notice" style="font-size:12px;color:var(--gold);font-weight:700"></div>
+    </div>
+
+    <!-- CC Transaction Log -->
+    <div class="card">
+      <div class="card-title">📝 Card Transactions</div>
+      <div class="type-toggle">
+        <div class="type-btn active-debit" id="cc-type-charge" onclick="setCCType('charge')">💳 Charge</div>
+        <div class="type-btn" id="cc-type-payment" onclick="setCCType('payment')">💰 Payment</div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>DATE</label>
+          <input type="date" id="cc-tx-date">
+        </div>
+        <div class="field">
+          <label>AMOUNT ($)</label>
+          <input type="number" id="cc-tx-amount" placeholder="0.00" step="0.01">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>DESCRIPTION / MERCHANT</label>
+          <input type="text" id="cc-tx-desc" placeholder="e.g. Walmart, Amazon, Monthly payment">
+        </div>
+      </div>
+      <button class="btn btn-full" style="background:var(--red);color:#000;border:none;border-radius:8px;padding:11px;font-weight:700;cursor:pointer" onclick="ccAddTx()">✅ Add Card Transaction</button>
+      <div class="st" id="cc-tx-st"></div>
+      <div class="sep"></div>
+      <div id="cc-tx-list" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <!-- ── AUTO LOANS PANEL ────────────────────────────────────────────────── -->
+  <div class="panel" id="panel-loan" style="margin-top:14px">
+
+    <!-- VEHICLE SELECTOR -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div class="acct-btn active" id="vehicle-chevy" onclick="switchVehicle('chevy')" style="padding:12px;font-size:12px">
+        <span class="acct-emoji">🛻</span>CHEVY COLORADO
+      </div>
+      <div class="acct-btn" id="vehicle-kia" onclick="switchVehicle('kia')" style="padding:12px;font-size:12px">
+        <span class="acct-emoji">🚗</span>KIA SELTOS
+      </div>
+    </div>
+
+    <!-- CHEVY COLORADO -->
+    <div id="loan-chevy-wrap">
+      <div class="card" style="border-left:4px solid var(--gold)">
+        <div class="card-title">🛻 Chevy Colorado Loan</div>
+        <div class="form-row">
+          <div class="field">
+            <label>LENDER / BANK</label>
+            <input type="text" id="loan-lender" placeholder="e.g. Chase Auto, GM Financial">
+          </div>
+          <div class="field">
+            <label>ORIGINAL LOAN AMOUNT ($)</label>
+            <input type="number" id="loan-original" placeholder="0.00" step="0.01" oninput="loanUpdate()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>CURRENT BALANCE OWED ($)</label>
+            <input type="number" id="loan-balance" placeholder="0.00" step="0.01" oninput="loanUpdate()">
+          </div>
+          <div class="field">
+            <label>INTEREST RATE (% APR)</label>
+            <input type="number" id="loan-rate" placeholder="e.g. 6.9" step="0.01" oninput="loanUpdate()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>MONTHLY PAYMENT ($)</label>
+            <input type="number" id="loan-payment" placeholder="0.00" step="0.01" oninput="loanUpdate()">
+          </div>
+          <div class="field">
+            <label>DUE DATE (day of month)</label>
+            <input type="number" id="loan-dueday" placeholder="e.g. 15" min="1" max="31">
+          </div>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="loanSave()">💾 Save Chevy Info</button>
+        <div class="st" id="loan-st"></div>
+      </div>
+      <div class="card" style="background:rgba(245,197,24,.05);border:1px solid rgba(245,197,24,.25)">
+        <div class="card-title" style="color:var(--gold)">🛻 Chevy Colorado — Summary</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--red);margin-bottom:4px">BALANCE OWED</div>
+            <div style="font-family:'Source Code Pro',monospace;font-size:20px;color:var(--red)" id="loan-bal-disp">$0.00</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--gold);margin-bottom:4px">MONTHLY PAYMENT</div>
+            <div style="font-family:'Source Code Pro',monospace;font-size:20px;color:var(--gold)" id="loan-pay-disp">$0.00</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px">MONTHLY INTEREST</div>
+            <div style="font-family:'Source Code Pro',monospace;font-size:16px;color:var(--muted)" id="loan-int-disp">$0.00</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:4px">PRINCIPAL PAID</div>
+            <div style="font-family:'Source Code Pro',monospace;font-size:16px;color:var(--green)" id="loan-principal-disp">$0.00</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Loan Payoff Progress</div>
+        <div style="height:12px;background:var(--bg3);border-radius:6px;overflow:hidden;margin-bottom:8px">
+          <div id="loan-progress-bar" style="height:100%;border-radius:6px;width:0%;background:var(--gold);transition:width .4s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+          <span id="loan-pct-paid">0% paid off</span>
+          <span id="loan-months-left">-- months remaining</span>
+        </div>
+        <div id="loan-due-notice" style="font-size:12px;color:var(--gold);font-weight:700;margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📝 Chevy Payment History</div>
+        <div class="form-row">
+          <div class="field"><label>PAYMENT DATE</label><input type="date" id="loan-tx-date"></div>
+          <div class="field"><label>AMOUNT ($)</label><input type="number" id="loan-tx-amount" placeholder="0.00" step="0.01"></div>
+        </div>
+        <div class="form-row full">
+          <div class="field"><label>NOTES</label><input type="text" id="loan-tx-note" placeholder="e.g. Regular payment, Extra principal"></div>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="loanAddPayment()">✅ Record Chevy Payment</button>
+        <div class="st" id="loan-tx-st"></div>
+        <div class="sep"></div>
+        <div id="loan-tx-list" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <!-- KIA SELTOS -->
+    <div id="loan-kia-wrap" style="display:none">
+      <div class="card" style="border-left:4px solid var(--teal)">
+        <div class="card-title">🚗 Kia Seltos Loan</div>
+        <div class="form-row">
+          <div class="field">
+            <label>LENDER / BANK</label>
+            <input type="text" id="kia-lender" placeholder="Kia Finance America">
+          </div>
+          <div class="field">
+            <label>ORIGINAL LOAN AMOUNT ($)</label>
+            <input type="number" id="kia-original" placeholder="0.00" step="0.01" oninput="kiaUpdate()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>CURRENT BALANCE OWED ($)</label>
+            <input type="number" id="kia-balance" placeholder="25647.49" step="0.01" oninput="kiaUpdate()">
+          </div>
+          <div class="field">
+            <label>INTEREST RATE (% APR)</label>
+            <input type="number" id="kia-rate" placeholder="e.g. 6.9" step="0.01" oninput="kiaUpdate()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>MONTHLY PAYMENT ($)</label>
+            <input type="number" id="kia-payment" placeholder="596.95" step="0.01" oninput="kiaUpdate()">
+          </div>
+          <div class="field">
+            <label>DUE DATE (day of month)</label>
+            <input type="number" id="kia-dueday" placeholder="e.g. 15" min="1" max="31">
+          </div>
+        </div>
+        <button class="btn btn-teal btn-full" onclick="kiaSave()">💾 Save Kia Info</button>
+        <div class="st" id="kia-st"></div>
+      </div>
+
+      <div class="card" style="background:rgba(0,212,170,.05);border:1px solid rgba(0,212,170,.25)">
+        <div class="card-title" style="color:var(--teal)">🚗 Kia Seltos — Summary</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--red);margin-bottom:4px">BALANCE OWED</div>
+            <div style="font-family:'Source Code Pro',monospace;font-size:20px;color:var(--red)" id="kia-bal-disp">$25,647.49</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--teal);margin-bottom:4px">MONTHLY PAYMENT</div>
+            <div style="font-family:'Source Code Pro',monospace;font-size:20px;color:var(--teal)" id="kia-pay-disp">$596.95</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px">MONTHLY INTEREST</div>
+            <div style="font-family:'Source Code Pro',monospace;font-size:16px;color:var(--muted)" id="kia-int-disp">$0.00</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:4px">PRINCIPAL/PAYMENT</div>
+            <div style="font-family:'Source Code Pro',monospace;font-size:16px;color:var(--green)" id="kia-principal-disp">$0.00</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Loan Payoff Progress</div>
+        <div style="height:12px;background:var(--bg3);border-radius:6px;overflow:hidden;margin-bottom:8px">
+          <div id="kia-progress-bar" style="height:100%;border-radius:6px;width:0%;background:var(--teal);transition:width .4s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+          <span id="kia-pct-paid">0% paid off</span>
+          <span id="kia-months-left">-- months remaining</span>
+        </div>
+        <div id="kia-due-notice" style="font-size:12px;color:var(--teal);font-weight:700;margin-top:8px"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📝 Kia Payment History</div>
+        <div class="form-row">
+          <div class="field"><label>PAYMENT DATE</label><input type="date" id="kia-tx-date"></div>
+          <div class="field"><label>AMOUNT ($)</label><input type="number" id="kia-tx-amount" placeholder="596.95" step="0.01"></div>
+        </div>
+        <div class="form-row full">
+          <div class="field"><label>NOTES</label><input type="text" id="kia-tx-note" placeholder="e.g. Monthly payment, Extra principal"></div>
+        </div>
+        <button class="btn btn-teal btn-full" onclick="kiaAddPayment()">✅ Record Kia Payment</button>
+        <div class="st" id="kia-tx-st"></div>
+        <div class="sep"></div>
+        <div id="kia-tx-list" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /main -->
+
+<script>
+// ── Vehicle switcher ──────────────────────────────────────────────────────
+var currentVehicle = 'chevy';
+function switchVehicle(v) {
+  currentVehicle = v;
+  var cb=document.getElementById('vehicle-chevy'), kb=document.getElementById('vehicle-kia');
+  var cw=document.getElementById('loan-chevy-wrap'), kw=document.getElementById('loan-kia-wrap');
+  if(cb) cb.className='acct-btn'+(v==='chevy'?' active':'');
+  if(kb) kb.className='acct-btn'+(v==='kia'?' active-savings':'');
+  if(cw) cw.style.display=v==='chevy'?'block':'none';
+  if(kw) kw.style.display=v==='kia'?'block':'none';
+  if(v==='kia') kiaLoad();
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────
+var STORE_KEY = 'johns_checkbook_v1';
+var currentAcct = 'checking';
+var currentFilter = 'all';
+
+function getData() { try { return JSON.parse(localStorage.getItem(STORE_KEY)||'{"transactions":[],"startBalance":0,"bankBalance":0}'); } catch(e) { return {transactions:[],startBalance:0,bankBalance:0}; } }
+function saveData(d) { localStorage.setItem(STORE_KEY,JSON.stringify(d)); }
+function getAcctData(a) { try { return JSON.parse(localStorage.getItem('jcb_'+a)||'{}'); } catch(e) { return {}; } }
+function setAcctData(a,d) { localStorage.setItem('jcb_'+a,JSON.stringify(d)); }
+
+// ── Format currency ───────────────────────────────────────────────────────
+function fmt(n) {
+  var abs=Math.abs(n).toFixed(2), parts=abs.split('.');
+  parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return (n<0?'-$':'$')+parts.join('.');
+}
+
+// ── Category emoji ────────────────────────────────────────────────────────
+var CAT_EMOJI = {'Food & Groceries':'🛒','Gas & Auto':'⛽','Bills & Utilities':'💡','Medical':'🏥','Income':'💰','Transfer':'🔄','Church & Giving':'⛪','Home & Repairs':'🏠','Subscriptions':'📱','Studio':'🎙','Personal':'👤','Other':'📌'};
+
+// ── Account switcher ──────────────────────────────────────────────────────
+function switchAcct(acct) {
+  currentAcct = acct;
+  ['checking','savings','credit','loan'].forEach(a => {
+    var btn=document.getElementById('acct-'+a);
+    if(btn) btn.className='acct-btn'+(a===acct?(' active'+(a!=='checking'?'-'+a:'')):'');
+  });
+  ['register','add','reconcile','summary'].forEach(p => {
+    var el=document.getElementById('panel-'+p); if(el) el.style.display=(acct==='checking'?'':'none');
+  });
+  ['savings','credit','loan'].forEach(p => {
+    var el=document.getElementById('panel-'+p); if(el) el.style.display=(acct===p?'block':'none');
+  });
+  var tabs=document.querySelector('.tabs'); if(tabs) tabs.style.display=(acct==='checking'?'flex':'none');
+  updateAcctHeader(acct);
+  if(acct==='savings') savUpdate();
+  if(acct==='credit')  ccLoad();
+  if(acct==='loan')    { loanLoad(); kiaLoad(); }
+}
+
+function updateAcctHeader(acct) {
+  var ml=document.getElementById('bal-main-label'), bl=document.getElementById('bal-bank-label');
+  var labels={checking:['MY BALANCE','BANK SAYS'],savings:['SAVINGS BAL','GOAL'],credit:['BALANCE OWED','AVAILABLE'],loan:['KIA BALANCE','KIA PAYMENT']};
+  var lbl=labels[acct]||labels.checking;
+  if(ml) ml.textContent=lbl[0]; if(bl) bl.textContent=lbl[1];
+  if(acct==='checking') { updateHeaderBalances(); return; }
+  var cb=document.getElementById('bal-checkbook'), bb=document.getElementById('bal-bank'), db=document.getElementById('bal-diff');
+  if(acct==='savings') {
+    var d=getAcctData('savings'); var pct=d.goal?Math.min(100,((d.balance||0)/d.goal*100)):0;
+    if(cb){cb.textContent=fmt(d.balance||0);cb.className='bal-amount positive';}
+    if(bb){bb.textContent=fmt(d.goal||0);bb.className='bal-amount neutral';}
+    if(db){db.textContent=pct.toFixed(0)+'%';db.className='bal-amount '+(pct>=100?'positive':'neutral');}
+  } else if(acct==='credit') {
+    var d=getAcctData('credit'); var avail=Math.max(0,(d.limit||0)-(d.balance||0));
+    if(cb){cb.textContent=fmt(d.balance||0);cb.className='bal-amount negative';}
+    if(bb){bb.textContent=fmt(avail);bb.className='bal-amount positive';}
+    if(db){db.textContent=fmt(d.limit||0);db.className='bal-amount neutral';}
+  } else if(acct==='loan') {
+    var dk=getAcctData('kia');
+    if(cb){cb.textContent=fmt(dk.balance||25647.49);cb.className='bal-amount negative';}
+    if(bb){bb.textContent=fmt(dk.payment||596.95);bb.className='bal-amount neutral';}
+    if(db){db.textContent='$596.95';db.className='bal-amount neutral';}
+  }
+}
+
+// ── Checking balance ──────────────────────────────────────────────────────
+function calcBalance() {
+  var d=getData(); var bal=d.startBalance||0;
+  (d.transactions||[]).forEach(tx => { if(tx.type==='credit') bal+=tx.amount; else bal-=tx.amount; });
+  return bal;
+}
+
+function updateHeaderBalances() {
+  var d=getData(); var myBal=calcBalance(); var bnBal=d.bankBalance||0; var diff=myBal-bnBal;
+  var cb=document.getElementById('bal-checkbook'), bb=document.getElementById('bal-bank'), db=document.getElementById('bal-diff');
+  if(cb){cb.textContent=fmt(myBal);cb.className='bal-amount '+(myBal>=0?'positive':'negative');}
+  if(bb){bb.textContent=fmt(bnBal);bb.className='bal-amount neutral';}
+  if(db){db.textContent=fmt(diff);db.className='bal-amount '+(Math.abs(diff)<0.01?'positive':'negative');}
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  var pg=document.getElementById('panel-'+id); if(pg) pg.classList.add('active');
+  var tb=document.getElementById('tab-'+id);   if(tb) tb.classList.add('active');
+  if(id==='register')  renderRegister();
+  if(id==='reconcile') renderReconcile();
+  if(id==='summary')   renderSummary();
+}
+
+// ── Type toggle ───────────────────────────────────────────────────────────
+var currentType='debit';
+function setType(t) {
+  currentType=t;
+  document.getElementById('type-debit').className='type-btn'+(t==='debit'?' active-debit':'');
+  document.getElementById('type-credit').className='type-btn'+(t==='credit'?' active-credit':'');
+}
+
+// ── Filter ────────────────────────────────────────────────────────────────
+function setFilter(f,el) {
+  currentFilter=f;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderRegister();
+}
+
+// ── Add transaction ───────────────────────────────────────────────────────
+function addTransaction() {
+  var date=document.getElementById('tx-date').value, amount=parseFloat(document.getElementById('tx-amount').value);
+  var desc=document.getElementById('tx-desc').value.trim(), cat=document.getElementById('tx-cat').value;
+  var check=document.getElementById('tx-check').value.trim(), memo=document.getElementById('tx-memo').value.trim();
+  var cleared=document.getElementById('tx-cleared').checked;
+  if(!date){showSt('add-st','err','Please enter a date.');return;}
+  if(!amount||amount<=0){showSt('add-st','err','Please enter a valid amount.');return;}
+  if(!desc){showSt('add-st','err','Please enter a description.');return;}
+  var d=getData();
+  d.transactions.unshift({id:'tx'+Date.now(),date,amount,desc,cat,check,memo,cleared,type:currentType,created:new Date().toISOString()});
+  saveData(d);
+  document.getElementById('tx-amount').value=''; document.getElementById('tx-desc').value='';
+  document.getElementById('tx-check').value='';  document.getElementById('tx-memo').value='';
+  document.getElementById('tx-cleared').checked=false;
+  showSt('add-st','ok','✅ Added! '+(currentType==='debit'?'💸':'💰')+' '+desc+' — '+fmt(amount));
+  updateHeaderBalances();
+}
+
+function setStartBalance() {
+  var val=parseFloat(document.getElementById('start-bal').value);
+  if(isNaN(val)){showSt('start-st','err','Enter a valid amount.');return;}
+  var d=getData(); d.startBalance=val; saveData(d);
+  updateHeaderBalances(); showSt('start-st','ok','✅ Starting balance set to '+fmt(val));
+}
+
+function quickFill(desc,cat,type) {
+  setType(type);
+  document.getElementById('tx-desc').value=desc; document.getElementById('tx-cat').value=cat;
+  document.getElementById('tx-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('tx-amount').focus(); switchTab('add');
+}
+
+// ── Register ──────────────────────────────────────────────────────────────
+function renderRegister() {
+  var d=getData(); var search=(document.getElementById('search-inp')?.value||'').toLowerCase();
+  var txs=[...( d.transactions||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  var ordered=[...(d.transactions||[])].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  var balMap={}, bal=d.startBalance||0;
+  ordered.forEach(tx=>{if(tx.type==='credit') bal+=tx.amount; else bal-=tx.amount; balMap[tx.id]=bal;});
+  if(currentFilter==='debit')     txs=txs.filter(t=>t.type==='debit');
+  if(currentFilter==='credit')    txs=txs.filter(t=>t.type==='credit');
+  if(currentFilter==='cleared')   txs=txs.filter(t=>t.cleared);
+  if(currentFilter==='uncleared') txs=txs.filter(t=>!t.cleared);
+  if(search) txs=txs.filter(t=>t.desc.toLowerCase().includes(search)||t.cat.toLowerCase().includes(search)||(t.memo&&t.memo.toLowerCase().includes(search))||(t.check&&t.check.includes(search)));
+  var el=document.getElementById('tx-list');
+  if(!txs.length){el.innerHTML='<div class="empty"><div class="empty-icon">📋</div>'+(search?'No transactions match.':'No transactions yet — tap ➕ Add to start.')+'</div>';return;}
+  el.innerHTML=txs.map(tx=>{
+    var emoji=CAT_EMOJI[tx.cat]||'📌'; var running=balMap[tx.id];
+    return '<div class="tx-item '+tx.type+(tx.cleared?' cleared':'')+'">'+
+      '<div class="tx-icon">'+emoji+'</div>'+
+      '<div class="tx-body">'+
+        '<div class="tx-desc">'+tx.desc+'</div>'+
+        '<div class="tx-meta"><span>'+tx.date+'</span><span class="tx-badge">'+tx.cat+'</span>'+
+        (tx.check?'<span class="tx-badge">Chk #'+tx.check+'</span>':'')+
+        (tx.cleared?'<span class="tx-badge" style="color:var(--green)">✓ Cleared</span>':'<span class="tx-badge" style="color:var(--gold)">⏳ Pending</span>')+
+        (tx.memo?'<span style="color:var(--muted);font-style:italic">'+tx.memo+'</span>':'')+
+        '</div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">Balance after: <span style="font-family:monospace;color:'+(running>=0?'var(--green)':'var(--red)')+'">'+fmt(running)+'</span></div>'+
+      '</div>'+
+      '<div class="tx-amount '+tx.type+'">'+(tx.type==='debit'?'-':'+')+fmt(tx.amount)+'</div>'+
+      '<div class="tx-actions">'+
+        '<button class="tx-btn" onclick="toggleCleared(\''+tx.id+'\')">'+(tx.cleared?'↩':'✓')+'</button>'+
+        '<button class="tx-btn danger" onclick="deleteTx(\''+tx.id+'\')">✕</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function toggleCleared(id) {
+  var d=getData(); var tx=d.transactions.find(t=>t.id===id);
+  if(tx){tx.cleared=!tx.cleared;saveData(d);} renderRegister(); updateHeaderBalances();
+}
+
+function deleteTx(id) {
+  if(!confirm('Delete this transaction?')) return;
+  var d=getData(); d.transactions=d.transactions.filter(t=>t.id!==id);
+  saveData(d); renderRegister(); updateHeaderBalances();
+}
+
+// ── Reconcile ─────────────────────────────────────────────────────────────
+function updateBankBal() {
+  var val=parseFloat(document.getElementById('bank-bal').value); if(isNaN(val)) val=0;
+  var d=getData(); d.bankBalance=val; saveData(d);
+  updateHeaderBalances(); renderReconcile();
+}
+
+function renderReconcile() {
+  var d=getData(); var myBal=calcBalance(); var bnBal=d.bankBalance||0; var diff=myBal-bnBal;
+  var isMatch=Math.abs(diff)<0.01;
+  var box=document.getElementById('rec-diff-box'), amt=document.getElementById('rec-diff-amt'), msg=document.getElementById('rec-diff-msg');
+  if(box) box.className='reconcile-diff '+(isMatch?'match':'mismatch');
+  if(amt){amt.textContent=fmt(Math.abs(diff));amt.style.color=isMatch?'var(--green)':'var(--red)';}
+  if(msg){msg.textContent=isMatch?'🎉 Perfect! Your checkbook matches the bank!':diff>0?'Your checkbook is '+fmt(Math.abs(diff))+' MORE than the bank.':'Your checkbook is '+fmt(Math.abs(diff))+' LESS than the bank.';msg.style.color=isMatch?'var(--green)':diff>0?'var(--red)':'var(--gold)';}
+  var uncleared=(d.transactions||[]).filter(t=>!t.cleared).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  var el=document.getElementById('uncleared-list');
+  if(!el) return;
+  if(!uncleared.length){el.innerHTML='<div class="txt-muted">All transactions cleared ✅</div>';return;}
+  el.innerHTML=uncleared.map(tx=>'<div class="tx-item '+tx.type+'" style="margin-bottom:6px"><div class="tx-icon">'+(CAT_EMOJI[tx.cat]||'📌')+'</div><div class="tx-body"><div class="tx-desc">'+tx.desc+'</div><div class="tx-meta">'+tx.date+'</div></div><div class="tx-amount '+tx.type+'">'+(tx.type==='debit'?'-':'+')+fmt(tx.amount)+'</div><button class="tx-btn" onclick="toggleCleared(\''+tx.id+'\')">✓ Clear</button></div>').join('');
+}
+
+// ── Summary ───────────────────────────────────────────────────────────────
+function renderSummary() {
+  var d=getData(); var txs=d.transactions||[]; var now=new Date();
+  var thisMonth=txs.filter(t=>{var td=new Date(t.date);return td.getMonth()===now.getMonth()&&td.getFullYear()===now.getFullYear();});
+  var income=thisMonth.filter(t=>t.type==='credit').reduce((s,t)=>s+t.amount,0);
+  var spending=thisMonth.filter(t=>t.type==='debit').reduce((s,t)=>s+t.amount,0);
+  var el=id=>document.getElementById(id);
+  if(el('sum-income'))       el('sum-income').textContent=fmt(income);
+  if(el('sum-spending'))     el('sum-spending').textContent=fmt(spending);
+  if(el('sum-total-count'))  el('sum-total-count').textContent=txs.length;
+  if(el('sum-debit-count'))  el('sum-debit-count').textContent=txs.filter(t=>t.type==='debit').length;
+  if(el('sum-credit-count')) el('sum-credit-count').textContent=txs.filter(t=>t.type==='credit').length;
+  var cats={};
+  txs.forEach(t=>{if(t.type==='debit') cats[t.cat]=(cats[t.cat]||0)+t.amount;});
+  var sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  var grid=document.getElementById('cat-grid');
+  if(!grid) return;
+  if(!sorted.length){grid.innerHTML='<div class="txt-muted" style="grid-column:1/-1;text-align:center;padding:20px">No spending data yet.</div>';return;}
+  grid.innerHTML=sorted.slice(0,9).map(([cat,amt])=>'<div class="cat-item"><div class="cat-emoji">'+(CAT_EMOJI[cat]||'📌')+'</div><div class="cat-name">'+cat+'</div><div class="cat-amt neg">'+fmt(amt)+'</div></div>').join('');
+}
+
+// ── Status messages ───────────────────────────────────────────────────────
+function showSt(id,type,msg) {
+  var el=document.getElementById(id); if(!el) return;
+  el.textContent=msg; el.className='st '+(type==='ok'?'ok':'err');
+  if(type==='ok') setTimeout(()=>{if(el) el.className='st';},4000);
+}
+
+// ── Export CSV ────────────────────────────────────────────────────────────
+function exportCSV() {
+  var d=getData(); var txs=d.transactions||[];
+  if(!txs.length){alert('No transactions to export.');return;}
+  var rows=[['Date','Type','Description','Category','Amount','Check#','Memo','Cleared']];
+  txs.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(tx=>{rows.push([tx.date,tx.type,tx.desc,tx.cat,(tx.type==='debit'?'-':'')+tx.amount.toFixed(2),tx.check||'',tx.memo||'',tx.cleared?'Yes':'No']);});
+  var csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  var blob=new Blob([csv],{type:'text/csv'}); var url=URL.createObjectURL(blob);
+  var a=document.createElement('a'); a.href=url; a.download='johns-checkbook-'+new Date().toISOString().split('T')[0]+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function importCSV() { document.getElementById('import-file').click(); }
+function handleImport(e) {
+  var file=e.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var lines=ev.target.result.split('\n').slice(1); var d=getData(); var added=0;
+    lines.forEach(line=>{
+      if(!line.trim()) return;
+      var cols=line.split(',').map(c=>c.replace(/^"|"$/g,'').replace(/""/g,'"'));
+      if(cols.length<5) return;
+      d.transactions.push({id:'imp'+Date.now()+Math.random(),date:cols[0],type:cols[1],desc:cols[2],cat:cols[3],amount:Math.abs(parseFloat(cols[4])||0),check:cols[5]||'',memo:cols[6]||'',cleared:cols[7]==='Yes',created:new Date().toISOString()});
+      added++;
+    });
+    saveData(d); updateHeaderBalances(); renderRegister(); alert('✅ Imported '+added+' transactions!');
+  };
+  reader.readAsText(file);
+}
+
+function clearAll() {
+  if(!confirm('Delete ALL checkbook data?')) return;
+  if(!confirm('Are you 100% sure?')) return;
+  localStorage.removeItem(STORE_KEY); updateHeaderBalances(); renderRegister(); alert('All data cleared.');
+}
+
+// ── SAVINGS ───────────────────────────────────────────────────────────────
+var savTxType='deposit';
+function setSavType(t){savTxType=t;document.getElementById('sav-type-deposit').className='type-btn'+(t==='deposit'?' active-credit':'');document.getElementById('sav-type-withdraw').className='type-btn'+(t==='withdraw'?' active-debit':'');}
+function savSave(){var d=getAcctData('savings');d.balance=parseFloat(document.getElementById('sav-balance')?.value)||d.balance||0;d.rate=parseFloat(document.getElementById('sav-rate')?.value)||d.rate||0;d.goal=parseFloat(document.getElementById('sav-goal')?.value)||d.goal||0;setAcctData('savings',d);savUpdate();showSt('sav-st','ok','✅ Savings saved!');updateAcctHeader('savings');}
+function savUpdateBal(){var bal=parseFloat(document.getElementById('sav-balance')?.value)||0;var rate=parseFloat(document.getElementById('sav-rate')?.value)||0;var goal=parseFloat(document.getElementById('sav-goal')?.value)||0;var monthly=(bal*(rate/100))/12;var pct=goal?Math.min(100,(bal/goal*100)):0;var el=id=>document.getElementById(id);if(el('sav-bal-disp'))el('sav-bal-disp').textContent=fmt(bal);if(el('sav-interest-disp'))el('sav-interest-disp').textContent=fmt(monthly);if(el('sav-goal-pct'))el('sav-goal-pct').textContent=pct.toFixed(1)+'% of goal';if(el('sav-goal-bar'))el('sav-goal-bar').style.width=pct+'%';}
+function savUpdate(){var d=getAcctData('savings');if(document.getElementById('sav-balance'))document.getElementById('sav-balance').value=d.balance||'';if(document.getElementById('sav-rate'))document.getElementById('sav-rate').value=d.rate||'';if(document.getElementById('sav-goal'))document.getElementById('sav-goal').value=d.goal||'';savUpdateBal();savRenderTx();}
+function savAddTx(){var date=document.getElementById('sav-date')?.value;var amount=parseFloat(document.getElementById('sav-amount')?.value);var desc=document.getElementById('sav-desc')?.value.trim();if(!date||!amount||!desc){showSt('sav-tx-st','err','Fill in all fields.');return;}var d=getAcctData('savings');if(!d.txs)d.txs=[];d.txs.unshift({id:'s'+Date.now(),date,amount,desc,type:savTxType});if(savTxType==='deposit')d.balance=(d.balance||0)+amount;else d.balance=Math.max(0,(d.balance||0)-amount);setAcctData('savings',d);if(document.getElementById('sav-amount'))document.getElementById('sav-amount').value='';if(document.getElementById('sav-desc'))document.getElementById('sav-desc').value='';savUpdate();updateAcctHeader('savings');showSt('sav-tx-st','ok','✅ Transaction added!');}
+function savRenderTx(){var d=getAcctData('savings');var el=document.getElementById('sav-tx-list');if(!el)return;var txs=d.txs||[];if(!txs.length){el.innerHTML='<div class="txt-muted" style="text-align:center;padding:16px">No transactions yet.</div>';return;}el.innerHTML=txs.slice(0,20).map(tx=>'<div class="tx-item '+(tx.type==='deposit'?'credit':'debit')+'" style="margin-bottom:6px"><div class="tx-icon">'+(tx.type==='deposit'?'💰':'💸')+'</div><div class="tx-body"><div class="tx-desc">'+tx.desc+'</div><div class="tx-meta">'+tx.date+'</div></div><div class="tx-amount '+(tx.type==='deposit'?'credit':'debit')+'">'+(tx.type==='deposit'?'+':'-')+fmt(tx.amount)+'</div><button class="tx-btn danger" onclick="savDelTx(\''+tx.id+'\')">✕</button></div>').join('');}
+function savDelTx(id){if(!confirm('Delete?'))return;var d=getAcctData('savings');d.txs=(d.txs||[]).filter(t=>t.id!==id);setAcctData('savings',d);savUpdate();updateAcctHeader('savings');}
+
+// ── CREDIT CARD ───────────────────────────────────────────────────────────
+var ccTxType='charge';
+function setCCType(t){ccTxType=t;document.getElementById('cc-type-charge').className='type-btn'+(t==='charge'?' active-debit':'');document.getElementById('cc-type-payment').className='type-btn'+(t==='payment'?' active-credit':'');}
+function ccSave(){var d=getAcctData('credit');d.name=document.getElementById('cc-name')?.value.trim()||'Credit Card';d.limit=parseFloat(document.getElementById('cc-limit')?.value)||d.limit||0;d.balance=parseFloat(document.getElementById('cc-balance')?.value)||d.balance||0;d.apr=parseFloat(document.getElementById('cc-apr')?.value)||d.apr||0;d.minpay=parseFloat(document.getElementById('cc-minpay')?.value)||d.minpay||0;d.dueday=parseInt(document.getElementById('cc-dueday')?.value)||d.dueday||1;setAcctData('credit',d);ccUpdate();showSt('cc-st','ok','✅ Card info saved!');updateAcctHeader('credit');}
+function ccUpdate(){var d=getAcctData('credit');var bal=parseFloat(document.getElementById('cc-balance')?.value)||d.balance||0;var limit=parseFloat(document.getElementById('cc-limit')?.value)||d.limit||0;var apr=parseFloat(document.getElementById('cc-apr')?.value)||d.apr||0;var avail=Math.max(0,limit-bal);var monthly=(bal*(apr/100))/12;var util=limit?Math.min(100,(bal/limit*100)):0;var el=id=>document.getElementById(id);if(el('cc-bal-disp'))el('cc-bal-disp').textContent=fmt(bal);if(el('cc-avail-disp'))el('cc-avail-disp').textContent=fmt(avail);if(el('cc-interest-disp'))el('cc-interest-disp').textContent=fmt(monthly);if(el('cc-util-disp')){el('cc-util-disp').textContent=util.toFixed(0)+'%';el('cc-util-disp').style.color=util>30?'var(--red)':'var(--green)';}if(el('cc-util-bar')){el('cc-util-bar').style.width=util+'%';el('cc-util-bar').style.background=util>30?'var(--red)':util>10?'var(--gold)':'var(--green)';}var dueday=d.dueday||0;if(dueday){var now=new Date();var due=new Date(now.getFullYear(),now.getMonth(),dueday);if(due<now)due=new Date(now.getFullYear(),now.getMonth()+1,dueday);var days=Math.ceil((due-now)/(1000*60*60*24));if(el('cc-due-notice'))el('cc-due-notice').textContent='📅 Next payment due: '+due.toLocaleDateString()+' ('+days+' days)';}}
+function ccLoad(){var d=getAcctData('credit');['name','limit','balance','apr','minpay','dueday'].forEach(k=>{var el=document.getElementById('cc-'+k);if(el&&d[k])el.value=d[k];});ccUpdate();ccRenderTx();}
+function ccAddTx(){var date=document.getElementById('cc-tx-date')?.value;var amount=parseFloat(document.getElementById('cc-tx-amount')?.value);var desc=document.getElementById('cc-tx-desc')?.value.trim();if(!date||!amount||!desc){showSt('cc-tx-st','err','Fill in all fields.');return;}var d=getAcctData('credit');if(!d.txs)d.txs=[];d.txs.unshift({id:'c'+Date.now(),date,amount,desc,type:ccTxType});if(ccTxType==='charge')d.balance=(d.balance||0)+amount;else d.balance=Math.max(0,(d.balance||0)-amount);setAcctData('credit',d);if(document.getElementById('cc-tx-amount'))document.getElementById('cc-tx-amount').value='';if(document.getElementById('cc-tx-desc'))document.getElementById('cc-tx-desc').value='';ccLoad();updateAcctHeader('credit');showSt('cc-tx-st','ok','✅ Transaction added!');}
+function ccRenderTx(){var d=getAcctData('credit');var el=document.getElementById('cc-tx-list');if(!el)return;var txs=d.txs||[];if(!txs.length){el.innerHTML='<div class="txt-muted" style="text-align:center;padding:16px">No transactions yet.</div>';return;}el.innerHTML=txs.slice(0,20).map(tx=>'<div class="tx-item '+(tx.type==='payment'?'credit':'debit')+'" style="margin-bottom:6px"><div class="tx-icon">'+(tx.type==='payment'?'💰':'💳')+'</div><div class="tx-body"><div class="tx-desc">'+tx.desc+'</div><div class="tx-meta">'+tx.date+'</div></div><div class="tx-amount '+(tx.type==='payment'?'credit':'debit')+'">'+(tx.type==='payment'?'-':'+')+fmt(tx.amount)+'</div><button class="tx-btn danger" onclick="ccDelTx(\''+tx.id+'\')">✕</button></div>').join('');}
+function ccDelTx(id){if(!confirm('Delete?'))return;var d=getAcctData('credit');d.txs=(d.txs||[]).filter(t=>t.id!==id);setAcctData('credit',d);ccLoad();updateAcctHeader('credit');}
+
+// ── CHEVY COLORADO ────────────────────────────────────────────────────────
+function loanSave(){var d=getAcctData('loan');d.lender=document.getElementById('loan-lender')?.value.trim()||'Auto Loan';d.original=parseFloat(document.getElementById('loan-original')?.value)||d.original||0;d.balance=parseFloat(document.getElementById('loan-balance')?.value)||d.balance||0;d.rate=parseFloat(document.getElementById('loan-rate')?.value)||d.rate||0;d.payment=parseFloat(document.getElementById('loan-payment')?.value)||d.payment||0;d.dueday=parseInt(document.getElementById('loan-dueday')?.value)||d.dueday||1;setAcctData('loan',d);loanUpdate();showSt('loan-st','ok','✅ Chevy info saved!');updateAcctHeader('loan');}
+function loanUpdate(){var d=getAcctData('loan');var bal=parseFloat(document.getElementById('loan-balance')?.value)||d.balance||0;var pmt=parseFloat(document.getElementById('loan-payment')?.value)||d.payment||0;var rate=parseFloat(document.getElementById('loan-rate')?.value)||d.rate||0;var orig=parseFloat(document.getElementById('loan-original')?.value)||d.original||0;var mi=(bal*(rate/100))/12;var pr=Math.max(0,pmt-mi);var pct=orig?Math.min(100,((orig-bal)/orig*100)):0;var ml=pmt>mi?Math.ceil(bal/(pmt-mi)):0;var el=id=>document.getElementById(id);if(el('loan-bal-disp'))el('loan-bal-disp').textContent=fmt(bal);if(el('loan-pay-disp'))el('loan-pay-disp').textContent=fmt(pmt);if(el('loan-int-disp'))el('loan-int-disp').textContent=fmt(mi);if(el('loan-principal-disp'))el('loan-principal-disp').textContent=fmt(pr);if(el('loan-progress-bar'))el('loan-progress-bar').style.width=pct+'%';if(el('loan-pct-paid'))el('loan-pct-paid').textContent=pct.toFixed(1)+'% paid off';if(el('loan-months-left'))el('loan-months-left').textContent=ml?ml+' months remaining':'--';var dueday=d.dueday||0;if(dueday){var now=new Date();var due=new Date(now.getFullYear(),now.getMonth(),dueday);if(due<now)due=new Date(now.getFullYear(),now.getMonth()+1,dueday);var days=Math.ceil((due-now)/(1000*60*60*24));if(el('loan-due-notice'))el('loan-due-notice').textContent='📅 Next payment: '+due.toLocaleDateString()+' ('+days+' days) — '+fmt(pmt);}}
+function loanLoad(){var d=getAcctData('loan');['lender','original','balance','rate','payment','dueday'].forEach(k=>{var el=document.getElementById('loan-'+k);if(el&&d[k])el.value=d[k];});loanUpdate();loanRenderTx();}
+function loanAddPayment(){var date=document.getElementById('loan-tx-date')?.value;var amount=parseFloat(document.getElementById('loan-tx-amount')?.value);var note=document.getElementById('loan-tx-note')?.value.trim()||'Payment';if(!date||!amount){showSt('loan-tx-st','err','Enter date and amount.');return;}var d=getAcctData('loan');if(!d.txs)d.txs=[];d.txs.unshift({id:'l'+Date.now(),date,amount,note});var mi=((d.balance||0)*((d.rate||0)/100))/12;var pr=Math.max(0,amount-mi);d.balance=Math.max(0,(d.balance||0)-pr);setAcctData('loan',d);if(document.getElementById('loan-tx-amount'))document.getElementById('loan-tx-amount').value='';if(document.getElementById('loan-tx-note'))document.getElementById('loan-tx-note').value='';loanLoad();updateAcctHeader('loan');showSt('loan-tx-st','ok','✅ Payment recorded! Principal: '+fmt(pr));}
+function loanRenderTx(){var d=getAcctData('loan');var el=document.getElementById('loan-tx-list');if(!el)return;var txs=d.txs||[];if(!txs.length){el.innerHTML='<div class="txt-muted" style="text-align:center;padding:16px">No payments yet.</div>';return;}el.innerHTML=txs.slice(0,20).map(tx=>'<div class="tx-item credit" style="margin-bottom:6px"><div class="tx-icon">🛻</div><div class="tx-body"><div class="tx-desc">'+tx.note+'</div><div class="tx-meta">'+tx.date+'</div></div><div class="tx-amount credit">-'+fmt(tx.amount)+'</div><button class="tx-btn danger" onclick="loanDelTx(\''+tx.id+'\')">✕</button></div>').join('');}
+function loanDelTx(id){if(!confirm('Delete?'))return;var d=getAcctData('loan');d.txs=(d.txs||[]).filter(t=>t.id!==id);setAcctData('loan',d);loanLoad();}
+
+// ── KIA SELTOS ────────────────────────────────────────────────────────────
+function kiaSave(){var d=getAcctData('kia');d.lender=document.getElementById('kia-lender')?.value.trim()||'Kia Finance America';d.original=parseFloat(document.getElementById('kia-original')?.value)||d.original||0;d.balance=parseFloat(document.getElementById('kia-balance')?.value)||25647.49;d.rate=parseFloat(document.getElementById('kia-rate')?.value)||d.rate||0;d.payment=parseFloat(document.getElementById('kia-payment')?.value)||596.95;d.dueday=parseInt(document.getElementById('kia-dueday')?.value)||d.dueday||1;setAcctData('kia',d);kiaUpdate();showSt('kia-st','ok','✅ Kia Seltos info saved!');updateAcctHeader('loan');}
+function kiaUpdate(){var d=getAcctData('kia');var bal=parseFloat(document.getElementById('kia-balance')?.value)||d.balance||25647.49;var pmt=parseFloat(document.getElementById('kia-payment')?.value)||d.payment||596.95;var rate=parseFloat(document.getElementById('kia-rate')?.value)||d.rate||0;var orig=parseFloat(document.getElementById('kia-original')?.value)||d.original||0;var mi=(bal*(rate/100))/12;var pr=Math.max(0,pmt-mi);var pct=orig?Math.min(100,((orig-bal)/orig*100)):0;var ml=pmt>mi?Math.ceil(bal/(pmt-mi)):0;var el=id=>document.getElementById(id);if(el('kia-bal-disp'))el('kia-bal-disp').textContent=fmt(bal);if(el('kia-pay-disp'))el('kia-pay-disp').textContent=fmt(pmt);if(el('kia-int-disp'))el('kia-int-disp').textContent=fmt(mi);if(el('kia-principal-disp'))el('kia-principal-disp').textContent=fmt(pr);if(el('kia-progress-bar'))el('kia-progress-bar').style.width=pct+'%';if(el('kia-pct-paid'))el('kia-pct-paid').textContent=pct.toFixed(1)+'% paid off';if(el('kia-months-left'))el('kia-months-left').textContent=ml?ml+' months remaining':'--';var dueday=d.dueday||0;if(dueday){var now=new Date();var due=new Date(now.getFullYear(),now.getMonth(),dueday);if(due<now)due=new Date(now.getFullYear(),now.getMonth()+1,dueday);var days=Math.ceil((due-now)/(1000*60*60*24));if(el('kia-due-notice'))el('kia-due-notice').textContent='📅 Next payment: '+due.toLocaleDateString()+' ('+days+' days) — $596.95';}}
+function kiaLoad(){var d=getAcctData('kia');if(!d.balance){d.balance=25647.49;d.payment=596.95;d.lender='Kia Finance America';setAcctData('kia',d);}if(document.getElementById('kia-lender'))document.getElementById('kia-lender').value=d.lender||'Kia Finance America';if(document.getElementById('kia-original'))document.getElementById('kia-original').value=d.original||'';if(document.getElementById('kia-balance'))document.getElementById('kia-balance').value=d.balance||25647.49;if(document.getElementById('kia-rate'))document.getElementById('kia-rate').value=d.rate||'';if(document.getElementById('kia-payment'))document.getElementById('kia-payment').value=d.payment||596.95;if(document.getElementById('kia-dueday'))document.getElementById('kia-dueday').value=d.dueday||'';kiaUpdate();kiaRenderTx();}
+function kiaAddPayment(){var date=document.getElementById('kia-tx-date')?.value;var amount=parseFloat(document.getElementById('kia-tx-amount')?.value);var note=document.getElementById('kia-tx-note')?.value.trim()||'Monthly Payment';if(!date||!amount){showSt('kia-tx-st','err','Enter date and amount.');return;}var d=getAcctData('kia');if(!d.txs)d.txs=[];d.txs.unshift({id:'k'+Date.now(),date,amount,note});var mi=((d.balance||0)*((d.rate||0)/100))/12;var pr=Math.max(0,amount-mi);d.balance=Math.max(0,(d.balance||25647.49)-pr);setAcctData('kia',d);if(document.getElementById('kia-tx-amount'))document.getElementById('kia-tx-amount').value='';if(document.getElementById('kia-tx-note'))document.getElementById('kia-tx-note').value='';kiaLoad();updateAcctHeader('loan');showSt('kia-tx-st','ok','✅ Payment of '+fmt(amount)+' recorded!');}
+function kiaRenderTx(){var d=getAcctData('kia');var el=document.getElementById('kia-tx-list');if(!el)return;var txs=d.txs||[];if(!txs.length){el.innerHTML='<div class="txt-muted" style="text-align:center;padding:16px">No payments recorded yet.</div>';return;}el.innerHTML=txs.slice(0,20).map(tx=>'<div class="tx-item credit" style="margin-bottom:6px"><div class="tx-icon">🚗</div><div class="tx-body"><div class="tx-desc">'+tx.note+'</div><div class="tx-meta">'+tx.date+'</div></div><div class="tx-amount credit">-'+fmt(tx.amount)+'</div><button class="tx-btn danger" onclick="kiaDelTx(\''+tx.id+'\')">✕</button></div>').join('');}
+function kiaDelTx(id){if(!confirm('Delete?'))return;var d=getAcctData('kia');d.txs=(d.txs||[]).filter(t=>t.id!==id);setAcctData('kia',d);kiaLoad();}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+function initAllAccounts() {
+  var today=new Date().toISOString().split('T')[0];
+  ['tx-date','stmt-date','sav-date','cc-tx-date','loan-tx-date','kia-tx-date'].forEach(id=>{var el=document.getElementById(id);if(el)el.value=today;});
+  var d=getData();
+  if(d.bankBalance&&document.getElementById('bank-bal')) document.getElementById('bank-bal').value=d.bankBalance.toFixed(2);
+  updateHeaderBalances(); renderRegister(); savUpdate(); ccLoad(); loanLoad(); kiaLoad();
+  ['savings','credit','loan'].forEach(p=>{var el=document.getElementById('panel-'+p);if(el)el.style.display='none';});
+  var kw=document.getElementById('loan-kia-wrap'); if(kw) kw.style.display='none';
+}
+
+// ── Password lock ─────────────────────────────────────────────────────────
+function checkLock() {
+  var pw=document.getElementById('lock-input').value;
+  if(pw==='2729') {
+    sessionStorage.setItem('checkbook_auth','ok');
+    document.getElementById('lock-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    initAllAccounts();
+  } else {
+    var err=document.getElementById('lock-err');
+    err.textContent='Incorrect password. Try again.';
+    document.getElementById('lock-input').value='';
+    document.getElementById('lock-input').focus();
+    setTimeout(()=>{err.textContent='';},3000);
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  if(sessionStorage.getItem('checkbook_auth')==='ok') {
+    document.getElementById('lock-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    initAllAccounts();
+  } else {
+    setTimeout(()=>{var inp=document.getElementById('lock-input');if(inp)inp.focus();},100);
+  }
+});
+</script>
+</div><!-- /app -->
+</body>
+</html>

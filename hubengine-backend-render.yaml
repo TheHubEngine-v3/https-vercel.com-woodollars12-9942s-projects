@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: hubengine-backend
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: REDIRECT_URI
+        value: https://hubengine-backend.onrender.com/youtube/callback
