@@ -53,9 +53,10 @@ export async function uploadRender(localPath, jobId) {
     return url;
 
   } else {
-    // Dev fallback — return the local file path as a "URL"
+    // Dev fallback — return a URL served by the static middleware in server.js
     // In production always configure R2
+    const filename = path.basename(localPath);
     console.warn('[FreeStack] WARNING: Returning local file path (no R2 configured)');
-    return `file://${localPath}`;
+    return `/local-renders/${path.basename(path.dirname(localPath))}/${filename}`;
   }
 }

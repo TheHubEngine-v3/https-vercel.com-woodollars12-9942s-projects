@@ -9,8 +9,26 @@ const fetch    = require('node-fetch');
 const FormData = require('form-data');
 const app      = express();
 
-app.use(cors({ origin: '*' }));
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['*'];
+const API_KEY = process.env.API_KEY;
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes('*') || ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
 app.use(express.json({ limit: '500mb' }));
+
+const auth = (req, res, next) => {
+  if (!API_KEY) return next();
+  const key = req.headers['x-api-key'];
+  if (key === API_KEY) return next();
+  res.status(401).json({ error: 'Unauthorized' });
+};
 
 const PORT         = process.env.PORT || 3000;
 const REDIRECT_URI = process.env.REDIRECT_URI || 'https://hubengine-backend.onrender.com/youtube/callback';
@@ -106,7 +124,7 @@ app.get('/youtube/callback', async (req, res) => {
 });
 
 // ── Step 3: Exchange code for tokens ─────────────────────────────────────
-app.post('/youtube/token', async (req, res) => {
+app.post('/youtube/token', auth, async (req, res) => {
   const { code, client_id, client_secret } = req.body;
   if (!code || !client_id || !client_secret) {
     return res.status(400).json({ error: 'code, client_id and client_secret required' });
@@ -141,7 +159,7 @@ app.post('/youtube/token', async (req, res) => {
 });
 
 // ── Step 4: Refresh access token ─────────────────────────────────────────
-app.post('/youtube/refresh', async (req, res) => {
+app.post('/youtube/refresh', auth, async (req, res) => {
   const { refresh_token, client_id, client_secret } = req.body;
   if (!refresh_token || !client_id || !client_secret) {
     return res.status(400).json({ error: 'refresh_token, client_id and client_secret required' });
@@ -167,17 +185,43 @@ app.post('/youtube/refresh', async (req, res) => {
 });
 
 // ── Step 5: Upload video to YouTube ──────────────────────────────────────
-// Receives the Shotstack video URL + metadata, uploads to YouTube
-app.post('/youtube/upload', async (req, res) => {
+// Receives the video URL + metadata, uploads to YouTube
+app.post('/youtube/upload', auth, async (req, res) => {
   const { video_url, title, description, tags, access_token } = req.body;
   if (!video_url || !title || !access_token) {
     return res.status(400).json({ error: 'video_url, title and access_token required' });
   }
 
+  // SSRF Protection: Validate video_url
   try {
-    // Download video from Shotstack
-    const videoRes  = await fetch(video_url);
-    const videoBlob = await videoRes.buffer();
+    const url = new URL(video_url);
+    const allowedHosts = [
+      'freestack-video.onrender.com',
+      'api.shotstack.io',
+      'r2.cloudflarestorage.com'
+    ];
+    // Also allow R2 public domains if configured via env
+    if (process.env.ALLOWED_VIDEO_DOMAINS) {
+      allowedHosts.push(...process.env.ALLOWED_VIDEO_DOMAINS.split(','));
+    }
+
+    const isAllowed = allowedHosts.some(host => url.hostname.endsWith(host));
+    // SSRF protection should NOT depend on CORS ALLOWED_ORIGINS.
+    // If you need to disable SSRF protection for dev, use a specific variable.
+    if (!isAllowed && process.env.DISABLE_SSRF_PROTECTION !== 'true') {
+       return res.status(403).json({ error: 'Forbidden: video_url domain not allowed' });
+    }
+  } catch (e) {
+    return res.status(400).json({ error: 'Invalid video_url' });
+  }
+
+  try {
+    // Download video and stream to YouTube to avoid OOM
+    const videoRes = await fetch(video_url);
+    if (!videoRes.ok) throw new Error(`Failed to fetch video: ${videoRes.statusText}`);
+
+    const contentLength = videoRes.headers.get('content-length');
+    if (!contentLength) throw new Error('Could not determine video content length');
 
     const meta = {
       snippet: {
@@ -201,7 +245,7 @@ app.post('/youtube/upload', async (req, res) => {
           'Authorization':           `Bearer ${access_token}`,
           'Content-Type':            'application/json',
           'X-Upload-Content-Type':   'video/mp4',
-          'X-Upload-Content-Length': String(videoBlob.length)
+          'X-Upload-Content-Length': contentLength
         },
         body: JSON.stringify(meta)
       }
@@ -215,11 +259,14 @@ app.post('/youtube/upload', async (req, res) => {
     const uploadUrl = initRes.headers.get('location');
     if (!uploadUrl) return res.status(500).json({ error: 'YouTube did not return upload URL' });
 
-    // Upload video bytes
+    // Stream video bytes from source to YouTube
     const uploadRes = await fetch(uploadUrl, {
       method:  'PUT',
-      headers: { 'Content-Type': 'video/mp4' },
-      body:    videoBlob
+      headers: {
+        'Content-Type': 'video/mp4',
+        'Content-Length': contentLength
+      },
+      body:    videoRes.body // node-fetch response body is a stream
     });
 
     if (!uploadRes.ok) {

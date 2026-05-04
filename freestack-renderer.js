@@ -33,6 +33,7 @@ function esc(s) {
     .replace(/,/g,  '\\,')
     .replace(/\[/g, '\\[')
     .replace(/\]/g, '\\]')
+    .replace(/[;&|`$]/g, '') // Remove command injection characters
     .substring(0, 200);
 }
 
@@ -205,7 +206,8 @@ export async function renderTimeline(timeline, options = {}, jobId, onProgress) 
   const H   = res.h;
   const FPS = options.fps || 30;
 
-  const dir     = mkdtempSync(path.join(os.tmpdir(), 'fsv-'));
+  const renderDir = path.join(os.tmpdir(), 'freestack-renders');
+  const dir     = mkdtempSync(path.join(renderDir, 'fsv-'));
   const outFile = path.join(dir, `${jobId}.mp4`);
 
   const { inputs, filterComplex } = buildFiltergraph(timeline.scenes, W, H, FPS);

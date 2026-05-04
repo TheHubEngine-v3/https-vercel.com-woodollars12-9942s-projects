@@ -6,6 +6,7 @@
 
 import express    from 'express';
 import cors       from 'cors';
+import os         from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { unlink }     from 'node:fs/promises';
 import { renderTimeline } from './renderer.js';
@@ -14,9 +15,35 @@ import { uploadRender, storageReady } from './storage.js';
 const app  = express();
 const PORT = process.env.PORT || 10000;
 
+// ── Auth & CORS ────────────────────────────────────────────────────────────
+const API_KEY = process.env.API_KEY;
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['*'];
+
+const auth = (req, res, next) => {
+  if (!API_KEY) return next(); // No key set, allow all (dev mode)
+  const key = req.headers['x-api-key'];
+  if (key === API_KEY) return next();
+  res.status(401).json({ error: 'Unauthorized: Invalid or missing x-api-key' });
+};
+
 // ── Middleware ─────────────────────────────────────────────────────────────
-app.use(cors({ origin: '*' }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes('*') || ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
 app.use(express.json({ limit: '512kb' }));
+
+// ── Local static serving (fallback only) ───────────────────────────────────
+// We only serve a specific subdirectory, not the entire os.tmpdir() for security.
+const LOCAL_RENDER_DIR = path.join(os.tmpdir(), 'freestack-renders');
+import { mkdirSync } from 'node:fs';
+try { mkdirSync(LOCAL_RENDER_DIR, { recursive: true }); } catch (e) {}
+app.use('/local-renders', express.static(LOCAL_RENDER_DIR));
 
 // ── In-memory job store ────────────────────────────────────────────────────
 // Each job: { status, url?, error?, createdAt, progress? }
@@ -41,7 +68,11 @@ async function workLoop() {
 
       jobs.set(id, { ...jobs.get(id), progress: 90, status: 'uploading' });
       const url = await uploadRender(localFile, id);
-      await unlink(localFile).catch(() => {});
+
+      // Only delete if it was uploaded to R2 (url won't start with file:// or /local-renders)
+      if (storageReady()) {
+        await unlink(localFile).catch(() => {});
+      }
 
       jobs.set(id, { status: 'done', url, progress: 100, createdAt: jobs.get(id).createdAt });
       console.log(`[FreeStack] Job ${id} done → ${url}`);
@@ -73,6 +104,9 @@ app.get('/', (_req, res) => {
 });
 
 app.get('/healthz', (_req, res) => res.json({ ok: true, queue: queue.length }));
+
+// ── Protected routes ───────────────────────────────────────────────────────
+app.use(['/render', '/renders'], auth);
 
 // ── POST /render — Submit a video render job ───────────────────────────────
 // Input format (Shotstack-compatible):

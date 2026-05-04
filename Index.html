@@ -2713,9 +2713,19 @@ Write it here first. Becky can clean it up after if you want — but write it ra
       <tr><td>Vercel</td><td style="color:var(--green)">Free</td><td>App hosting</td><td><a href="https://vercel.com" target="_blank" class="btn btn-ghost btn-xs">Visit</a></td></tr>
     </table>
   </div>
+  <!-- BACKEND SECURITY -->
+  <div class="card mb16" style="border:1px solid var(--green);background:rgba(52,211,153,.04)">
+    <div class="sec-title" style="color:var(--green)">🛡 Backend Security</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Add your Hub Engine Master API Key to secure your self-hosted FreeStack Video and YouTube backends.</div>
+    <div class="label mb4">Hub Engine Master API Key</div>
+    <input id="he-key-inp" type="password" placeholder="Enter your backend master key..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--txt);font-size:13px;outline:none;margin-bottom:10px">
+    <button class="btn btn-teal btn-sm" onclick="apSaveKey('he')">💾 Save Master Key</button>
+    <div id="he-key-st" class="st mt8"></div>
+  </div>
+
   <div class="card">
     <div class="sec-title">🗄 Data Management</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">All data stored in browser localStorage. Nothing sent externally except Groq API calls.</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">All data stored in browser localStorage. Nothing sent externally except Groq API calls and your own backends.</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-ghost" onclick="exportData()">📤 Export Data</button>
       <button class="btn btn-danger" onclick="if(confirm('Clear all app data?')){localStorage.clear();location.reload()}">🗑 Clear All Data</button>
@@ -4399,9 +4409,12 @@ nav = function(id) {
 async function vsCheckFreeStack() {
   var el = document.getElementById('freestack-st');
   if(el) { el.className='st'; el.style.color='var(--muted)'; el.textContent='🔍 Checking FreeStack Video server...'; }
+  var heKey = apGetKey('he_key');
   try {
     var resp = await Promise.race([
-      fetch('https://freestack-video.onrender.com/healthz'),
+      fetch('https://freestack-video.onrender.com/healthz', {
+        headers: { 'x-api-key': heKey }
+      }),
       new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout after 10 seconds')),10000))
     ]);
     if(resp.ok) {
@@ -4595,10 +4608,14 @@ async function vsRenderProject() {
 
   // ── Try FreeStack Video first ─────────────────────────────────────────
   var fsWorking = false;
+  var heKey = apGetKey('he_key');
   try {
     vsRenderStep(2,'running','Checking FreeStack Video server...');
     var ping = await Promise.race([
-      fetch(HE_CONFIG.EDIT_URL + '/healthz', {method:'GET'}),
+      fetch(HE_CONFIG.EDIT_URL + '/healthz', {
+        method:'GET',
+        headers: { 'x-api-key': heKey }
+      }),
       new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 8000))
     ]);
     if(ping.ok) fsWorking = true;
@@ -4611,7 +4628,11 @@ async function vsRenderProject() {
     try {
       vsRenderStep(2,'running','FreeStack Video online — sending job...');
       var sr = await fetch(HE_CONFIG.EDIT_URL + '/render', {
-        method:'POST', headers:{'Content-Type':'application/json'},
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key': heKey
+        },
         body: JSON.stringify(fsPayload)
       });
       if(!sr.ok) { var e=await sr.text(); throw new Error('FreeStack '+sr.status+': '+e.substring(0,150)); }
@@ -4621,7 +4642,9 @@ async function vsRenderProject() {
       vsRenderStep(2,'running','FreeStack job started — polling...');
       for(var p=0;p<36;p++){
         await new Promise(r=>setTimeout(r,10000));
-        var pr=await fetch(HE_CONFIG.EDIT_URL+'/render/'+rid);
+        var pr=await fetch(HE_CONFIG.EDIT_URL+'/render/'+rid, {
+          headers: { 'x-api-key': heKey }
+        });
         var pd=await pr.json();
         if(pd.status==='done'&&pd.url){
           vsRenderStep(2,'done','FreeStack rendered!'); vsRenderStep(3,'done','Complete — no watermark!');
@@ -7667,7 +7690,8 @@ function apSaveKey(service) {
     yt:  { keys:[`yt_key`,`yt_chan`],   inps:[`yt-key-inp`,`yt-channel-inp`], stId:`yt-key-st`, label:`YouTube` },
     tt:  { keys:[`tt_key`],             inps:[`tt-key-inp`],                  stId:`tt-key-st`, label:`TikTok` },
     ig:  { keys:[`ig_key`,`ig_acct`],   inps:[`ig-key-inp`,`ig-acct-inp`],   stId:`ig-key-st`, label:`Instagram` },
-    fb:  { keys:[`fb_key`,`fb_page`],   inps:[`fb-key-inp`,`fb-page-inp`],   stId:`fb-key-st`, label:`Facebook` }
+    fb:  { keys:[`fb_key`,`fb_page`],   inps:[`fb-key-inp`,`fb-page-inp`],   stId:`fb-key-st`, label:`Facebook` },
+    he:  { keys:[`he_key`],             inps:[`he-key-inp`],                  stId:`he-key-st`, label:`Hub Engine Master` }
   };
   var cfg = map[service];
   if (!cfg) return;
@@ -7684,7 +7708,8 @@ function apLoadKeys() {
     [`yt-key-inp`,`yt_key`],[`yt-channel-inp`,`yt_chan`],
     [`tt-key-inp`,`tt_key`],
     [`ig-key-inp`,`ig_key`],[`ig-acct-inp`,`ig_acct`],
-    [`fb-key-inp`,`fb_key`],[`fb-page-inp`,`fb_page`]
+    [`fb-key-inp`,`fb_key`],[`fb-page-inp`,`fb_page`],
+    [`he-key-inp`,`he_key`]
   ];
   pairs.forEach(([id,k]) => { var el=document.getElementById(id); var v=apGetKey(k); if(el&&v) el.placeholder=`Saved ✅ (hidden)`; });
 }
@@ -7866,10 +7891,11 @@ async function heHostAudio(audioBlob, ssKey) {
   apStep(3, `running`, `Getting FreeStack Video upload URL...`);
 
   // STEP 1 — Get signed upload URL
+  var heKey = apGetKey('he_key');
   var uploadRes = await fetch(`${HE_CONFIG.INGEST_URL}/upload`, {
     method: `POST`,
     headers: {
-      'x-api-key': ssKey,
+      'x-api-key': heKey || ssKey,
       'Accept': `application/json`
     }
   });
@@ -7904,7 +7930,7 @@ async function heHostAudio(audioBlob, ssKey) {
   for (var i = 0; i < 20; i++) {
     await new Promise(r => setTimeout(r, 3000));
     var pollRes  = await fetch(`${HE_CONFIG.INGEST_URL}/sources/${sourceId}`, {
-      headers: { 'x-api-key': ssKey }
+      headers: { 'x-api-key': heKey || ssKey }
     });
     var pd      = await pollRes.json();
     var status  = pd.data?.attributes?.status;
@@ -7949,9 +7975,13 @@ async function apStep3_Video(audioBlob, title, description) {
   var output = { format:`mp4`, resolution:`hd`, aspectRatio:`9:16`, fps:25, size:{width:1080,height:1920} };
 
   apStep(3, `running`, `Submitting to HubEngine render queue...`);
+  var heKey = apGetKey('he_key');
   var submitRes = await fetch(`${HE_CONFIG.EDIT_URL}/render`, {
     method: `POST`,
-    headers: { 'x-api-key': ssKey, 'Content-Type': `application/json` },
+    headers: {
+      'x-api-key': heKey || ssKey,
+      'Content-Type': `application/json`
+    },
     body: JSON.stringify({ timeline, output })
   });
   if (!submitRes.ok) {
@@ -7965,7 +7995,9 @@ async function apStep3_Video(audioBlob, title, description) {
   apStep(3, `running`, `Render queued (${renderId.substring(0,8)}) — checking every 10 sec...`);
   for (var poll = 0; poll < 30; poll++) {
     await new Promise(r => setTimeout(r, 10000));
-    var pollRes  = await fetch(`${HE_CONFIG.EDIT_URL}/render/${renderId}`, { headers:{} });
+    var pollRes  = await fetch(`${HE_CONFIG.EDIT_URL}/render/${renderId}`, {
+      headers: { 'x-api-key': heKey || ssKey }
+    });
     var pollData = await pollRes.json();
     var rStatus  = pollData.response?.status || pollData.status;
     var rUrl     = pollData.response?.url    || pollData.url;
@@ -8014,10 +8046,14 @@ async function ytExchangeCode() {
   var secret = apGetKey(`yt_client_secret`);
   if (!code || !id || !secret) { setSt(`yt-key-st`,`e`,`Need auth code, client ID and secret.`); return; }
   setSt(`yt-key-st`,`i`,`Connecting to YouTube via HubEngine backend...`);
+  var heKey = apGetKey('he_key');
   try {
     var res  = await fetch(`${HE_BACKEND}/youtube/token`, {
       method: `POST`,
-      headers: { 'Content-Type':`application/json` },
+      headers: {
+        'Content-Type':`application/json`,
+        'x-api-key': heKey
+      },
       body: JSON.stringify({ code, client_id:id, client_secret:secret })
     });
     var data = await res.json();
@@ -8039,11 +8075,17 @@ async function ytRefreshToken() {
   var clientId = apGetKey(`yt_client_id`);
   var secret   = apGetKey(`yt_client_secret`);
   var refresh  = apGetKey(`yt_refresh_token`);
+  var heKey    = apGetKey('he_key');
   if (!refresh || !clientId || !secret) throw new Error(`YouTube not connected — go to Settings and connect your channel.`);
-  var res  = await fetch(`https://oauth2.googleapis.com/token`, {
+
+  // Use our backend for refresh too, to keep it consistent and secure
+  var res  = await fetch(`${HE_BACKEND}/youtube/refresh`, {
     method: `POST`,
-    headers: { 'Content-Type':`application/x-www-form-urlencoded` },
-    body: `refresh_token=${encodeURIComponent(refresh)}&client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(secret)}&grant_type=refresh_token`
+    headers: {
+      'Content-Type':`application/json`,
+      'x-api-key': heKey
+    },
+    body: JSON.stringify({ refresh_token: refresh, client_id: clientId, client_secret: secret })
   });
   var data = await res.json();
   if (data.error) throw new Error(`YouTube token refresh failed: ${data.error_description || data.error}`);
@@ -8104,41 +8146,37 @@ async function apStep4_YouTube(videoUrl, title, description, tags) {
   };
 
   // Initiate resumable upload
-  apStep(4, `running`, `Starting YouTube upload...`);
-  var initRes = await fetch(`https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status`, {
+  apStep(4, `running`, `Starting YouTube upload via HubEngine backend...`);
+  var heKey = apGetKey('he_key');
+  var res = await fetch(`${HE_BACKEND}/youtube/upload`, {
     method: `POST`,
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type':  `application/json`,
-      'X-Upload-Content-Type': `video/mp4`,
-      'X-Upload-Content-Length': String(videoBlob.size)
+      'Content-Type':`application/json`,
+      'x-api-key': heKey
     },
-    body: JSON.stringify(meta)
+    body: JSON.stringify({
+      video_url: videoUrl,
+      title: title,
+      description: description,
+      tags: tags,
+      access_token: token
+    })
   });
 
-  if (!initRes.ok) {
-    var e = await initRes.text();
-    throw new Error(`YouTube upload init failed ${initRes.status}: ${e.substring(0,150)}`);
+  if (!res.ok) {
+    var e = await res.text();
+    throw new Error(`YouTube upload failed ${res.status}: ${e.substring(0,150)}`);
   }
 
-  var uploadUrl = initRes.headers.get(`Location`);
-  if (!uploadUrl) throw new Error(`YouTube did not return an upload URL`);
+  var uploadData = await res.json();
+  return uploadData.youtube_url;
+}
 
-  apStep(4, `running`, `Uploading video to YouTube (${Math.round(videoBlob.size/1024/1024)}MB)...`);
-  var uploadRes = await fetch(uploadUrl, {
-    method:  `PUT`,
-    headers: { 'Content-Type':`video/mp4` },
-    body: videoBlob
-  });
-
-  if (!uploadRes.ok) {
-    var e2 = await uploadRes.text();
-    throw new Error(`YouTube upload failed ${uploadRes.status}: ${e2.substring(0,150)}`);
-  }
-
-  var uploadData = await uploadRes.json();
-  var videoId    = uploadData.id;
-  return videoId ? `https://youtube.com/watch?v=${videoId}` : null;
+// Deprecated in favor of server-side upload for better reliability.
+// This is kept as a stub to avoid ReferenceErrors, but server-side upload is preferred.
+async function apStep4_YouTube_ClientSide(videoUrl, title, description, tags) {
+  console.warn("Client-side YouTube upload is deprecated and may not function correctly.");
+  throw new Error("Client-side upload is deprecated. Please configure Hub Engine Backend in Settings.");
 }
 
 async function apStep4_TikTok(videoUrl, caption) {
