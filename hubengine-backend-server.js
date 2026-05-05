@@ -15,6 +15,17 @@ app.use(express.json({ limit: '500mb' }));
 const PORT         = process.env.PORT || 3000;
 const REDIRECT_URI = process.env.REDIRECT_URI || 'https://hubengine-backend.onrender.com/youtube/callback';
 
+// Escape HTML to prevent XSS
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── Direct redirect to Google OAuth (browser opens this) ─────────────────
 app.get('/youtube/auth-url-redirect', (req, res) => {
   const { client_id } = req.query;
@@ -63,10 +74,11 @@ app.get('/youtube/callback', async (req, res) => {
   const { code, error } = req.query;
 
   if (error) {
+    const escapedError = escapeHTML(error);
     return res.send(`
       <html><body style="font-family:sans-serif;background:#0c0f1a;color:#fff;padding:40px;text-align:center">
         <h2 style="color:#ff4d6d">❌ Authorization Failed</h2>
-        <p>Error: ${error}</p>
+        <p>Error: ${escapedError}</p>
         <p>Close this tab and try again in Hub Engine Settings.</p>
       </body></html>
     `);
@@ -81,6 +93,11 @@ app.get('/youtube/callback', async (req, res) => {
     `);
   }
 
+  const escapedCode = escapeHTML(code);
+  // For the onclick handler, we need to escape for JS context first, then HTML context.
+  // JSON.stringify is a safe way to escape for a JS string literal.
+  const jsEscapedCode = escapeHTML(JSON.stringify(code));
+
   // Show the code to the user — Hub Engine will pick it up
   res.send(`
     <html>
@@ -92,9 +109,9 @@ app.get('/youtube/callback', async (req, res) => {
         <p style="color:rgba(255,255,255,.7);margin-bottom:24px">Copy the code below and paste it into Hub Engine Settings → YouTube section</p>
         <div style="background:#1a1a2e;border:1px solid #00d4aa;border-radius:8px;padding:16px;margin-bottom:16px">
           <div style="font-size:11px;color:#00d4aa;font-weight:700;margin-bottom:8px;letter-spacing:.1em">YOUR AUTHORIZATION CODE</div>
-          <div id="code" style="font-family:monospace;font-size:13px;word-break:break-all;color:#f5c518">${code}</div>
+          <div id="code" style="font-family:monospace;font-size:13px;word-break:break-all;color:#f5c518">${escapedCode}</div>
         </div>
-        <button onclick="navigator.clipboard.writeText('${code}').then(()=>{this.textContent='✅ Copied!';this.style.background='#00d4aa'})"
+        <button onclick="navigator.clipboard.writeText(${jsEscapedCode}).then(()=>{this.textContent='✅ Copied!';this.style.background='#00d4aa'})"
           style="background:#ff4d6d;color:#fff;border:none;border-radius:8px;padding:14px 28px;font-size:16px;font-weight:700;cursor:pointer;width:100%">
           📋 Copy Code
         </button>
