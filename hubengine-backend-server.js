@@ -10,6 +10,12 @@ const FormData = require('form-data');
 const app      = express();
 
 app.use(cors({ origin: '*' }));
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
 app.use(express.json({ limit: '500mb' }));
 
 const PORT         = process.env.PORT || 3000;
@@ -176,6 +182,9 @@ app.post('/youtube/upload', async (req, res) => {
 
   try {
     // Download video from Shotstack
+    if (!/^https?:\/\//i.test(video_url)) {
+      return res.status(400).json({ error: 'Invalid video_url format' });
+    }
     const videoRes  = await fetch(video_url);
     const videoBlob = await videoRes.buffer();
 
