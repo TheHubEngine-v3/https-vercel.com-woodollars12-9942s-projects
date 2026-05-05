@@ -12,6 +12,14 @@ const app      = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '500mb' }));
 
+// Security Headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
 const PORT         = process.env.PORT || 3000;
 const REDIRECT_URI = process.env.REDIRECT_URI || 'https://hubengine-backend.onrender.com/youtube/callback';
 
