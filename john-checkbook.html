@@ -1238,6 +1238,16 @@ body {
 </div><!-- /main -->
 
 <script>
+function escapeHTML(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // ── Vehicle switcher ──────────────────────────────────────────────────────
 var currentVehicle = 'chevy';
 function switchVehicle(v) {
@@ -1573,7 +1583,8 @@ function initAllAccounts() {
 // ── Password lock ─────────────────────────────────────────────────────────
 function checkLock() {
   var pw=document.getElementById('lock-input').value;
-  if(pw==='2729') {
+  var storedPw = localStorage.getItem('checkbook_password') || '2729';
+  if(pw===storedPw) {
     sessionStorage.setItem('checkbook_auth','ok');
     document.getElementById('lock-screen').style.display='none';
     document.getElementById('app').style.display='block';
