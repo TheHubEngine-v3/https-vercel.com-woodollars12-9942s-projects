@@ -2,9 +2,9 @@
   "name": "hubengine-backend",
   "version": "1.0.0",
   "description": "HubEngine YouTube OAuth backend",
-  "main": "server.js",
+  "main": "hubengine-backend-server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node hubengine-backend-server.js"
   },
   "dependencies": {
     "express": "^4.18.2",

@@ -9,7 +9,24 @@ const fetch    = require('node-fetch');
 const FormData = require('form-data');
 const app      = express();
 
-app.use(cors({ origin: '*' }));
+// Security Headers Middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
+const whitelist = ['https://project-cj1zx.vercel.app', 'https://thehubengine-v3.github.io', 'http://localhost:3000', 'http://localhost:10000'];
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }
+}));
 app.use(express.json({ limit: '500mb' }));
 
 const PORT         = process.env.PORT || 3000;
