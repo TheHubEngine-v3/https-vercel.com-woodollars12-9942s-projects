@@ -2,11 +2,11 @@
   "name": "freestack-video",
   "version": "1.0.0",
   "description": "FreeStack Video — Self-hosted video render API. Built for AffiliateMediaHub Studio.",
-  "main": "src/server.js",
+  "main": "freestack-server.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "start": "node freestack-server.js",
+    "dev": "node --watch freestack-server.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.600.0",
