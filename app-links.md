@@ -1,0 +1,9 @@
+https://2-pdf-guide-business-dashboard.vercel.app/
+https://3-blueprint-store.vercel.app/
+https://3-pdf-guide-blueprint-store.vercel.app/
+https://4-video-studio.vercel.app/
+https://5-video-generator-studio-2.vercel.app/
+https://6-28-ai-training.vercel.app/
+https://7-28-day-leadership-mastery.vercel.app/
+https://8-spanish-learning.vercel.app/
+https://9-job-hunter.vercel.app/
