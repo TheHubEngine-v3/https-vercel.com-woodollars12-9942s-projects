@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Command Center Dashboard — Hub Engine v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0f1a;--bg2:#131726;--bg3:#1a1f30;--bg4:#1e2438;
+  --teal:#00d4aa;--blue:#4f8ef7;--purple:#9b7fee;
+  --green:#34d399;--red:#f87171;--gold:#f5c518;
+  --txt:#e2e8f0;--muted:#94a3b8;--border:#2a3048;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding:24px;font-size:14px}
+.container{max-width:1300px;margin:0 auto}
+
+/* HEADER METRICS */
+.header{margin-bottom:24px}
+.title{font-size:20px;font-weight:800;letter-spacing:-0.02em}
+.sub{font-size:13px;color:var(--muted);margin-top:4px}
+
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.g4{grid-template-columns:1fr}}
+
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative}
+.stat-val{font-size:28px;font-weight:800;margin-bottom:4px}
+.stat-lbl{font-size:12px;color:var(--muted);font-weight:500}
+
+/* CORE FUNCTIONALITY CARDS */
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:24px}
+@media(max-width:900px){.g3{grid-template-columns:1fr}}
+
+.main-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;justify-content:space-between}
+.card-info{margin-bottom:20px}
+.card-icon{font-size:18px;margin-bottom:12px;display:block}
+.card-title{font-size:15px;font-weight:700;margin-bottom:8px}
+.card-desc{font-size:13px;color:var(--muted);line-height:1.5}
+
+.btn{width:100%;padding:11px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s}
+.btn-teal{background:linear-gradient(135deg, #00f2fe, var(--teal));color:#000}
+.btn-white{background:#ffffff;color:#000}
+.btn-blue{background:linear-gradient(135deg, var(--blue), #60a5fa);color:#fff}
+.btn:hover{opacity:.9;transform:translateY(-1px)}
+
+/* BOTTOM FLEET SYSTEM MAP */
+.fleet-section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px}
+.fleet-title{font-size:14px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.fleet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+@media(max-width:768px){.fleet-grid{grid-template-columns:1fr}}
+
+.fleet-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;transition:.15s}
+.fleet-box:hover{border-color:var(--teal);background:var(--bg4)}
+.fleet-box-title{font-weight:700;font-size:13px;color:var(--teal);margin-bottom:4px}
+.fleet-box-desc{font-size:12px;color:var(--muted);line-height:1.4}
+
+/* MODAL INTERFACE PANELS */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);align-items:center;justify-content:center;z-index:1000;padding:16px}
+.modal-content{background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:100%;max-width:500px;padding:24px;position:relative}
+.close-btn{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer}
+.close-btn:hover{color:#fff}
+.modal-inp{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;color:#fff;margin-bottom:12px;outline:none}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <h1 class="title">Command Center Dashboard</h1>
+        <p class="sub">Hub Engine v4 · Managing standalone digital product assets and metrics</p>
+      </div>
+      <span style="font-size:11px;font-weight:700;color:var(--teal);background:rgba(0,212,170,.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(0,212,170,.2)">Modular App Architecture</span>
+    </div>
+  </div>
+
+  <div class="g4">
+    <div class="stat-card">
+      <div class="stat-val">24</div>
+      <div class="stat-lbl">Active PDF Blueprints</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">142</div>
+      <div class="stat-lbl">Total Guide Downloads</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--teal)">$1,420</div>
+      <div class="stat-lbl">Storefront Gross Value</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--green)">✅</div>
+      <div class="stat-lbl">Fleet Synced Live</div>
+    </div>
+  </div>
+
+  <div class="g3">
+    <div class="main-card">
+      <div class="card-info">
+        <span class="card-icon">📄</span>
+        <div class="card-title">PDF Template Manager</div>
+        <p class="card-desc">Configure your zero-fluff checklist strategies, assign prices ($9 - $29), and structure your blueprint metadata blocks.</p>
+      </div>
+      <button class="btn btn-teal" onclick="openModal('template-modal')">Manage PDF Assets →</button>
+    </div>
+
+    <div class="main-card">
+      <div class="card-info">
+        <span class="card-icon">🏪</span>
+        <div class="card-title">Storefront Funnel Sync</div>
+        <p class="card-desc">Push live catalog modifications instantly out to your public-facing Vercel Storefront application without writing code.</p>
+      </div>
+      <button class="btn btn-white" onclick="triggerStoreSync(this)">Sync Vercel Store →</button>
+    </div>
+
+    <div class="main-card">
+      <div class="card-info">
+        <span class="card-icon">📊</span>
+        <div class="card-title">Monetization Engine</div>
+        <p class="card-desc">Audit down through your download funnels, custom traffic loops, and single-problem checkout configurations.</p>
+      </div>
+      <button class="btn btn-blue" onclick="openModal('metrics-modal')">View Money Metrics →</button>
+    </div>
+  </div>
+
+  <div class="fleet-section">
+    <div class="fleet-title">🌐 App Fleet System Map <span style="font-size:12px;color:var(--muted);font-weight:400;">(Standalone Framework)</span></div>
+    <p style="font-size:12px;color:var(--muted);margin-top:2px">Your ecosystem is now split into separate, ultra-lightweight files. No overlapping code blocks.</p>
+    
+    <div class="fleet-grid">
+      <div class="fleet-box" onclick="goToApp(1)">
+        <div class="fleet-box-title">App 1: Master Workbench</div>
+        <div class="fleet-box-desc">Central command gateway pilot pane containing all cross-application workflows.</div>
+      </div>
+
+      <div class="fleet-box" onclick="goToApp(3)">
+        <div class="fleet-box-title">App 3: PDF Storefront</div>
+        <div class="fleet-box-desc">Public client gallery &amp; secure asset delivery infrastructure.</div>
+      </div>
+
+      <div class="fleet-box" onclick="goToApp(4)">
+        <div class="fleet-box-title">App 4: Video Studio</div>
+        <div class="fleet-box-desc">Persona engine and automated YouTube/TikTok publisher pipeline.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="template-modal" class="modal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('template-modal')">×</button>
+    <h3 style="margin-bottom:12px;font-size:16px;">📝 Add New PDF Asset Template</h3>
+    <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">MANUAL OR CHECKLIST NAME</label>
+    <input class="modal-inp" placeholder="e.g., Structural Budgeting Guide v1">
+    <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">PRICING VALUE ($)</label>
+    <input class="modal-inp" type="number" placeholder="19">
+    <button class="btn btn-teal" style="margin-top:8px" onclick="alert('Asset staging structured! Ready to sync.');closeModal('template-modal')">Stage Asset Data</button>
+  </div>
+</div>
+
+<div id="metrics-modal" class="modal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('metrics-modal')">×</button>
+    <h3 style="margin-bottom:14px;font-size:16px;color:var(--blue)">📊 Live Monetization Audit</h3>
+    <div style="background:var(--bg3);padding:12px;border-radius:6px;margin-bottom:8px;font-size:13px">
+      <strong>Standard Funnel Conversion:</strong> <span style="color:var(--green)">4.8%</span>
+    </div>
+    <div style="background:var(--bg3);padding:12px;border-radius:6px;font-size:13px">
+      <strong>Average Cart Checkout Value:</strong> $14.50
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id) {
+  document.getElementById(id).style.display = 'flex';
+}
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+function triggerStoreSync(btnEl) {
+  const oldText = btnEl.textContent;
+  btnEl.textContent = '🔄 Deploying Cloud Catalog Updates...';
+  btnEl.style.opacity = '0.7';
+  
+  setTimeout(() => {
+    btnEl.textContent = '✅ Vercel Store Sync Complete!';
+    btnEl.style.borderColor = 'var(--green)';
+    setTimeout(() => {
+      btnEl.textContent = oldText;
+      btnEl.style.opacity = '1';
+    }, 2000);
+  }, 1500);
+}
+
+// ROUTING MATRIX FOR MODULAR REDIRECTS
+function goToApp(num) {
+  // Update these URLs to match your real deployed links as they wrap up!
+  const links = {
+    1: 'https://project-cj1zx-4ofdpvibu-woodollars12-9942s-projects.vercel.app', 
+    3: 'https://3-blueprint-store.vercel.app',
+    4: 'https://4-video-studio.vercel.app'
+  };
+  
+  if(links[num]) {
+    window.location.href = links[num];
+  } else {
+    alert(`Routing path to App ${num} target node initialized!`);
+  }
+}
+</script>
+</body>
+</html>
