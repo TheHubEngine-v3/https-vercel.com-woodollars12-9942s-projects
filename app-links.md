@@ -7,3 +7,26 @@ https://6-28-ai-training.vercel.app/
 https://7-28-day-leadership-mastery.vercel.app/
 https://8-spanish-learning.vercel.app/
 https://9-job-hunter.vercel.app/
+<div class="card active">
+    <h3>App 1: Master Workbench</h3>
+    <p>Central management switchboard, system gateway navigation, and template execution logs.</p>
+    <a href="https://1-master-workbench-gnmg.vercel.app" class="btn">Active View</a>
+</div>
+
+<div class="card">
+    <h3>App 2: PDF Business Dashboard</h3>
+    <p>Digital download tracker, Gross Value calculators, and core sales metrics dashboards.</p>
+    <a href="https://2-pdf-guide-business-dashboard.vercel.app" class="btn" target="_blank">Launch Deck →</a>
+</div>
+
+<div class="card">
+    <h3>App 7: Leadership Mastery</h3>
+    <p>28-Day supervisor development dashboard tracking speaking velocity metrics and body presence presentation drills.</p>
+    <a href="https://7-28-day-leadership-mastery.vercel.app" class="btn" target="_blank">Launch Deck →</a>
+</div>
+
+<div class="card">
+    <h3>App 9: LinkedIn & Career Hub</h3>
+    <p>Daily LinkedIn post/blog article copy creator alongside deep web search scraper algorithms for AI employment.</p>
+    <a href="https://9-linkedin-career-hub.vercel.app" class="btn" target="_blank">Launch Deck →</a>
+</div>
