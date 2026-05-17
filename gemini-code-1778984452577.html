@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hub Engine v4 — Master Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0f1a;--bg2:#131726;--bg3:#1a1f30;--bg4:#1e2438;
+  --teal:#00d4aa;--gold:#f5c518;--blue:#4f8ef7;
+  --purple:#9b7fee;--green:#34d399;--red:#f87171;
+  --txt:#e2e8f0;--muted:#94a3b8;--border:#2a3048;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px}
+
+.layout{display:grid;grid-template-columns:240px 1fr 360px;height:100vh;overflow:hidden}
+@media(max-width:1200px){.layout{grid-template-columns:1fr}}
+
+/* SIDEBAR: NAV GATEWAY */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px;overflow-y:auto}
+.logo-area{margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:14px}
+.logo-title{font-size:15px;font-weight:800;color:var(--teal)}
+.logo-sub{font-size:10px;color:var(--muted)}
+.nav-section{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin:14px 0 6px}
+.app-link{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--txt);text-decoration:none;font-size:12px;margin-bottom:8px;font-weight:600;transition:.15s}
+.app-link:hover{border-color:var(--teal);background:rgba(0,212,170,.05)}
+
+/* MAIN WORKBENCH */
+.main-content{padding:24px;overflow-y:auto;display:flex;flex-direction:column;gap:20px}
+.header{border-bottom:1px solid var(--border);padding-bottom:14px}
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden}
+.stat-num{font-size:24px;font-weight:800;color:var(--teal);margin-bottom:4px}
+.stat-lbl{font-size:12px;font-weight:700}
+.stat-desc{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* THE BECKY CHAT INTERFACE WITH PLUS BUTTON */
+.chat-pane{background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.chat-head{background:var(--bg3);padding:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.chat-status{width:8px;height:8px;background:var(--green);border-radius:50%}
+.chat-messages{flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.msg{padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.5;max-width:85%}
+.msg.assistant{background:rgba(155,127,238,.12);color:var(--txt);align-self:flex-start}
+.msg.user{background:rgba(0,212,170,.12);color:var(--txt);align-self:flex-end}
+.attachment-preview{font-size:11px;background:var(--bg4);padding:4px 8px;border-radius:4px;margin-top:6px;display:inline-flex;align-items:center;gap:6px;color:var(--gold)}
+
+/* CHAT INPUT EXPANSION ROW */
+.chat-input-area{padding:14px;background:var(--bg3);border-top:1px solid var(--border)}
+.input-wrapper{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:4px 8px}
+.input-wrapper:focus-within{border-color:var(--teal)}
+
+/* THE RE-ENGINEERED PLUS BUTTON */
+.plus-btn-label{display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--teal);font-weight:800;font-size:18px;transition:.15s;user-select:none}
+.plus-btn-label:hover{background:var(--teal);color:#000}
+#file-upload{display:none}
+
+.chat-input{flex:1;background:transparent;border:none;padding:8px;color:var(--txt);font-size:13px;outline:none}
+.send-btn{background:var(--teal);color:#000;border:none;border-radius:6px;padding:6px 12px;font-weight:700;font-size:12px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <div class="sidebar">
+    <div class="logo-area">
+      <div class="logo-title">Hub Engine v4</div>
+      <div class="logo-sub">Central Architecture Console</div>
+    </div>
+    
+    <div class="nav-section">Core Command Gates</div>
+    <a href="#" class="app-link" style="border-color:var(--teal);color:var(--teal)"><span style="font-size:14px">🎛️</span> App 1: Master Center</a>
+    <a href="https://2-pdf-guide-business-dashboard.vercel.app" target="_blank" class="app-link"><span>💰</span> App 2: PDF Business</a>
+    <a href="#" target="_blank" class="app-link"><span>📄</span> App 3: Blueprint Store</a>
+    <a href="https://video-generator-studio.vercel.app" target="_blank" class="app-link"><span>🎬</span> App 4: Video Studio</a>
+    <a href="#" target="_blank" class="app-link"><span>🤖</span> App 5: AI Engine Hub</a>
+
+    <div class="nav-section">Production &amp; Development</div>
+    <a href="#" target="_blank" class="app-link"><span>🎙️</span> App 6: MWF Podcast</a>
+    <a href="#" target="_blank" class="app-link"><span>👔</span> App 7: 84-Day Corporate</a>
+    <a href="#" target="_blank" class="app-link"><span>⚡</span> App 8: 28-Day AI Training</a>
+    <a href="#" target="_blank" class="app-link"><span>🔍</span> App 9: IT Job Matrix</a>
+  </div>
+
+  <div class="main-content">
+    <div class="header">
+      <h1 style="font-size:20px;font-weight:800">Master Suite Integration Workbench</h1>
+      <p style="font-size:12px;color:var(--muted)">All 9 external modular configurations feeding unified parameters to your system frame.</p>
+    </div>
+
+    <div class="grid-cards">
+      <div class="stat-box">
+        <div class="stat-num">9 / 9</div>
+        <div class="stat-lbl">Modules Configured</div>
+        <div class="stat-desc">Zero overlap crash safety active.</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--purple)">FreeStack</div>
+        <div class="stat-lbl">Video Engine</div>
+        <div class="stat-desc">Connected via R2 cloud arrays.</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--gold)">Active</div>
+        <div class="stat-lbl">Prompt Optimizer</div>
+        <div class="stat-desc">Deep prompting pipeline standing by.</div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;flex:1">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--teal)">🔄 Deep Prompting Workflow Guide</h3>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px">
+        Use the sidebar on the left to instantly launch any specific application tab in separate secure branches. Use the right pane to iterate on structural layout updates or optimize production prompts directly with Becky.
+      </p>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;font-family:monospace;color:var(--purple)">
+        [System State]: Routing parameters isolated. Apps 2-9 isolated as independent production repositories to avoid overlapping file loops.
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-pane">
+    <div class="chat-head">
+      <div class="chat-status"></div>
+      <div>
+        <div style="font-size:13px;font-weight:800">Becky AI Assistant</div>
+        <div style="font-size:11px;color:var(--muted)">Modular Prompt Structurer</div>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chat-stream">
+      <div class="msg assistant">Welcome back, John! I see your modular apps are perfectly mapped out. Ready to enhance your next big concept or polish a prompt. Drop any files or data layout sheets right using the plus button below!</div>
+    </div>
+
+    <div class="chat-input-area">
+      <div id="pending-file-zone" style="margin-bottom:6px"></div>
+      
+      <div class="input-wrapper">
+        <label for="file-upload" class="plus-btn-label" title="Attach Document, Prompt Text, or Image Asset">+</label>
+        <input type="file" id="file-upload" onchange="handleFileSelection(this)">
+        
+        <input type="text" id="user-chat-input" class="chat-input" placeholder="Type prompt or question..." onkeydown="if(event.key==='Enter') executePromptLoop()">
+        <button class="send-btn" onclick="executePromptLoop()">Send</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let activeAttachmentName = "";
+
+function handleFileSelection(inputElement) {
+  if (inputElement.files && inputElement.files[0]) {
+    activeAttachmentName = inputElement.files[0].name;
+    const fileZone = document.getElementById('pending-file-zone');
+    fileZone.innerHTML = `<div style="font-size:11px;color:var(--gold);background:var(--bg4);padding:4px 8px;border-radius:4px;display:inline-flex;align-items:center;gap:6px">📎 Loaded: <strong>${activeAttachmentName}</strong> <span style="cursor:pointer;color:var(--red)" onclick="clearAttachment()">×</span></div>`;
+  }
+}
+
+function clearAttachment() {
+  activeAttachmentName = "";
+  document.getElementById('file-upload').value = "";
+  document.getElementById('pending-file-zone').innerHTML = "";
+}
+
+function executePromptLoop() {
+  const textInput = document.getElementById('user-chat-input');
+  const userText = textInput.value.trim();
+  if(!userText && !activeAttachmentName) return;
+
+  const chatStream = document.getElementById('chat-stream');
+  
+  // 1. Build user text block
+  let userMessageHtml = `<div class="msg user">${userText || "Sent an asset payload."}`;
+  if(activeAttachmentName) {
+    userMessageHtml += `<br><span class="attachment-preview">📄 [Attached Asset File: ${activeAttachmentName}]</span>`;
+  }
+  userMessageHtml += `</div>`;
+  
+  chatStream.innerHTML += userMessageHtml;
+  
+  // Clear the input fields immediately
+  textInput.value = "";
+  clearAttachment();
+  chatStream.scrollTop = chatStream.scrollHeight;
+
+  // 2. Generate optimized advisor response
+  setTimeout(() => {
+    chatStream.innerHTML += `
+      <div class="msg assistant">
+        <strong>[Prompt Extraction Activated]:</strong> Received your thought structural block! I have parsed your layout goals.<br><br>
+        Let's take this down into a deeper framework layer. Would you like me to refine the visual DNA scripts or test the structural parameters across App 2 or App 4?
+      </div>`;
+    chatStream.scrollTop = chatStream.scrollHeight;
+  }, 750);
+}
+</script>
+</body>
+</html>
