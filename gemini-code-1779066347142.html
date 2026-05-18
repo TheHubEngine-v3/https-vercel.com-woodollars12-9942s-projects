@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App 1: Master Workbench — Fleet Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0f1a;--bg2:#131726;--bg3:#1a1f30;--bg4:#1e2438;
+  --teal:#00d4aa;--blue:#4f8ef7;--purple:#9b7fee;--gold:#f5c518;
+  --green:#34d399;--txt:#e2e8f0;--muted:#94a3b8;--border:#2a3048;
+  --sw:240px;--th:52px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+button, a{text-decoration:none;font-family:'Inter',sans-serif}
+
+/* MASTER NAVIGATION SIDEBAR */
+#sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200}
+.sb-logo{padding:16px;border-bottom:1px solid var(--border)}
+.sb-logo-text{font-size:14px;font-weight:800;color:var(--teal)}
+.sb-logo-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.sb-nav{padding:10px 0;flex:1;overflow-y:auto}
+.sb-section{font-size:10px;color:var(--muted);padding:10px 16px 4px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.ni{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:13px;color:var(--muted);cursor:pointer;transition:.15s;border-left:3px solid transparent}
+.ni:hover{color:var(--txt);background:var(--bg3)}
+.ni.active{color:var(--teal);border-left-color:var(--teal);background:rgba(0,212,170,.06);font-weight:600}
+
+/* GLOBAL HEADER */
+#topbar{position:fixed;top:0;left:var(--sw);right:0;height:var(--th);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:150}
+#tbl{font-size:14px;font-weight:700;color:var(--txt)}
+.tb-pill{background:rgba(0,212,170,.1);color:var(--teal);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
+
+/* MAIN INTERFACE SPACE */
+#main{margin-left:var(--sw);margin-top:var(--th);min-height:calc(100vh - var(--th));padding:20px;box-sizing:border-box}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px}
+.stat-num{font-size:20px;font-weight:800}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* DYNAMIC 9 APP GRID METRIC STYLE */
+.map-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+.map-tile{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;transition:.15s;display:flex;flex-direction:column;justify-content:space-between;min-height:150px}
+.map-tile:hover{border-color:var(--teal)}
+.map-name{font-size:13px;font-weight:700;color:var(--teal);margin-bottom:4px}
+.map-desc{font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:12px}
+.btn-link{display:inline-block;background:var(--bg4);border:1px solid var(--border);color:var(--txt);padding:6px 12px;border-radius:4px;font-size:11px;font-weight:600;text-align:center;transition:.15s}
+.btn-link:hover{background:var(--teal);color:#000;border-color:var(--teal)}
+
+@media(max-width:1024px){.map-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){
+  #sidebar{display:none}
+  #main,#topbar{left:0;margin-left:0}
+  .map-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+  <div id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-text">The Hub Engine</div>
+      <div class="sb-logo-sub">AffiliateMediaHub Ecosystem</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Core Command Hub</div>
+      <div class="ni active">🎛️ App 1: Master Workbench</div>
+      
+      <div class="sb-section">Modular Application Fleet</div>
+      <a class="ni" href="https://2-pdf-guide-business-dashboard.vercel.app" target="_blank">📊 App 2: PDF Business</a>
+      <a class="ni" href="https://3-pdf-guide-blueprint-store.vercel.app" target="_blank">🏬 App 3: Template Store</a>
+      <a class="ni" href="https://4-video-studio.vercel.app" target="_blank">🎬 App 4: Video Generator</a>
+      <a class="ni" href="https://5-video-generator-studio-2.vercel.app" target="_blank">🎥 App 5: Studio #2 Array</a>
+      <a class="ni" href="https://6-28-ai-training.vercel.app" target="_blank">🤖 App 6: AI Tech Training</a>
+      <a class="ni" href="https://7-28-day-leadership-mastery.vercel.app" target="_blank">👔 App 7: Leadership Mastery</a>
+      <a class="ni" href="https://8-spanish-learning.vercel.app" target="_blank">🇪🇸 App 8: Spanish Language</a>
+      <a class="ni" href="https://www.linkedin.com/in/john-lanter" target="_blank">💼 App 9: LinkedIn &amp; Jobs</a>
+    </nav>
+  </div>
+
+  <div id="topbar">
+    <div id="tbl">App 1: Master Command Workbench Configuration Matrix</div>
+    <span class="tb-pill">All 9 Deployments Active</span>
+  </div>
+
+  <div id="main">
+
+    <div class="g3">
+      <div class="stat-box"><div class="stat-num" style="color:var(--teal)">9 Frameworks</div><div class="stat-lbl">Fully Separated Modular Stacks</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--blue)">Loop-Free</div><div class="stat-lbl">Zero Interlocking Deployment Faults</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--purple)">Active Sync</div><div class="stat-lbl">LinkedIn Content &amp; Job Trackers</div></div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:16px; font-weight:800; margin-bottom:4px">Unified System Command Hub</h2>
+      <p style="color:var(--muted); font-size:12px">Select an individual app station below to load its target parameters, metrics, or content studio interface directly.</p>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px; font-weight:800; color:var(--txt); margin-bottom:12px">🗺️ Global Engine Map Directory</h3>
+      <div class="map-grid">
+        
+        <div class="map-tile">
+          <div>
+            <div class="map-name">App 1: Master Workbench</div>
+            <div class="map-desc">Central management switchboard, system gateway navigation, and template execution logs.</div>
+          </div>
+          <span class="btn-link" style="opacity:0.4; cursor:default">Active View</span>
+        </div>
+
+        <div class="map-tile">
+          <div>
+            <div class="map-name">App 2: PDF Business Dashboard</div>
+            <div class="map-desc">Digital download tracker, Gross Value calculators, and core sales metrics dashboards.</div>
+          </div>
+          <a class="btn-link" href="https://2-pdf-guide-business-dashboard.vercel.app" target="_blank">Launch Deck →</a>
+        </div>
+
+        <div class="map-tile">
+          <div>
+            <div class="map-name">App 3: PDF Blueprint Store</div>
+            <div class="map-desc">Client-facing frontend template layout for distributing custom automation system architectures.</div>
+          </div>
+          <a class="btn-link" href="https://3-pdf-guide-blueprint-store.vercel.app" target="_blank">Launch Deck →</a>
+        </div>
+
+        <div class="map-tile">
+          <div>
+            <div class="map-name">App 4: Video Generator Studio</div>
+            <div class="map-desc">Dynamic multi-persona narrative coordinator for Alisha, Susan, Paul, Lisa, and Becky podcast configurations.</div>
+          </div>
+          <a class="btn-link" href="https://4-video-studio.vercel.app" target="_blank">Launch Deck →</a>
+        </div>
+
+        <div class="map-tile">
+          <div>
+            <div class="map-name">App 5: Video Studio #2 Array</div>
+            <div class="map-desc">Alternate video generator layer providing standalone avatar segment scripts and timing timelines.</div>
+          </div>
+          <a class="btn-link" href="https://5-video-generator-studio-2.vercel.app" target="_blank">Launch Deck →</a>
+        </div>
+
+        <div class="map-tile">
+          <div>
+            <div class="map-name">App 6: AI Technology Training</div>
+            <div class="map-desc">28-Day systematic technical skills roadmap tracking beginner prompt tracks and asset engineering curves.</div>
+          </div>
+          <a class="btn-link" href="https://6-28-ai-training.vercel.app" target="_blank">Launch Deck →</a>
+        </div>
+
+        <div class="map-tile">
+          <div>
+            <div class="map-name">App 7: Leadership Mastery</div>
+            <div class="map-desc">28-Day supervisor development dashboard tracking speaking velocity metrics and body presence presentation drills.</div>
+          </div>
+          <a class="btn-link" href="https://7-28-day-leadership-mastery.vercel.app" target="_blank">Launch Deck →</a>
+        </div>
+
+        <div class="map-tile">
+          <div>
+            <div class="map-name">App 8: Conversational Spanish</div>
+            <div class="map-desc">28-Day language curriculum tracking daily workplace sentence builders and vocal phrase tracking metrics.</div>
+          </div>
+          <a class="btn-link" href="https://8-spanish-learning.vercel.app" target="_blank">Launch Deck →</a>
+        </div>
+
+        <div class="map-tile">
+          <div>
+            <div class="map-name">App 9: LinkedIn &amp; Career Hub</div>
+            <div class="map-desc">Daily LinkedIn post/blog article copy creator alongside deep web search scraper algorithms for AI employment.</div>
+          </div>
+          <a class="btn-link" href="https://www.linkedin.com/in/john-lanter" target="_blank">Launch Deck →</a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
